@@ -1,7 +1,7 @@
 
   # Avati Safe Storage
 
-  This is a code bundle created for Avati Safe Storage. By MonoMorph
+  This is a code bundle created for Avati Safe Storage, By The MonoMorph
 
   ## Running the code
 
