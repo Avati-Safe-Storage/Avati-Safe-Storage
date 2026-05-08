@@ -1,50 +1,117 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Home, Building2, Car, ChevronRight, MapPin } from "lucide-react";
+"use client";
 
-type StorageType = "household" | "business" | "vehicle" | null;
+import { FormEvent, useMemo, useState } from "react";
+import { motion } from "motion/react";
+import {
+  BadgeIndianRupee,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Mail,
+  MapPin,
+  Package,
+  ShieldCheck,
+} from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Switch } from "./ui/switch";
+import { Textarea } from "./ui/textarea";
+import { calculateQuotation, formatCurrency, validateQuotation } from "@/lib/quotationPricing";
+import type { QuotationFormData, StorageDuration, StorageType } from "@/lib/quotationTypes";
 
-const largeItems = ["Sofa (1 Seater)", "Sofa (2 Seater)", "Sofa (3 Seater)", "Refrigerator", "Washing Machine", "Single Cot", "Queen Cot", "King Cot", "Wardrobe"];
-const mediumItems = ["TV", "Foldable Mattress", "Non-Foldable Mattress", "Microwave", "AC", "Coffee Table"];
+const initialForm: QuotationFormData = {
+  fullName: "",
+  phone: "",
+  email: "",
+  storageType: "household",
+  numberOfBoxes: 10,
+  estimatedVolume: 120,
+  storageDuration: "3-6",
+  pickupRequired: true,
+  insuranceRequired: true,
+  pickupLocation: "",
+  additionalNotes: "",
+};
+
+const storageTypes: { value: StorageType; label: string }[] = [
+  { value: "household", label: "Household Storage" },
+  { value: "business", label: "Business Inventory" },
+  { value: "vehicle", label: "Vehicle Storage" },
+  { value: "documents", label: "Documents & Records" },
+];
+
+const durations: { value: StorageDuration; label: string }[] = [
+  { value: "1-3", label: "1 to 3 months" },
+  { value: "3-6", label: "3 to 6 months" },
+  { value: "6-12", label: "6 to 12 months" },
+  { value: "12+", label: "12+ months" },
+];
+
+type FieldErrors = Partial<Record<keyof QuotationFormData, string>>;
+
+function FieldMessage({ children }: { children?: string }) {
+  if (!children) return null;
+  return <p className="mt-1 text-sm text-red-600">{children}</p>;
+}
 
 export function QuotationSystem() {
-  const [step, setStep] = useState(1);
-  const [storageType, setStorageType] = useState<StorageType>(null);
-  const [houseSize, setHouseSize] = useState("");
-  const [floor, setFloor] = useState("");
-  const [serviceLift, setServiceLift] = useState("");
-  const [selectedLargeItems, setSelectedLargeItems] = useState<string[]>([]);
-  const [selectedMediumItems, setSelectedMediumItems] = useState<string[]>([]);
-  const [boxes, setBoxes] = useState(0);
-  const [showQuote, setShowQuote] = useState(false);
+  const [form, setForm] = useState<QuotationFormData>(initialForm);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
 
-  const toggleLargeItem = (item: string) => {
-    setSelectedLargeItems(prev =>
-      prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
-    );
+  const quote = useMemo(() => calculateQuotation(form), [form]);
+
+  const updateForm = <Key extends keyof QuotationFormData>(key: Key, value: QuotationFormData[Key]) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
+    setSubmitMessage("");
   };
 
-  const toggleMediumItem = (item: string) => {
-    setSelectedMediumItems(prev =>
-      prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
-    );
-  };
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextErrors = validateQuotation(form);
 
-  const calculateQuote = () => {
-    const baseStorage = 2000;
-    const itemCost = (selectedLargeItems.length * 500) + (selectedMediumItems.length * 300) + (boxes * 100);
-    const subtotal = baseStorage + itemCost;
-    const gst = subtotal * 0.18;
-    const packing = 1500;
-    const transport = 2000;
-    const total = subtotal + gst + packing + transport;
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      setSubmitMessage("Please review the highlighted fields.");
+      return;
+    }
 
-    return { subtotal, gst, packing, transport, total };
+    setIsSubmitting(true);
+    setSubmitMessage("");
+
+    try {
+      const response = await fetch("/api/quotation-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.message || "Unable to generate quotation.");
+      }
+
+      setSubmitMessage(`Quotation ${result.quotationId} generated and emailed successfully.`);
+    } catch (error) {
+      setSubmitMessage(error instanceof Error ? error.message : "Unable to generate quotation right now.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <section id="quote" className="py-24 bg-gradient-to-br from-[#0B1F3A] to-black">
-      <div className="max-w-4xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -52,308 +119,272 @@ export function QuotationSystem() {
           className="text-center mb-16"
         >
           <h2 className="text-5xl md:text-6xl text-white mb-4">Get Instant Quote</h2>
-          <p className="text-xl text-gray-300">
-            AI-powered quotation in just a few steps
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            Share a few storage details and receive a branded Avati quotation by email.
           </p>
         </motion.div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
-          <div className="flex items-center justify-between mb-12">
-            {[1, 2, 3, 4].map((s) => (
-              <div key={s} className="flex items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
-                  step >= s ? 'bg-[#D4AF37] text-black' : 'bg-gray-200 text-gray-400'
-                }`}>
-                  {s}
-                </div>
-                {s < 4 && (
-                  <div className={`hidden sm:block w-16 md:w-24 h-1 mx-2 transition-all ${
-                    step > s ? 'bg-[#D4AF37]' : 'bg-gray-200'
-                  }`} />
-                )}
+        <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-8 items-start">
+          <motion.form
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-2xl shadow-2xl p-6 md:p-10"
+          >
+            <div className="flex items-start gap-4 mb-8">
+              <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/15 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-6 h-6 text-[#D4AF37]" />
               </div>
-            ))}
-          </div>
+              <div>
+                <h3 className="text-2xl text-black">Quotation Details</h3>
+                <p className="text-gray-600 mt-1">All pricing updates live as you edit the request.</p>
+              </div>
+            </div>
 
-          <AnimatePresence mode="wait">
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <h3 className="text-2xl text-black mb-8">Select Storage Type</h3>
-                <div className="grid md:grid-cols-3 gap-6">
-                  {[
-                    { type: "household" as const, icon: Home, label: "Household" },
-                    { type: "business" as const, icon: Building2, label: "Business" },
-                    { type: "vehicle" as const, icon: Car, label: "Vehicle" }
-                  ].map(({ type, icon: Icon, label }) => (
-                    <button
-                      key={type}
-                      onClick={() => {
-                        setStorageType(type);
-                        if (type === "household") {
-                          setStep(2);
-                        }
-                      }}
-                      className={`p-6 rounded-xl border-2 transition-all hover:scale-105 ${
-                        storageType === type
-                          ? 'border-[#D4AF37] bg-[#D4AF37]/10'
-                          : 'border-gray-200 hover:border-[#D4AF37]'
-                      }`}
-                    >
-                      <Icon className="w-12 h-12 mx-auto mb-4 text-[#0B1F3A]" />
-                      <p className="text-lg text-black">{label}</p>
-                    </button>
-                  ))}
+            <div className="grid md:grid-cols-2 gap-5">
+              <div>
+                <Label htmlFor="fullName" className="text-gray-700">Full Name</Label>
+                <Input
+                  id="fullName"
+                  value={form.fullName}
+                  onChange={(event) => updateForm("fullName", event.target.value)}
+                  className="mt-2 h-12 rounded-lg border-2 border-gray-200 focus-visible:border-[#D4AF37]"
+                  placeholder="Your name"
+                  aria-invalid={Boolean(errors.fullName)}
+                />
+                <FieldMessage>{errors.fullName}</FieldMessage>
+              </div>
+
+              <div>
+                <Label htmlFor="phone" className="text-gray-700">Phone Number</Label>
+                <Input
+                  id="phone"
+                  inputMode="tel"
+                  value={form.phone}
+                  onChange={(event) => updateForm("phone", event.target.value)}
+                  className="mt-2 h-12 rounded-lg border-2 border-gray-200 focus-visible:border-[#D4AF37]"
+                  placeholder="9876543210"
+                  aria-invalid={Boolean(errors.phone)}
+                />
+                <FieldMessage>{errors.phone}</FieldMessage>
+              </div>
+
+              <div>
+                <Label htmlFor="email" className="text-gray-700">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateForm("email", event.target.value)}
+                  className="mt-2 h-12 rounded-lg border-2 border-gray-200 focus-visible:border-[#D4AF37]"
+                  placeholder="name@example.com"
+                  aria-invalid={Boolean(errors.email)}
+                />
+                <FieldMessage>{errors.email}</FieldMessage>
+              </div>
+
+              <div>
+                <Label className="text-gray-700">Storage Type</Label>
+                <Select value={form.storageType} onValueChange={(value) => updateForm("storageType", value as StorageType)}>
+                  <SelectTrigger className="mt-2 h-12 rounded-lg border-2 border-gray-200 focus:border-[#D4AF37]">
+                    <SelectValue placeholder="Select storage type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {storageTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldMessage>{errors.storageType}</FieldMessage>
+              </div>
+
+              <div>
+                <Label htmlFor="numberOfBoxes" className="text-gray-700">Number of Boxes</Label>
+                <Input
+                  id="numberOfBoxes"
+                  type="number"
+                  min="0"
+                  value={form.numberOfBoxes}
+                  onChange={(event) => updateForm("numberOfBoxes", Number(event.target.value))}
+                  className="mt-2 h-12 rounded-lg border-2 border-gray-200 focus-visible:border-[#D4AF37]"
+                  aria-invalid={Boolean(errors.numberOfBoxes)}
+                />
+                <FieldMessage>{errors.numberOfBoxes}</FieldMessage>
+              </div>
+
+              <div>
+                <Label htmlFor="estimatedVolume" className="text-gray-700">Estimated Volume</Label>
+                <div className="relative mt-2">
+                  <Input
+                    id="estimatedVolume"
+                    type="number"
+                    min="1"
+                    value={form.estimatedVolume}
+                    onChange={(event) => updateForm("estimatedVolume", Number(event.target.value))}
+                    className="h-12 rounded-lg border-2 border-gray-200 pr-16 focus-visible:border-[#D4AF37]"
+                    aria-invalid={Boolean(errors.estimatedVolume)}
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">cu ft</span>
                 </div>
-              </motion.div>
-            )}
+                <FieldMessage>{errors.estimatedVolume}</FieldMessage>
+              </div>
 
-            {step === 2 && storageType === "household" && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <h3 className="text-2xl text-black mb-8">House Details</h3>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-gray-700 mb-2">House Size</label>
-                    <div className="grid grid-cols-3 gap-4">
-                      {["1BHK", "2BHK", "3BHK"].map((size) => (
-                        <button
-                          key={size}
-                          onClick={() => setHouseSize(size)}
-                          className={`py-3 rounded-lg border-2 transition-all ${
-                            houseSize === size
-                              ? 'border-[#D4AF37] bg-[#D4AF37]/10'
-                              : 'border-gray-200 hover:border-[#D4AF37]'
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              <div>
+                <Label className="text-gray-700">Storage Duration</Label>
+                <Select value={form.storageDuration} onValueChange={(value) => updateForm("storageDuration", value as StorageDuration)}>
+                  <SelectTrigger className="mt-2 h-12 rounded-lg border-2 border-gray-200 focus:border-[#D4AF37]">
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {durations.map((duration) => (
+                      <SelectItem key={duration.value} value={duration.value}>{duration.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldMessage>{errors.storageDuration}</FieldMessage>
+              </div>
 
-                  <div>
-                    <label className="block text-gray-700 mb-2">Floor Number</label>
-                    <input
-                      type="number"
-                      value={floor}
-                      onChange={(e) => setFloor(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors"
-                      placeholder="Enter floor number"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 mb-2">Service Lift Available?</label>
-                    <div className="grid grid-cols-2 gap-4">
-                      {["Yes", "No"].map((option) => (
-                        <button
-                          key={option}
-                          onClick={() => setServiceLift(option)}
-                          className={`py-3 rounded-lg border-2 transition-all ${
-                            serviceLift === option
-                              ? 'border-[#D4AF37] bg-[#D4AF37]/10'
-                              : 'border-gray-200 hover:border-[#D4AF37]'
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setStep(3)}
-                    disabled={!houseSize || !floor || !serviceLift}
-                    className="w-full py-4 bg-[#D4AF37] text-black font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                  >
-                    Next <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <h3 className="text-2xl text-black mb-8">Select Items</h3>
-                <div className="space-y-6 max-h-96 overflow-y-auto pr-2">
-                  <div>
-                    <h4 className="text-lg text-gray-700 mb-3">Large Items</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      {largeItems.map((item) => (
-                        <button
-                          key={item}
-                          onClick={() => toggleLargeItem(item)}
-                          className={`py-2 px-3 rounded-lg border-2 transition-all text-sm ${
-                            selectedLargeItems.includes(item)
-                              ? 'border-[#D4AF37] bg-[#D4AF37]/10'
-                              : 'border-gray-200 hover:border-[#D4AF37]'
-                          }`}
-                        >
-                          {item}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-lg text-gray-700 mb-3">Medium Items</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      {mediumItems.map((item) => (
-                        <button
-                          key={item}
-                          onClick={() => toggleMediumItem(item)}
-                          className={`py-2 px-3 rounded-lg border-2 transition-all text-sm ${
-                            selectedMediumItems.includes(item)
-                              ? 'border-[#D4AF37] bg-[#D4AF37]/10'
-                              : 'border-gray-200 hover:border-[#D4AF37]'
-                          }`}
-                        >
-                          {item}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 mb-2">Number of Boxes</label>
-                    <input
-                      type="number"
-                      value={boxes}
-                      onChange={(e) => setBoxes(parseInt(e.target.value) || 0)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors"
-                      placeholder="Enter number of boxes"
-                      min="0"
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border-2 border-gray-200 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor="pickupRequired" className="text-gray-700">Pickup Required</Label>
+                    <Switch
+                      id="pickupRequired"
+                      checked={form.pickupRequired}
+                      onCheckedChange={(checked) => updateForm("pickupRequired", checked)}
+                      className="data-[state=checked]:bg-[#D4AF37]"
                     />
                   </div>
                 </div>
-
-                <button
-                  onClick={() => setStep(4)}
-                  className="w-full mt-6 py-4 bg-[#D4AF37] text-black font-semibold rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                >
-                  Next <ChevronRight className="w-5 h-5" />
-                </button>
-              </motion.div>
-            )}
-
-            {step === 4 && !showQuote && (
-              <motion.div
-                key="step4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <h3 className="text-2xl text-black mb-8">Location</h3>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-gray-700 mb-2">Enter Your Address</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="text"
-                        className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors"
-                        placeholder="Enter pickup location"
-                      />
-                    </div>
+                <div className="rounded-xl border-2 border-gray-200 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor="insuranceRequired" className="text-gray-700">Insurance</Label>
+                    <Switch
+                      id="insuranceRequired"
+                      checked={form.insuranceRequired}
+                      onCheckedChange={(checked) => updateForm("insuranceRequired", checked)}
+                      className="data-[state=checked]:bg-[#D4AF37]"
+                    />
                   </div>
-
-                  <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                    <div className="text-center">
-                      <MapPin className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                      <p className="text-gray-500">Map Integration</p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setShowQuote(true)}
-                    className="w-full py-4 bg-[#D4AF37] text-black font-semibold rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                  >
-                    Generate Quote
-                  </button>
                 </div>
-              </motion.div>
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="pickupLocation" className="text-gray-700">Pickup Location</Label>
+                <div className="relative mt-2">
+                  <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                  <Input
+                    id="pickupLocation"
+                    value={form.pickupLocation}
+                    onChange={(event) => updateForm("pickupLocation", event.target.value)}
+                    className="h-12 rounded-lg border-2 border-gray-200 pl-12 focus-visible:border-[#D4AF37]"
+                    placeholder="Area, city, landmark"
+                    aria-invalid={Boolean(errors.pickupLocation)}
+                  />
+                </div>
+                <FieldMessage>{errors.pickupLocation}</FieldMessage>
+              </div>
+
+              <div className="md:col-span-2">
+                <Label htmlFor="additionalNotes" className="text-gray-700">Additional Notes</Label>
+                <Textarea
+                  id="additionalNotes"
+                  value={form.additionalNotes}
+                  onChange={(event) => updateForm("additionalNotes", event.target.value)}
+                  className="mt-2 min-h-28 rounded-lg border-2 border-gray-200 focus-visible:border-[#D4AF37]"
+                  placeholder="Fragile items, access timing, floor details, or special handling needs"
+                />
+              </div>
+            </div>
+
+            {submitMessage && (
+              <div className="mt-6 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-700">
+                {submitMessage}
+              </div>
             )}
 
-            {showQuote && (
-              <motion.div
-                key="quote"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
-                <h3 className="text-2xl text-black mb-8">Your Quote</h3>
-                {(() => {
-                  const quote = calculateQuote();
-                  return (
-                    <div className="space-y-4">
-                      <div className="p-6 bg-gradient-to-br from-[#0B1F3A] to-black rounded-xl text-white">
-                        <div className="flex justify-between items-center mb-4">
-                          <span>Monthly Storage Cost</span>
-                          <span className="text-2xl">₹{quote.subtotal.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm text-gray-300 mb-2">
-                          <span>GST (18%)</span>
-                          <span>₹{quote.gst.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm text-gray-300 mb-2">
-                          <span>Packing Charges</span>
-                          <span>₹{quote.packing.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm text-gray-300 mb-4">
-                          <span>Transportation</span>
-                          <span>₹{quote.transport.toLocaleString()}</span>
-                        </div>
-                        <div className="pt-4 border-t border-white/20 flex justify-between items-center">
-                          <span className="text-lg">Total</span>
-                          <span className="text-3xl text-[#D4AF37]">₹{quote.total.toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      <button className="w-full py-4 bg-[#D4AF37] text-black font-semibold rounded-lg hover:shadow-lg transition-all">
-                        Proceed to Booking
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setStep(1);
-                          setShowQuote(false);
-                          setStorageType(null);
-                          setSelectedLargeItems([]);
-                          setSelectedMediumItems([]);
-                          setBoxes(0);
-                        }}
-                        className="w-full py-3 text-gray-600 hover:text-black transition-colors"
-                      >
-                        Start New Quote
-                      </button>
-                    </div>
-                  );
-                })()}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {step > 1 && !showQuote && (
-            <button
-              onClick={() => setStep(step - 1)}
-              className="mt-6 text-gray-600 hover:text-black transition-colors"
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="mt-8 w-full h-12 rounded-lg bg-[#D4AF37] text-black hover:bg-[#c9a332] hover:shadow-lg"
             >
-              ← Back
-            </button>
-          )}
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
+              {isSubmitting ? "Generating Quote" : "Generate & Email Quotation"}
+            </Button>
+          </motion.form>
+
+          <motion.aside
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="lg:sticky lg:top-8"
+          >
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+              <div className="p-6 bg-gradient-to-br from-[#0B1F3A] to-black text-white">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-gray-300">Live Quote Summary</p>
+                    <h3 className="text-3xl text-white mt-1">{formatCurrency(quote.totalEstimate)}</h3>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-[#D4AF37] flex items-center justify-center">
+                    <BadgeIndianRupee className="w-6 h-6 text-black" />
+                  </div>
+                </div>
+                <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-xl bg-white/10 p-3">
+                    <p className="text-gray-300">Monthly</p>
+                    <p className="text-lg text-[#D4AF37]">{formatCurrency(quote.totalMonthly)}</p>
+                  </div>
+                  <div className="rounded-xl bg-white/10 p-3">
+                    <p className="text-gray-300">Valid Until</p>
+                    <p className="text-lg text-[#D4AF37]">
+                      {new Date(quote.validUntil).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {[
+                  ["Storage pricing", quote.storageMonthly],
+                  ["Volume pricing", quote.volumeMonthly],
+                  ["Duration discount", -quote.durationDiscount],
+                  ["Pickup charges", quote.pickupCharges],
+                  ["Insurance", quote.insurance],
+                  ["GST (18%)", quote.gst],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-center justify-between gap-4 text-gray-700">
+                    <span>{label}</span>
+                    <span className={Number(value) < 0 ? "text-green-700" : "text-black"}>
+                      {Number(value) < 0 ? "-" : ""}{formatCurrency(Math.abs(Number(value)))}
+                    </span>
+                  </div>
+                ))}
+
+                <div className="pt-4 border-t border-gray-200 flex items-center justify-between">
+                  <span className="text-lg text-black">Total Estimate</span>
+                  <span className="text-2xl text-[#D4AF37]">{formatCurrency(quote.totalEstimate)}</span>
+                </div>
+
+                <div className="grid gap-3 pt-2">
+                  <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
+                    <Package className="w-5 h-5 text-[#D4AF37] mt-0.5" />
+                    <p className="text-sm text-gray-600">Storage, pickup, insurance, and GST are itemized for transparent approval.</p>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
+                    <ShieldCheck className="w-5 h-5 text-[#D4AF37] mt-0.5" />
+                    <p className="text-sm text-gray-600">Final billing may vary after item inspection and confirmed service scope.</p>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-xl bg-[#D4AF37]/10 p-4">
+                    <CheckCircle2 className="w-5 h-5 text-[#D4AF37] mt-0.5" />
+                    <p className="text-sm text-gray-700">PDF quotation is generated with Avati branding and emailed to customer plus admin.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.aside>
         </div>
       </div>
     </section>

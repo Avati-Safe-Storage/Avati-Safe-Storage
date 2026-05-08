@@ -1,13 +1,16 @@
 import { MapPin, Phone, Mail, Instagram, Youtube, Linkedin } from "lucide-react";
+import logoUrl from "@/imports/image.png";
 
 export function Footer() {
+  const logoSrc = typeof logoUrl === "string" ? logoUrl : (logoUrl as { src: string }).src;
+
   return (
     <footer className="bg-gradient-to-br from-black via-[#0B1F3A] to-black text-white py-16">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div>
             <img
-              src="/src/imports/image.png"
+              src={logoSrc}
               alt="Avati Safe Storage"
               className="h-16 mb-4"
             />
@@ -19,10 +22,11 @@ export function Footer() {
           <div>
             <h3 className="text-lg mb-4 text-[#D4AF37]">Quick Links</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Services</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+              <li><a href="/about-us" className="text-gray-400 hover:text-white transition-colors">About Us</a></li>
+              <li><a href="/self-storage-in-bangalore" className="text-gray-400 hover:text-white transition-colors">Self Storage</a></li>
+              <li><a href="/warehouse-storage-in-bangalore" className="text-gray-400 hover:text-white transition-colors">Warehouse Storage</a></li>
+              <li><a href="/quote" className="text-gray-400 hover:text-white transition-colors">Get Quote</a></li>
+              <li><a href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
             </ul>
           </div>
 

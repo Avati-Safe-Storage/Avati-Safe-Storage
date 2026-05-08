@@ -1,8 +1,13 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
+import logoUrl from "@/imports/image.png";
 
-export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
+export function Navigation({ onLoginClick, forceSolid = false }: { onLoginClick?: () => void; forceSolid?: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const solid = forceSolid || isScrolled;
+  const logoSrc = typeof logoUrl === "string" ? logoUrl : (logoUrl as { src: string }).src;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,11 +31,17 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <button 
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => {
+            if (window.location.pathname === "/") {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            } else {
+              window.location.href = "/";
+            }
+          }}
           className="transition-transform hover:scale-105"
         >
           <img
-            src="/src/imports/image.png"
+            src={logoSrc}
             alt="Avati Safe Storage"
             className="h-12"
           />
@@ -38,33 +49,33 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
 
         <div className="hidden md:flex items-center gap-8">
           <a
-            href="#services"
+            href="/#services"
             className={`transition-colors ${
-              isScrolled ? 'text-black hover:text-[#D4AF37]' : 'text-white hover:text-[#D4AF37]'
+              solid ? 'text-black hover:text-[#D4AF37]' : 'text-white hover:text-[#D4AF37]'
             }`}
           >
             Services
           </a>
           <a
-            href="#pricing"
+            href="/#pricing"
             className={`transition-colors ${
-              isScrolled ? 'text-black hover:text-[#D4AF37]' : 'text-white hover:text-[#D4AF37]'
+              solid ? 'text-black hover:text-[#D4AF37]' : 'text-white hover:text-[#D4AF37]'
             }`}
           >
             Pricing
           </a>
           <a
-            href="#process"
+            href="/#process"
             className={`transition-colors ${
-              isScrolled ? 'text-black hover:text-[#D4AF37]' : 'text-white hover:text-[#D4AF37]'
+              solid ? 'text-black hover:text-[#D4AF37]' : 'text-white hover:text-[#D4AF37]'
             }`}
           >
             How It Works
           </a>
           <a
-            href="#contact"
+            href="/#contact"
             className={`transition-colors ${
-              isScrolled ? 'text-black hover:text-[#D4AF37]' : 'text-white hover:text-[#D4AF37]'
+              solid ? 'text-black hover:text-[#D4AF37]' : 'text-white hover:text-[#D4AF37]'
             }`}
           >
             Contact
@@ -75,7 +86,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
           <button 
             onClick={onLoginClick}
             className={`hidden sm:block whitespace-nowrap shrink-0 px-5 py-2 font-semibold rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
-            isScrolled 
+            solid 
               ? 'text-black border-2 border-black/80 hover:bg-black hover:text-white' 
               : 'text-white border-2 border-white/80 hover:bg-white hover:text-black'
           }`}>

@@ -1,7 +1,7 @@
 
   # Avati Safe Storage
 
-  This is a code bundle for Avati Safe Storage. The original project is available at https://www.figma.com/design/Ty6jnsVPrf3Nv9XmlGyNqI/Avati-Safe-Storage.
+  This is a code bundle for Avati Safe Storage, By The MonoMorph.
 
   ## Running the code
 

@@ -1,7 +1,10 @@
 import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
+import logoUrl from "@/imports/image.png";
 
 export function Hero() {
+  const logoSrc = typeof logoUrl === "string" ? logoUrl : (logoUrl as { src: string }).src;
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
       <video
@@ -12,7 +15,7 @@ export function Hero() {
         className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-luminosity"
       >
         <source
-          src="/Homepage%20video.mp4"
+          src="/homepage-video"
           type="video/mp4"
         />
       </video>
@@ -33,7 +36,7 @@ export function Hero() {
           className="mb-8"
         >
           <img
-            src="/src/imports/image.png"
+            src={logoSrc}
             alt="Avati Safe Storage"
             className="h-32 mx-auto mb-8"
           />
