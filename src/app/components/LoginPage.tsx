@@ -1,9 +1,16 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Mail, Lock, Phone, ArrowLeft } from "lucide-react";
+import { Mail, Phone, ArrowLeft, MessageCircle } from "lucide-react";
 
 export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: () => void }) {
-  const [isOTP, setIsOTP] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<"phone" | "email">("phone");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpMedium, setOtpMedium] = useState<"whatsapp" | "mail">("whatsapp");
+
+  const handleSendOTP = (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpSent(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0B1F3A] via-black to-[#0B1F3A] flex items-center justify-center px-6">
@@ -33,95 +40,115 @@ export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: (
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <div className="flex gap-2 mb-8 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setIsOTP(false)}
-              className={`flex-1 py-2 rounded-lg transition-all ${
-                !isOTP ? 'bg-white shadow-md text-black' : 'text-gray-600'
-              }`}
-            >
-              Email
-            </button>
-            <button
-              onClick={() => setIsOTP(true)}
-              className={`flex-1 py-2 rounded-lg transition-all ${
-                isOTP ? 'bg-white shadow-md text-black' : 'text-gray-600'
-              }`}
-            >
-              OTP
-            </button>
-          </div>
-
-          {!isOTP ? (
-            <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
-              <div>
-                <label className="block text-gray-700 mb-2">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="email"
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors"
-                    placeholder="your@email.com"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="password"
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors"
-                    placeholder="Enter your password"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 text-gray-600">
-                  <input type="checkbox" className="w-4 h-4" />
-                  Remember me
-                </label>
-                <button type="button" className="text-[#D4AF37] hover:underline">
-                  Forgot password?
+          {!otpSent ? (
+            <>
+              <div className="flex gap-2 mb-8 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setLoginMethod("phone")}
+                  className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                    loginMethod === "phone" ? 'bg-white shadow-md text-black' : 'text-gray-600'
+                  }`}
+                >
+                  <Phone className="w-4 h-4" /> Phone
+                </button>
+                <button
+                  onClick={() => setLoginMethod("email")}
+                  className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                    loginMethod === "email" ? 'bg-white shadow-md text-black' : 'text-gray-600'
+                  }`}
+                >
+                  <Mail className="w-4 h-4" /> Email
                 </button>
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-3 bg-[#D4AF37] text-black font-semibold rounded-lg hover:shadow-lg transition-all"
-              >
-                Sign In
-              </button>
-            </form>
+              <form className="space-y-6" onSubmit={handleSendOTP}>
+                {loginMethod === "phone" ? (
+                  <div>
+                    <label className="block text-gray-700 mb-2">Phone Number</label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="tel"
+                        required
+                        className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors"
+                        placeholder="+91 98765 43210"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-gray-700 mb-2">Email Address</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="email"
+                        required
+                        className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors"
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {loginMethod === "phone" && (
+                  <div>
+                    <label className="block text-gray-700 mb-2">Send OTP via</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="otpMedium"
+                          checked={otpMedium === "whatsapp"}
+                          onChange={() => setOtpMedium("whatsapp")}
+                          className="w-4 h-4 text-[#D4AF37] focus:ring-[#D4AF37]"
+                        />
+                        <MessageCircle className="w-4 h-4 text-green-500" /> WhatsApp
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="otpMedium"
+                          checked={otpMedium === "mail"}
+                          onChange={() => setOtpMedium("mail")}
+                          className="w-4 h-4 text-[#D4AF37] focus:ring-[#D4AF37]"
+                        />
+                        <Mail className="w-4 h-4 text-gray-500" /> SMS
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-[#0B1F3A] text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+                >
+                  Send OTP
+                </button>
+              </form>
+            </>
           ) : (
-            <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
-              <div>
-                <label className="block text-gray-700 mb-2">Phone Number</label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="tel"
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors"
-                    placeholder="+91 98765 43210"
-                  />
+            <motion.form 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6" 
+              onSubmit={(e) => { e.preventDefault(); onLogin(); }}
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <LockIcon className="w-8 h-8 text-[#D4AF37]" />
                 </div>
+                <h3 className="text-xl font-semibold">Enter OTP</h3>
+                <p className="text-sm text-gray-500 mt-2">
+                  We've sent a code to your {loginMethod === "phone" ? (otpMedium === "whatsapp" ? "WhatsApp" : "Phone") : "Email"}
+                </p>
               </div>
 
-              <button
-                type="button"
-                className="w-full py-3 bg-[#0B1F3A] text-white font-semibold rounded-lg hover:shadow-lg transition-all"
-              >
-                Send OTP
-              </button>
-
               <div>
-                <label className="block text-gray-700 mb-2">Enter OTP</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors text-center text-2xl tracking-widest"
-                  placeholder="- - - - - -"
+                  required
+                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors text-center text-3xl tracking-[1em]"
+                  placeholder="------"
                   maxLength={6}
                 />
               </div>
@@ -132,17 +159,47 @@ export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: (
               >
                 Verify & Sign In
               </button>
-            </form>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setOtpSent(false)}
+                  className="text-sm text-gray-500 hover:text-black transition-colors"
+                >
+                  Change {loginMethod === "phone" ? "Phone Number" : "Email"}
+                </button>
+              </div>
+            </motion.form>
           )}
 
           <p className="text-center text-gray-600 text-sm mt-6">
             Don't have an account?{' '}
             <button className="text-[#D4AF37] hover:underline">
-              Sign up
+              Get an Instant Quote
             </button>
           </p>
         </div>
       </motion.div>
     </div>
+  );
+}
+
+function LockIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
   );
 }

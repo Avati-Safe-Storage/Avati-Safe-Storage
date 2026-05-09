@@ -59,7 +59,6 @@ export function PricingPlans() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              viewport={{ once: true }}
               transition={{ delay: index * 0.2 }}
               className={`relative p-8 bg-white rounded-2xl shadow-lg border-2 transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-2xl ${
                 plan.popular ? 'border-[#D4AF37] scale-105 hover:scale-[1.07]' : 'border-gray-200 hover:scale-105'
