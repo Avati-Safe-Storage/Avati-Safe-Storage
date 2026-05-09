@@ -1,4 +1,5 @@
 import { MapPin, Phone, Mail, Instagram, Youtube, Linkedin } from "lucide-react";
+import logoImg from "../../imports/image.png";
 
 export function Footer() {
   return (
@@ -7,7 +8,7 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div>
             <img
-              src="/src/imports/image.png"
+              src={logoImg}
               alt="Avati Safe Storage"
               className="h-16 mb-4"
             />

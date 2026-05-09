@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
+import logoImg from "../../imports/image.png";
 
 export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -30,7 +31,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
           className="transition-transform hover:scale-105"
         >
           <img
-            src="/src/imports/image.png"
+            src={logoImg}
             alt="Avati Safe Storage"
             className="h-12"
           />

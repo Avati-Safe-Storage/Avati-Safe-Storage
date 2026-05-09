@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Mail, Phone, ArrowLeft, MessageCircle } from "lucide-react";
+import logoImg from "../../imports/image.png";
 
 export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: () => void }) {
   const [loginMethod, setLoginMethod] = useState<"phone" | "email">("phone");
@@ -30,7 +31,7 @@ export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: (
         <div className="text-center mb-8">
           <button onClick={onBack} className="inline-block transition-transform hover:scale-105">
             <img
-              src="/src/imports/image.png"
+              src={logoImg}
               alt="Avati Safe Storage"
               className="h-24 mx-auto mb-6"
             />

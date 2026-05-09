@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import logoImg from "../../imports/image.png";
 import { 
   Package, Plus, RotateCcw, LogOut, Calendar, IndianRupee, 
   MapPin, Phone, Mail, User, ShieldCheck, History, ArrowRight, 
@@ -340,7 +341,7 @@ export function Dashboard({ onLogout }: { onLogout: () => void }) {
       <nav className="bg-[#0B1F3A] text-white sticky top-0 z-40 shadow-xl">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/src/imports/image.png" alt="Avati Safe Storage" className="h-8 object-contain" />
+            <img src={logoImg} alt="Avati Safe Storage" className="h-8 object-contain" />
             <h1 className="text-xl font-black tracking-tight hidden sm:block">AVATI SAFE STORAGE <span className="text-[#D4AF37] font-normal">CUSTOMER PORTAL</span></h1>
           </div>
           <div className="flex items-center gap-6">
