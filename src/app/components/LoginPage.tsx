@@ -10,6 +10,7 @@ export function LoginPage({ onLogin, onBack }: { onLogin: (data: any) => void, o
   const [otpMedium, setOtpMedium] = useState<"whatsapp" | "mail">("whatsapp");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -20,13 +21,31 @@ export function LoginPage({ onLogin, onBack }: { onLogin: (data: any) => void, o
       return;
     }
     setErrorMsg("");
+    
+    const newOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedOtp(newOtp);
+
+    if (loginMethod === "phone" && otpMedium === "whatsapp") {
+      // MOCK WHATSAPP API CALL
+      // In a production environment, this triggers a backend endpoint connected to the Meta WhatsApp Business API 
+      // which is linked to the number +91 8892679226.
+      console.log(`[WHATSAPP API] Sending from: +91 8892679226`);
+      console.log(`[WHATSAPP API] Sending to: ${phoneNumber}`);
+      console.log(`[WHATSAPP API] Message: Your Avati Safe Storage login code is ${newOtp}`);
+      
+      // For testing purposes, alert the user with the OTP
+      alert(`[Dev Mode] WhatsApp Message from Avati (+91 8892679226):\n\nYour login code is: ${newOtp}\n\n(Note: You will need a WhatsApp API Provider like Interakt, Wati, or Twilio to automate this)`);
+    } else {
+      alert(`[Dev Mode] SMS/Email sent. Your login code is: ${newOtp}`);
+    }
+
     setOtpSent(true);
   };
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length < 4) {
-      setErrorMsg("Please enter a valid OTP.");
+    if (otp !== generatedOtp) {
+      setErrorMsg("Invalid OTP. Please try again.");
       return;
     }
     
