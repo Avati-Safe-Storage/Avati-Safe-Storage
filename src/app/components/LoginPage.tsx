@@ -2,15 +2,49 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { Mail, Phone, ArrowLeft, MessageCircle } from "lucide-react";
 import logoImg from "../../imports/image.png";
+import { fetchCustomerData } from "../../lib/googleSheets";
 
-export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: () => void }) {
+export function LoginPage({ onLogin, onBack }: { onLogin: (data: any) => void, onBack?: () => void }) {
   const [loginMethod, setLoginMethod] = useState<"phone" | "email">("phone");
   const [otpSent, setOtpSent] = useState(false);
   const [otpMedium, setOtpMedium] = useState<"whatsapp" | "mail">("whatsapp");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSendOTP = (e: React.FormEvent) => {
     e.preventDefault();
+    if (loginMethod === "phone" && phoneNumber.length < 10) {
+      setErrorMsg("Please enter a valid phone number.");
+      return;
+    }
+    setErrorMsg("");
     setOtpSent(true);
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length < 4) {
+      setErrorMsg("Please enter a valid OTP.");
+      return;
+    }
+    
+    setIsLoading(true);
+    setErrorMsg("");
+    
+    // Using the real phone number typed to find it in the sheets
+    // Removing extra spaces/chars to match the sheet format if necessary
+    const formattedPhone = phoneNumber.replace(/\D/g, '').slice(-10);
+    
+    const data = await fetchCustomerData(formattedPhone);
+    setIsLoading(false);
+    
+    if (data) {
+      onLogin(data);
+    } else {
+      setErrorMsg("No account found with this number. Please check your credentials.");
+    }
   };
 
   return (
@@ -71,8 +105,10 @@ export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: (
                       <input
                         type="tel"
                         required
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
                         className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors"
-                        placeholder="+91 98765 43210"
+                        placeholder="9876543210"
                       />
                     </div>
                   </div>
@@ -132,7 +168,7 @@ export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: (
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6" 
-              onSubmit={(e) => { e.preventDefault(); onLogin(); }}
+              onSubmit={handleVerifyOTP}
             >
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -148,6 +184,8 @@ export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: (
                 <input
                   type="text"
                   required
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
                   className="w-full px-4 py-4 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors text-center text-3xl tracking-[1em]"
                   placeholder="------"
                   maxLength={6}
@@ -156,9 +194,10 @@ export function LoginPage({ onLogin, onBack }: { onLogin: () => void, onBack?: (
 
               <button
                 type="submit"
-                className="w-full py-3 bg-[#D4AF37] text-black font-semibold rounded-lg hover:shadow-lg transition-all"
+                disabled={isLoading}
+                className="w-full py-3 bg-[#D4AF37] text-black font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
               >
-                Verify & Sign In
+                {isLoading ? "Verifying & Loading Data..." : "Verify & Sign In"}
               </button>
 
               <div className="text-center">

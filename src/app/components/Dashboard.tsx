@@ -9,23 +9,7 @@ import {
 import { QuotationSystem } from "./QuotationSystem";
 
 // Mock Data
-const customerData = {
-  customerId: "AVT-CUS-0001",
-  storageId: "AVT-STO-0001",
-  name: "Arun Kumar",
-  phone: "+91 98765 43210",
-  altPhone: "+91 98765 00000",
-  email: "arun.kumar@example.com",
-  storageType: "Household - Climate Controlled",
-  pickupDate: "2026-01-15",
-  warehouseLoc: "WH1-A1",
-  status: "Active",
-  monthlyStorage: 4500,
-  gst: 810,
-  total: 5310,
-  pendingPayments: 5310,
-};
-
+// customerData is now passed as a prop from Google Sheets
 const recentPayments = [
   { id: "AVT-PAY-0002", date: "2026-03-01", amount: 5310, status: "Paid" },
   { id: "AVT-PAY-0001", date: "2026-02-01", amount: 5310, status: "Paid" },
@@ -45,7 +29,7 @@ const retrievedItemsMock = [
 
 type TabType = "overview" | "items" | "retrievals" | "profile";
 
-export function Dashboard({ onLogout }: { onLogout: () => void }) {
+export function Dashboard({ customerData, onLogout }: { customerData: any, onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   
   // Flows

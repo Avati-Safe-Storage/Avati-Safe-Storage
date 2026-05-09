@@ -14,13 +14,14 @@ import { Dashboard } from "./components/Dashboard";
 
 export default function App() {
   const [view, setView] = useState<"landing" | "login" | "dashboard">("landing");
+  const [customerData, setCustomerData] = useState<any>(null);
 
   if (view === "login") {
-    return <LoginPage onLogin={() => setView("dashboard")} onBack={() => setView("landing")} />;
+    return <LoginPage onLogin={(data) => { setCustomerData(data); setView("dashboard"); }} onBack={() => setView("landing")} />;
   }
 
   if (view === "dashboard") {
-    return <Dashboard onLogout={() => setView("landing")} />;
+    return <Dashboard customerData={customerData} onLogout={() => { setCustomerData(null); setView("landing"); }} />;
   }
 
   return (
