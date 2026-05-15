@@ -485,20 +485,39 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   const pushToZoho = async (isPartial: boolean) => {
     try {
-      const formData = new URLSearchParams();
-      formData.append('xnQsjsdp', '2c9e1341c693dabbfc9b5be22073d905dd8ca73808a277604436fa2809ba9957');
-      formData.append('zc_gad', '');
-      formData.append('xmIwtLD', '1fe9648fd45d3551f9bca134b8d2ca8a63260563bbffeaf89cb463481f1191d969b37c46ffd41476715583bd1276ab8a');
-      formData.append('actionType', 'TGVhZHM=');
-      formData.append('returnURL', 'null');
+      const iframeName = `zoho_iframe_${Math.random()}`;
+      const iframe = document.createElement('iframe');
+      iframe.name = iframeName;
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://crm.zoho.in/crm/WebToLeadForm';
+      form.target = iframeName;
+      form.style.display = 'none';
+
+      const appendField = (name: string, value: string) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      };
+
+      appendField('xnQsjsdp', '2c9e1341c693dabbfc9b5be22073d905dd8ca73808a277604436fa2809ba9957');
+      appendField('zc_gad', '');
+      appendField('xmIwtLD', '1fe9648fd45d3551f9bca134b8d2ca8a63260563bbffeaf89cb463481f1191d969b37c46ffd41476715583bd1276ab8a');
+      appendField('actionType', 'TGVhZHM=');
+      appendField('returnURL', 'null');
       
-      formData.append('Company', 'Avati Website Lead');
-      formData.append('Last Name', customer.name || 'Unknown');
-      formData.append('Phone', customer.phone);
-      formData.append('Email', customer.email);
+      appendField('Company', 'Avati Website Lead');
+      appendField('Last Name', customer.name || 'Unknown');
+      appendField('Phone', customer.phone);
+      appendField('Email', customer.email);
       
       if (!isPartial) {
-        formData.append('LEADCF2', storageType);
+        appendField('LEADCF2', storageType);
         
         let invList = '';
         if (storageType === 'Household') {
@@ -513,34 +532,35 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         } else if (storageType === 'Document') {
           invList = `${docBoxes} boxes of ${docType}`;
         }
-        formData.append('LEADCF1', invList || 'No specific inventory');
+        appendField('LEADCF1', invList || 'No specific inventory');
         
-        formData.append('Address - Zip / Postal Code', logistics.pickupArea);
-        formData.append('Description', `Enquiry ID: ${enquiryId} | Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
+        appendField('Address - Zip / Postal Code', logistics.pickupArea);
+        appendField('Description', `Enquiry ID: ${enquiryId} | Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
         
         const planMapping: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Pro' };
-        formData.append('LEADCF3', planMapping[selectedPlan] || 'Basic');
+        appendField('LEADCF3', planMapping[selectedPlan] || 'Basic');
         
-        if (logistics.packingRequired) formData.append('LEADCF101', 'on');
-        if (logistics.transportRequired) formData.append('LEADCF102', 'on');
+        if (logistics.packingRequired) appendField('LEADCF101', 'on');
+        if (logistics.transportRequired) appendField('LEADCF102', 'on');
         
-        formData.append('LEADCF67', Math.round(costs.monthlyStorage).toString());
-        formData.append('LEADCF66', Math.round(costs.packingAndTransport).toString());
-        formData.append('Lead Status', 'Quotation Generated');
+        appendField('LEADCF67', Math.round(costs.monthlyStorage).toString());
+        appendField('LEADCF66', Math.round(costs.packingAndTransport).toString());
+        appendField('Lead Status', 'Quotation Generated');
       } else {
-        formData.append('Description', `Enquiry ID: ${enquiryId}`);
-        formData.append('Lead Status', 'Contact only');
+        appendField('Description', `Enquiry ID: ${enquiryId}`);
+        appendField('Lead Status', 'Contact only');
       }
       
-      formData.append('Lead Source', 'Online Store');
-      formData.append('aG9uZXlwb3Q', '');
+      appendField('Lead Source', 'Online Store');
+      appendField('aG9uZXlwb3Q', '');
 
-      await fetch('https://crm.zoho.in/crm/WebToLeadForm', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString()
-      });
+      document.body.appendChild(form);
+      form.submit();
+
+      setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+      }, 5000);
     } catch(_) {}
   };
 
@@ -617,11 +637,11 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 mb-3">
-          <button className="py-2.5 rounded-xl border text-sm font-bold flex items-center justify-center gap-1.5 transition-all"
+          <button onClick={() => window.print()} className="py-2.5 rounded-xl border text-sm font-bold flex items-center justify-center gap-1.5 transition-all"
             style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
             <Download className="w-3.5 h-3.5" /> PDF
           </button>
-          <a href={`https://wa.me/918095589888?text=Hi, my enquiry ID is ${enquiryId}`}
+          <a href={`https://wa.me/918095589888?text=${encodeURIComponent(`Hi Avati Team, I have generated a quote on your website.\n\n*Enquiry ID:* ${enquiryId}\n*Name:* ${customer.name || 'Not provided'}\n*Storage Type:* ${storageType}\n*Plan:* ${selectedPlan.toUpperCase()}\n*Monthly Cost:* ₹${costs.monthlyStorage.toFixed(0)} + GST\n\nPlease contact me at ${customer.phone} to proceed!`)}`}
             target="_blank" rel="noopener noreferrer"
             className="py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all"
             style={{ background: 'rgba(37,211,102,0.12)', color: '#128C7E', border: '1px solid rgba(37,211,102,0.25)' }}>
