@@ -326,11 +326,7 @@ export function Footer() {
                 Technology Partner
               </p>
 
-              {/* Logo placeholder */}
-              <div className="w-24 h-10 rounded-lg flex items-center justify-center mb-3 border border-dashed"
-                style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
-                <span className="text-[9px] font-bold text-center opacity-50">LOGO</span>
-              </div>
+
 
               <p className="text-xs font-bold mb-1" style={{ color: 'var(--text-primary)' }}>MonoMorph Minds</p>
               <p className="text-[11px] leading-relaxed mb-2" style={{ color: 'var(--text-muted)' }}>

@@ -157,88 +157,49 @@ export function Testimonials() {
           </p>
         </motion.div>
 
-        {/* Desktop: 3-up slider */}
-        <div className="hidden md:block">
-          <div className="grid grid-cols-3 gap-5">
-            {[0, 1, 2].map(offset => {
-              const r = getCard(offset);
-              return (
-                <motion.div
-                  key={`${currentIndex}-${offset}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: offset * 0.08 }}
-                  className="flex flex-col p-6 gap-4"
-                  style={cardStyle}
-                >
-                  <div className="flex items-start justify-between">
-                    <Quote className="w-5 h-5 opacity-40" style={{ color: 'var(--gold)' }} />
-                    <div className="flex gap-0.5">
-                      {[...Array(r.rating)].map((_, i) => (
-                        <Star key={i} className="w-3.5 h-3.5 fill-[#D4AF37] text-[#D4AF37]" />
-                      ))}
-                    </div>
+        {/* Desktop: Continuous Slider Effect */}
+        <div className="hidden md:block overflow-hidden relative py-4" style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)', maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
+          <div className="animate-marquee gap-5">
+            {[...reviews, ...reviews].map((r, index) => (
+              <div
+                key={`desktop-${index}`}
+                className="flex flex-col p-6 gap-4 w-[400px] flex-shrink-0"
+                style={cardStyle}
+              >
+                <div className="flex items-start justify-between">
+                  <Quote className="w-5 h-5 opacity-40" style={{ color: 'var(--gold)' }} />
+                  <div className="flex gap-0.5">
+                    {[...Array(r.rating)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-[#D4AF37] text-[#D4AF37]" />
+                    ))}
                   </div>
+                </div>
 
-                  <p className="text-sm leading-relaxed flex-1 italic" style={{ color: 'var(--text-secondary)' }}>
-                    "{r.text}"
-                  </p>
+                <p className="text-sm leading-relaxed flex-1 italic" style={{ color: 'var(--text-secondary)' }}>
+                  "{r.text}"
+                </p>
 
-                  <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                      style={{ backgroundColor: r.avatarBg }}>
-                      {r.avatar}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>{r.name}</p>
-                      <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{r.role} · {r.date}</p>
-                    </div>
-                    <a href={r.profileUrl} target="_blank" rel="noopener noreferrer"
-                      className="flex-shrink-0 p-1.5 rounded-lg transition-colors"
-                      style={{ color: 'var(--text-muted)' }}
-                      title="View on Google Maps"
-                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
-                      onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+                <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                    style={{ backgroundColor: r.avatarBg }}>
+                    {r.avatar}
                   </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* Desktop navigation */}
-          <div className="flex items-center justify-center gap-4 mt-8">
-            <button onClick={prev}
-              className="w-10 h-10 rounded-full flex items-center justify-center border transition-all"
-              style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--gold-surface)')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            <div className="flex gap-2">
-              {reviews.map((_, i) => (
-                <button key={i} onClick={() => setCurrentIndex(i)}
-                  className="h-2 rounded-full transition-all duration-300"
-                  style={{
-                    width: i === currentIndex ? '24px' : '8px',
-                    backgroundColor: i === currentIndex ? 'var(--gold)' : 'var(--border-color)',
-                  }}
-                />
-              ))}
-            </div>
-
-            <button onClick={next}
-              className="w-10 h-10 rounded-full flex items-center justify-center border transition-all"
-              style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--gold-surface)')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>{r.name}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{r.role} · {r.date}</p>
+                  </div>
+                  <a href={r.profileUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex-shrink-0 p-1.5 rounded-lg transition-colors"
+                    style={{ color: 'var(--text-muted)' }}
+                    title="View on Google Maps"
+                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

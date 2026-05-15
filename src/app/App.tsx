@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from "react";
-import { Routes, Route, useNavigate } from "react-router";
+import { Routes, Route, useNavigate, useLocation } from "react-router";
 import { Navigation } from "./components/Navigation";
 import { Hero } from "./components/Hero";
 import { Services } from "./components/Services";
@@ -10,7 +10,6 @@ import { ProcessSection } from "./components/ProcessSection";
 import { Testimonials } from "./components/Testimonials";
 import { AreasSection } from "./components/AreasSection";
 import { Footer } from "./components/Footer";
-import { FloatingWhatsApp } from "./components/FloatingWhatsApp";
 import { LoginPage } from "./components/LoginPage";
 import { Dashboard } from "./components/Dashboard";
 import { QuotePage } from "./components/QuotePage";
@@ -32,7 +31,6 @@ function PageLayout({ children, onLoginClick }: { children: React.ReactNode; onL
       <Navigation onLoginClick={onLoginClick} />
       {children}
       <Footer />
-      <FloatingWhatsApp />
     </div>
   );
 }
@@ -52,12 +50,29 @@ function LandingPage({ onLoginClick }: { onLoginClick: () => void }) {
   );
 }
 
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) {
+      setTimeout(() => {
+        const el = document.getElementById(hash.slice(1));
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
+  return null;
+}
+
 // ── Root with router ────────────────────────────────────────────────────────
 function AppRoutes() {
   const [customerData, setCustomerData] = useState<any>(null);
   const navigate = useNavigate();
 
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<LandingPage onLoginClick={() => navigate('/login')} />} />
       <Route path="/get-quote" element={<QuotePage />} />
@@ -144,6 +159,7 @@ function AppRoutes() {
       {/* Fallback */}
       <Route path="*" element={<LandingPage onLoginClick={() => navigate('/login')} />} />
     </Routes>
+    </>
   );
 }
 

@@ -376,3 +376,17 @@
 .mesh-blob-1 { animation: mesh-drift-1 18s ease-in-out infinite; }
 .mesh-blob-2 { animation: mesh-drift-2 22s ease-in-out infinite; }
 .mesh-blob-3 { animation: mesh-drift-3 26s ease-in-out infinite; }
+
+/* Marquee Slider */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
