@@ -23,7 +23,7 @@ import {
   Tv, Bed, Utensils, BookOpen, Archive, Sofa, Table, Box, Speaker, BatteryCharging,
   Image as ImageIcon, Sparkles, PanelRight, Wind, Snowflake, Fan, Refrigerator, Microwave,
   Flame, Cylinder, Droplet, Armchair, Monitor, Printer, WashingMachine, ShoppingBag,
-  AlignJustify, PaintBucket, Footprints, Church, Square, BedSingle, Package, Download, ChevronDown, X, Bike
+  AlignJustify, PaintBucket, Footprints, Church, Square, BedSingle, Package, Download, ChevronDown, X, Bike, RotateCcw
 } from "lucide-react";
 
 type OptionConfig = {
@@ -560,7 +560,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
           localStorage.removeItem(key);
         }
       }
-      window.location.reload();
+      window.location.href = (import.meta as any).env?.BASE_URL || '/';
     }
   };
 
@@ -568,10 +568,6 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     <div className="rounded-2xl shadow-xl p-6 border h-full flex flex-col relative"
       style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
       <div className="shrink-0 mb-6 border-b pb-5 text-center relative" style={{ borderColor: 'var(--border-color)' }}>
-        <button onClick={resetQuote} className="absolute right-0 top-0 text-[10px] font-bold text-red-500 hover:text-red-400 uppercase tracking-widest flex items-center gap-1">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-          Restart
-        </button>
         <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Enquiry ID: {enquiryId}</div>
         <h2 className="text-2xl font-black tracking-tight uppercase" style={{ color: 'var(--text-primary)' }}>Avati Safe Storage</h2>
         <div className="text-sm font-bold mt-1 tracking-widest uppercase" style={{ color: 'var(--gold)' }}>Live Quotation</div>
@@ -661,6 +657,14 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             ← Go Back
           </button>
         )}
+        
+        <button
+          onClick={resetQuote}
+          className="w-full py-2.5 mt-1 font-medium transition-colors text-sm hover:text-white flex items-center justify-center gap-1.5"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          <RotateCcw className="w-3.5 h-3.5" /> Start New Quote
+        </button>
       </div>
     </div>
   );
