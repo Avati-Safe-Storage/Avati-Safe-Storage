@@ -248,7 +248,16 @@ const ROOM_TABS = [
   { id: "Study Room", icon: BookOpen },
   { id: "Utility and Storage", icon: Archive },
   { id: "Boxes", icon: Package },
-  { id: "Vehicles", icon: Bike },
+];
+
+// Vehicle types for dedicated Vehicle Storage tab
+const VEHICLE_TYPES = [
+  { id: 'kids_cycle', name: 'Kids Cycle', price: 100, icon: '🚲', insurance: false },
+  { id: 'cycle', name: 'Cycle', price: 150, icon: '🚴', insurance: false },
+  { id: 'two_wheeler', name: 'Two Wheeler / Bike', price: 500, icon: '🏍️', insurance: true },
+  { id: 'hatchback', name: 'Hatchback Car', price: 2500, icon: '🚗', insurance: true },
+  { id: 'sedan', name: 'Sedan Car', price: 3000, icon: '🚘', insurance: true },
+  { id: 'suv', name: 'SUV / MUV', price: 3300, icon: '🚙', insurance: true },
 ];
 
 const BANGALORE_AREAS = [
@@ -273,11 +282,16 @@ const BANGALORE_AREAS = [
 ];
 
 const STORAGE_TYPES = [
-  { id: 'Household', icon: Home },
-  { id: 'Office', icon: Building },
-  { id: 'Business', icon: Briefcase },
-  { id: 'Document', icon: FileText },
-  { id: 'Vehicle', icon: Car },
+  { id: 'Household', icon: Home, desc: 'Furniture, appliances & belongings' },
+  { id: 'Business', icon: Briefcase, desc: 'Office & commercial inventory' },
+  { id: 'Vehicle', icon: Car, desc: 'Cars, bikes & cycles' },
+  { id: 'Document', icon: FileText, desc: 'Files, records & archives' },
+];
+
+const QUOTE_METHODS = [
+  { id: 'inventory', label: 'List Items', icon: '📋', desc: 'Add items from our catalog' },
+  { id: 'upload', label: 'Upload Photos', icon: '📸', desc: 'Upload pics or 360° of your space' },
+  { id: 'visit', label: 'Request Site Visit', icon: '🏠', desc: 'We come and assess for free' },
 ];
 
 const MIN_STORAGE_PRICE = 300;
@@ -300,12 +314,31 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   // Step 1: State
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
-  const [enquiryId] = useState(`AVT-ENQ-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [enquiryId] = useState(`AVT-LEAD-${Math.floor(1000 + Math.random() * 9000)}`);
   const [storageType, setStorageType] = useState('Household');
 
-  // Step 2: Inventory
+  // Quote method (for step 3)
+  const [quoteMethod, setQuoteMethod] = useState('inventory');
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [visitNote, setVisitNote] = useState('');
+
+  // Step 2: Inventory (Household)
   const [activeRoom, setActiveRoom] = useState(ROOM_TABS[0].id);
   const [inventory, setInventory] = useState<InventoryInstance[]>([]);
+  const [customItems, setCustomItems] = useState<{id:string;name:string;qty:number}[]>([]);
+  const [newCustomItem, setNewCustomItem] = useState('');
+
+  // Vehicle storage state
+  const [selectedVehicles, setSelectedVehicles] = useState<Record<string, boolean>>({});
+  const [vehicleMaintenance, setVehicleMaintenance] = useState(false);
+  const [vehiclePickup, setVehiclePickup] = useState(false);
+
+  // Business/Office storage state
+  const [businessSqft, setBusinessSqft] = useState(100);
+
+  // Document storage state
+  const [docBoxes, setDocBoxes] = useState(1);
+  const [docType, setDocType] = useState('Standard Files');
 
   // Step 3: Logistics
   const [logistics, setLogistics] = useState({
@@ -325,13 +358,15 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
   const [hasGstin, setHasGstin] = useState(false);
   const [gstin, setGstin] = useState('');
 
-  const baseStorageCost = Math.max(
-    MIN_STORAGE_PRICE,
-    inventory.reduce((acc, inst) => {
-      const def = BASE_ITEMS.find(i => i.id === inst.itemId);
-      return acc + (def ? def.calculatePrice(inst.options) * inst.quantity : 0);
-    }, 0)
-  );
+  // Pro-rata: days from pickup to 5th of next month
+  const calcProRata = (monthlyRate: number) => {
+    if (!logistics.pickupDate) return monthlyRate;
+    const pickup = new Date(logistics.pickupDate);
+    const nextMonth = new Date(pickup.getFullYear(), pickup.getMonth() + 1, 5);
+    const days = Math.max(1, Math.round((nextMonth.getTime() - pickup.getTime()) / (1000 * 60 * 60 * 24)));
+    return Math.round((monthlyRate / 30) * days);
+  };
+
 
   const addInstance = (itemId: string) => {
     const itemDef = BASE_ITEMS.find(i => i.id === itemId)!;
@@ -383,35 +418,46 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     let rawStorageCost = 0;
     let rawPackingCost = 0;
 
-    inventory.forEach(inst => {
-      const def = BASE_ITEMS.find(i => i.id === inst.itemId);
-      if (def) {
-        rawStorageCost += def.calculatePrice(inst.options) * inst.quantity;
-        rawPackingCost += def.calculatePacking(inst.options) * inst.quantity;
-      }
-    });
+    if (storageType === 'Household') {
+      inventory.forEach(inst => {
+        const def = BASE_ITEMS.find(i => i.id === inst.itemId);
+        if (def) {
+          rawStorageCost += def.calculatePrice(inst.options) * inst.quantity;
+          rawPackingCost += def.calculatePacking(inst.options) * inst.quantity;
+        }
+      });
+    } else if (storageType === 'Business') {
+      rawStorageCost = businessSqft * 34; // ₹34/sqft base
+    } else if (storageType === 'Vehicle') {
+      VEHICLE_TYPES.forEach(v => {
+        if (selectedVehicles[v.id]) rawStorageCost += v.price;
+      });
+      if (vehicleMaintenance) rawStorageCost += 250;
+    } else if (storageType === 'Document') {
+      const pricePerBox = docType === 'Confidential' ? 120 : 80;
+      rawStorageCost = docBoxes * pricePerBox;
+    }
 
-    const baseStorageCost = Math.max(rawStorageCost, inventory.length > 0 ? MIN_STORAGE_PRICE : 0);
-    const planMultiplier = PLANS.find(p => p.id === selectedPlan)?.mult || 1.0;
+    const baseStorageCost = Math.max(rawStorageCost, storageType === 'Household' && inventory.length > 0 ? MIN_STORAGE_PRICE : rawStorageCost);
+    const planMultiplier = storageType === 'Household' ? (PLANS.find(p => p.id === selectedPlan)?.mult || 1.0) : 1.0;
     const finalMonthlyStorage = baseStorageCost * planMultiplier;
 
+    // Packing + Transport grouped (no GST on these)
     const appliedPackingCost = logistics.packingRequired ? rawPackingCost : 0;
     const transportCost = logistics.transportRequired ? 1500 + (logistics.distance * 50) : 0;
     const liftSurcharge = logistics.liftAvailable === 'no' && logistics.floors > 0 ? logistics.floors * 300 : 0;
+    const packingAndTransport = appliedPackingCost + transportCost + liftSurcharge;
 
-    const oneTimeSetup = appliedPackingCost + transportCost + liftSurcharge;
-    const firstMonthSubtotal = finalMonthlyStorage + oneTimeSetup;
-    const gst = firstMonthSubtotal * 0.18;
-    const totalEstimate = firstMonthSubtotal + gst;
+    // Business GST on storage only (18%)
+    const storageGst = storageType === 'Business' ? finalMonthlyStorage * 0.18 : finalMonthlyStorage * 0.18;
+    const proRataFirst = calcProRata(finalMonthlyStorage);
+    const totalEstimate = proRataFirst + storageGst + packingAndTransport;
 
     return {
       monthlyStorage: finalMonthlyStorage,
-      appliedPackingCost,
-      transportCost,
-      liftSurcharge,
-      oneTimeSetup,
-      firstMonthSubtotal,
-      gst,
+      packingAndTransport,
+      storageGst,
+      proRataFirst,
       totalEstimate
     };
   };
@@ -419,98 +465,133 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
   const costs = calculateCosts();
 
   const renderSidebar = () => (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 h-full flex flex-col relative">
-      <div className="shrink-0 mb-8 border-b border-gray-100 pb-6 text-center">
-        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Enquiry ID: {enquiryId}</div>
-        <h2 className="text-3xl font-black text-gray-900 leading-tight tracking-tight uppercase">Avati Safe Storage</h2>
-        <div className="text-sm text-[#EAB308] font-bold mt-1 tracking-widest uppercase">Live Quotation Summary</div>
+    <div className="rounded-2xl shadow-xl p-6 border h-full flex flex-col relative"
+      style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+      <div className="shrink-0 mb-6 border-b pb-5 text-center" style={{ borderColor: 'var(--border-color)' }}>
+        <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Enquiry ID: {enquiryId}</div>
+        <h2 className="text-2xl font-black tracking-tight uppercase" style={{ color: 'var(--text-primary)' }}>Avati Safe Storage</h2>
+        <div className="text-sm font-bold mt-1 tracking-widest uppercase" style={{ color: 'var(--gold)' }}>Live Quotation</div>
       </div>
 
-      <div className="space-y-4 mb-6 flex-1 overflow-y-auto pr-2 hide-scrollbar">
+      <div className="space-y-3 mb-6 flex-1 overflow-y-auto pr-1 hide-scrollbar">
+        {/* Monthly storage */}
         <div className="flex justify-between items-center">
-          <span className="text-gray-600 font-medium">Storage (Monthly)</span>
-          <span className="font-bold text-gray-900">₹{costs.monthlyStorage.toFixed(0)}</span>
+          <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Monthly Storage</span>
+          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>₹{costs.monthlyStorage.toFixed(0)}</span>
         </div>
 
-        {step >= 4 && logistics.packingRequired && costs.appliedPackingCost > 0 && (
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600 font-medium">Professional Packing</span>
-            <span className="font-bold text-gray-900">₹{costs.appliedPackingCost.toFixed(0)}</span>
+        {/* GST on storage */}
+        <div className="flex justify-between items-center text-sm">
+          <span style={{ color: 'var(--text-muted)' }}>GST (18%)</span>
+          <span style={{ color: 'var(--text-secondary)' }}>₹{costs.storageGst.toFixed(0)}</span>
+        </div>
+
+        {/* Packing + Transport (no GST, grouped) */}
+        {step >= 4 && costs.packingAndTransport > 0 && (
+          <div className="flex justify-between items-center text-sm border-t pt-3" style={{ borderColor: 'var(--border-color)' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Packing & Transport</span>
+            <span style={{ color: 'var(--text-secondary)' }}>₹{costs.packingAndTransport.toFixed(0)}</span>
           </div>
         )}
 
-        {step >= 4 && logistics.transportRequired && (
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600 font-medium">Transport ({logistics.distance}km)</span>
-            <span className="font-bold text-gray-900">₹{costs.transportCost.toFixed(0)}</span>
-          </div>
-        )}
-
-        {step >= 4 && costs.liftSurcharge > 0 && (
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600 font-medium">Stairs Surcharge ({logistics.floors} Flr)</span>
-            <span className="font-bold text-gray-900">₹{costs.liftSurcharge.toFixed(0)}</span>
-          </div>
-        )}
-
-        {step >= 5 && (
-          <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-3">
-            <span className="text-gray-600 font-bold">GST (18%)</span>
-            <span className="font-bold text-gray-900">₹{costs.gst.toFixed(0)}</span>
+        {/* Pro-rata first month */}
+        {logistics.pickupDate && (
+          <div className="rounded-lg p-3 text-xs" style={{ background: 'var(--gold-surface)', border: '1px solid var(--gold-border)' }}>
+            <p className="font-bold mb-1" style={{ color: 'var(--gold-dim)' }}>First Month (Pro-rata)</p>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              Pickup date → 5th of next month
+            </p>
+            <p className="font-bold mt-1" style={{ color: 'var(--text-primary)' }}>₹{costs.proRataFirst.toFixed(0)}</p>
           </div>
         )}
       </div>
 
-      <div className="shrink-0 mt-auto pt-6 border-t border-gray-200">
-        <div className="flex flex-col mb-6">
-          <span className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Total Monthly Charges</span>
-          <span className="text-5xl font-black text-gray-900 tracking-tighter">₹{costs.totalEstimate.toFixed(0)}</span>
-          <span className="text-xs text-gray-400 font-medium mt-2">Includes 18% GST & One-time Setup</span>
+      <div className="shrink-0 mt-auto pt-5 border-t" style={{ borderColor: 'var(--border-color)' }}>
+        <div className="flex flex-col mb-5">
+          <span className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Total Monthly Charges</span>
+          <span className="text-4xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>
+            ₹{costs.monthlyStorage.toFixed(0)}
+            <span className="text-base font-semibold ml-1" style={{ color: 'var(--text-muted)' }}>/mo</span>
+          </span>
+          <span className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>+₹{costs.storageGst.toFixed(0)} GST · Packing/transport billed separately</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <button className="py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2">
-            <Download className="w-4 h-4" /> PDF
+        <div className="grid grid-cols-2 gap-2.5 mb-3">
+          <button className="py-2.5 rounded-xl border text-sm font-bold flex items-center justify-center gap-1.5 transition-all"
+            style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
+            <Download className="w-3.5 h-3.5" /> PDF
           </button>
-          <button className="py-3 rounded-xl bg-[#25D366]/10 text-[#128C7E] font-bold text-sm hover:bg-[#25D366]/20 transition-all flex items-center justify-center gap-2">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
-            </svg> WhatsApp
-          </button>
+          <a href={`https://wa.me/918095589888?text=Hi, my enquiry ID is ${enquiryId}`}
+            target="_blank" rel="noopener noreferrer"
+            className="py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all"
+            style={{ background: 'rgba(37,211,102,0.12)', color: '#128C7E', border: '1px solid rgba(37,211,102,0.25)' }}>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+            WhatsApp
+          </a>
         </div>
 
         <button
-          disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && inventory.length === 0)}
-          onClick={() => {
+          disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@')))}
+          onClick={async () => {
             if (step < 5) {
               setStep(step + 1);
             } else {
               if (isDashboard && onClose) {
                 onClose();
               } else {
-                alert(`Booking Request Sent! ID: ${enquiryId}`);
+                const webhookUrl = (import.meta as any).env?.VITE_ZOHO_FLOW_WEBHOOK_URL;
+                if (webhookUrl && webhookUrl !== 'YOUR_ZOHO_FLOW_WEBHOOK_URL_HERE') {
+                  try {
+                    await fetch(webhookUrl, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        action: 'new_lead_intake',
+                        leadId: enquiryId,
+                        data: {
+                          name: customer.name, phone: customer.phone, email: customer.email,
+                          storageType, plan: selectedPlan, area: logistics.pickupArea,
+                          pickupDate: logistics.pickupDate, duration: logistics.duration,
+                          monthlyEstimate: Math.round(costs.monthlyStorage),
+                          totalEstimate: Math.round(costs.totalEstimate),
+                          status: 'Quotation Sent',
+                        },
+                      }),
+                    });
+                  } catch(_) {}
+                }
+                alert(`Booking Request Sent!\nYour Lead ID: ${enquiryId}\n\nOur team will contact you within 24 hours.`);
               }
             }
           }}
-          className="w-full py-4 bg-[#EAB308] hover:bg-[#D9A006] text-black font-bold rounded-xl transition-all shadow-lg shadow-[#EAB308]/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+          className="w-full py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: 'linear-gradient(135deg, #D4AF37, #FFD700)', color: '#000', boxShadow: '0 0 20px rgba(212,175,55,0.3)' }}
         >
-          {step < 5 ? 'Continue' : (isDashboard ? 'Add Items' : 'Confirm Booking')} <ChevronRight className="w-5 h-5" />
+          {step < 5 ? 'Continue' : (isDashboard ? 'Add Items' : 'Confirm Booking')} <ChevronRight className="w-4 h-4" />
         </button>
 
         {step > (isDashboard ? 2 : 1) && (
           <button
             onClick={() => setStep(step - 1)}
-            className="w-full py-3 mt-3 text-gray-500 hover:text-gray-800 font-medium transition-colors"
+            className="w-full py-2.5 mt-2 font-medium transition-colors text-sm"
+            style={{ color: 'var(--text-muted)' }}
           >
-            Go Back
+            ← Go Back
           </button>
         )}
       </div>
     </div>
   );
 
+  const stepLabels = isDashboard
+    ? ['Type', 'Inventory', 'Logistics', 'Plans']
+    : ['Details', 'Type', 'Inventory', 'Logistics', 'Plans'];
+  const stepLabelsLong = isDashboard
+    ? ['Storage Type', 'Inventory', 'Logistics', 'Plans']
+    : ['Customer Details', 'Storage Type', 'Inventory', 'Logistics', 'Plans'];
+
   return (
-    <section id="quote" className={`py-24 bg-gradient-to-br from-[#0B1F3A] to-black relative overflow-hidden ${isDashboard ? 'min-h-[80vh] rounded-2xl' : 'min-h-screen'}`}>
+    <section id="quote" className={`py-16 sm:py-24 bg-gradient-to-br from-[#0B1F3A] to-black relative overflow-hidden ${isDashboard ? 'min-h-[80vh] rounded-2xl' : ''}`}>
       {isDashboard && (
         <button onClick={onClose} className="absolute top-6 right-6 text-white hover:text-[#EAB308] z-50">
           <X className="w-8 h-8" />
@@ -521,35 +602,36 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         <div className="absolute bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-[120px]" />
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">High-Precision Quote Generator</h2>
-          <p className="text-lg text-gray-300">Detailed item-specific calculation engine</p>
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 relative z-10">
+        <div className="text-center mb-10 sm:mb-14">
+          <span className="inline-block px-4 py-1.5 bg-[#D4AF37]/10 text-[#D4AF37] text-[11px] font-bold uppercase tracking-[0.15em] rounded-full mb-4 border border-[#D4AF37]/20">Instant Quote Engine</span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 tracking-tight">High-Precision Quote Generator</h2>
+          <p className="text-base text-gray-400">Detailed item-specific calculation — get your price in seconds</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 items-stretch lg:h-[750px] justify-center">
+        <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 items-stretch lg:h-[750px] justify-center">
           <div className="flex-1 w-full flex flex-col min-h-0">
 
-            {/* Progress Bar */}
-            <div className="mb-8 bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-2xl shadow-xl shrink-0">
+            {/* Progress Bar — short labels on mobile */}
+            <div className="mb-5 sm:mb-8 bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-4 sm:p-6 rounded-2xl shadow-xl shrink-0">
               <div className="flex items-center justify-between relative z-10">
-                {(isDashboard ? ['Storage Type', 'Inventory', 'Logistics', 'Plans'] : ['Customer Details', 'Storage Type', 'Inventory', 'Logistics', 'Plans']).map((label, i) => {
+                {stepLabels.map((label, i) => {
                   const currentStep = isDashboard ? i + 2 : i + 1;
                   return (
-                  <div key={i} className="flex flex-col items-center gap-3 flex-1 relative cursor-pointer" onClick={() => step > currentStep && setStep(currentStep)}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 z-10 ${step > currentStep ? 'bg-[#EAB308] text-black shadow-[0_0_15px_rgba(234,179,8,0.5)]' : step === currentStep ? 'bg-[#EAB308] text-black ring-4 ring-[#EAB308]/30' : 'bg-gray-800 text-gray-400 border-2 border-gray-700'
-                      }`}>
-                      {step > currentStep ? <Check className="w-5 h-5" /> : (isDashboard ? i + 1 : i + 1)}
+                  <div key={i} className="flex flex-col items-center gap-2 flex-1 relative cursor-pointer" onClick={() => step > currentStep && setStep(currentStep)}>
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300 z-10 ${step > currentStep ? 'bg-[#EAB308] text-black shadow-[0_0_12px_rgba(234,179,8,0.4)]' : step === currentStep ? 'bg-[#EAB308] text-black ring-4 ring-[#EAB308]/25' : 'bg-gray-800 text-gray-400 border-2 border-gray-700'}`}>
+                      {step > currentStep ? <Check className="w-4 h-4" /> : (i + 1)}
                     </div>
-                    <span className={`text-xs font-medium hidden md:block text-center ${step >= currentStep ? 'text-[#EAB308]' : 'text-gray-400'}`}>
-                      {label}
+                    <span className={`text-[9px] sm:text-xs font-medium text-center leading-tight ${step >= currentStep ? 'text-[#EAB308]' : 'text-gray-500'}`}>
+                      <span className="sm:hidden">{label}</span>
+                      <span className="hidden sm:block">{stepLabelsLong[i]}</span>
                     </span>
                   </div>
                 )})}
-                <div className="absolute top-5 left-[10%] w-[80%] h-[2px] bg-gray-700 -z-0" />
+                <div className="absolute top-4 sm:top-5 left-[10%] w-[80%] h-[2px] bg-gray-700 -z-0" />
                 <div
-                  className="absolute top-5 left-[10%] h-[2px] bg-[#EAB308] transition-all duration-500 -z-0 shadow-[0_0_10px_rgba(234,179,8,0.5)]"
-                  style={{ width: `${((step - 1) / 4) * 80}%` }}
+                  className="absolute top-4 sm:top-5 left-[10%] h-[2px] bg-[#EAB308] transition-all duration-500 -z-0 shadow-[0_0_8px_rgba(234,179,8,0.4)]"
+                  style={{ width: `${((step - 1) / (stepLabels.length - 1)) * 80}%` }}
                 />
               </div>
             </div>
@@ -563,22 +645,23 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="bg-white rounded-2xl shadow-xl p-8 h-full overflow-y-auto"
+                    className="rounded-2xl p-6 sm:p-8 h-full overflow-y-auto"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-card)' }}
                   >
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Details</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Customer Details</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-900 mb-2">Full Name</label>
-                          <input type="text" value={customer.name} onChange={e => setCustomer({ ...customer, name: e.target.value })} className="w-full p-4 rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none transition-all" placeholder="Your Name" />
+                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
+                          <input type="text" value={customer.name} onChange={e => setCustomer({ ...customer, name: e.target.value })} className="avati-input" placeholder="Your Name" />
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-gray-900 mb-2">Phone Number</label>
-                          <input type="tel" value={customer.phone} onChange={e => setCustomer({ ...customer, phone: e.target.value })} className="w-full p-4 rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none transition-all" placeholder="xxx 000" />
+                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Phone Number</label>
+                          <input type="tel" value={customer.phone} onChange={e => setCustomer({ ...customer, phone: e.target.value })} className="avati-input" placeholder="000-000-0000" />
                         </div>
                         <div className="md:col-span-2">
-                          <label className="block text-sm font-semibold text-gray-900 mb-2">Email Address</label>
-                          <input type="email" value={customer.email} onChange={e => setCustomer({ ...customer, email: e.target.value })} className="w-full p-4 rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none transition-all" placeholder="@gmail.com" />
+                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
+                          <input type="email" value={customer.email} onChange={e => setCustomer({ ...customer, email: e.target.value })} className="avati-input" placeholder="example@gmail.com" />
                         </div>
                       </div>
                     </div>
@@ -592,23 +675,26 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="bg-white rounded-2xl shadow-xl p-8 h-full overflow-y-auto"
+                    className="rounded-2xl p-6 sm:p-8 h-full overflow-y-auto"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-card)' }}
                   >
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900 mb-6">What type of storage do you need?</h2>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>What type of storage do you need?</h2>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {STORAGE_TYPES.map(type => (
                           <div
                             key={type.id}
-                            onClick={() => {
-                              setStorageType(type.id);
-                              setStep(3);
+                            onClick={() => { setStorageType(type.id); setStep(3); }}
+                            className="p-4 sm:p-5 rounded-2xl border-2 flex flex-col items-center gap-2 cursor-pointer transition-all min-h-[100px] justify-center text-center"
+                            style={{
+                              borderColor: storageType === type.id ? 'var(--gold)' : 'var(--border-color)',
+                              backgroundColor: storageType === type.id ? 'var(--gold-surface)' : 'var(--bg-secondary)',
+                              boxShadow: storageType === type.id ? '0 0 16px var(--gold-glow)' : 'none',
                             }}
-                            className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-4 cursor-pointer transition-all ${storageType === type.id ? 'border-[#EAB308] bg-[#EAB308]/5 text-[#D9A006] shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'border-gray-100 hover:border-[#EAB308]/50 text-gray-600'
-                              }`}
                           >
-                            <type.icon className={`w-10 h-10 ${storageType === type.id ? 'text-[#EAB308]' : ''}`} />
-                            <span className="font-semibold">{type.id}</span>
+                            <type.icon className="w-8 h-8" style={{ color: storageType === type.id ? 'var(--gold)' : 'var(--text-muted)' }} />
+                            <span className="font-bold text-sm" style={{ color: storageType === type.id ? 'var(--gold-dim)' : 'var(--text-primary)' }}>{type.id}</span>
+                            <span className="text-[11px] leading-tight" style={{ color: 'var(--text-muted)' }}>{type.desc}</span>
                           </div>
                         ))}
                       </div>
@@ -616,76 +702,209 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                   </motion.div>
                 )}
 
-                {/* TAB 3: Nested Inventory */}
+                {/* TAB 3: Storage-type specific inventory */}
                 {step === 3 && (
                   <motion.div
                     key="step3"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col h-full"
+                    className="rounded-2xl shadow-xl overflow-hidden flex flex-col h-full"
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
                   >
-                    <div className="flex overflow-x-auto justify-start bg-white p-4 gap-3 hide-scrollbar border-b border-gray-100 shrink-0 shadow-sm relative z-10 w-full">
+                    {/* ── VEHICLE STORAGE ── */}
+                    {storageType === 'Vehicle' && (
+                      <div className="p-5 overflow-y-auto flex-1">
+                        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Vehicle Storage</h3>
+                        <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Select the vehicles you want to store. Monthly rates below.</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+                          {VEHICLE_TYPES.map(v => (
+                            <button key={v.id} onClick={() => setSelectedVehicles(prev => ({ ...prev, [v.id]: !prev[v.id] }))}
+                              className="p-4 rounded-xl border-2 flex flex-col gap-2 transition-all text-left"
+                              style={{
+                                borderColor: selectedVehicles[v.id] ? 'var(--gold)' : 'var(--border-color)',
+                                background: selectedVehicles[v.id] ? 'var(--gold-surface)' : 'var(--bg-secondary)',
+                              }}>
+                              <Car className="w-6 h-6" style={{ color: selectedVehicles[v.id] ? 'var(--gold)' : 'var(--text-muted)' }} />
+                              <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{v.name}</span>
+                              <span className="text-xs font-semibold" style={{ color: 'var(--gold-dim)' }}>₹{v.price}/mo</span>
+                              {v.insurance && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>Insurance recommended</span>}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="rounded-xl p-4 border space-y-3" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}>
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" checked={vehicleMaintenance} onChange={e => setVehicleMaintenance(e.target.checked)} className="w-5 h-5 accent-[#D4AF37]" />
+                            <div>
+                              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>15-day Battery Maintenance — ₹250</p>
+                              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>We start your vehicle every 15 days to maintain battery health</p>
+                            </div>
+                          </label>
+                        </div>
+                        <p className="text-xs mt-4 p-3 rounded-lg" style={{ background: 'var(--gold-surface)', color: 'var(--text-secondary)' }}>
+                          <strong>Note:</strong> Vehicle insurance is the owner's responsibility. We recommend insuring your vehicle before storage. Avati is not liable for pre-existing damage.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* ── BUSINESS/OFFICE STORAGE ── */}
+                    {storageType === 'Business' && (
+                      <div className="p-5 overflow-y-auto flex-1">
+                        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Business / Office Storage</h3>
+                        <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Priced at ₹34 per sq.ft per month + 18% GST.</p>
+                        <div className="mb-6">
+                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Estimated Storage Area (sq.ft)</label>
+                          <div className="flex items-center gap-4">
+                            <input type="range" min={50} max={5000} step={50} value={businessSqft}
+                              onChange={e => setBusinessSqft(Number(e.target.value))}
+                              className="flex-1 accent-[#D4AF37]" />
+                            <div className="w-24 text-center font-black text-xl" style={{ color: 'var(--gold)' }}>{businessSqft} sqft</div>
+                          </div>
+                          <div className="mt-4 p-4 rounded-xl" style={{ background: 'var(--gold-surface)', border: '1px solid var(--gold-border)' }}>
+                            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Estimated Monthly: <strong style={{ color: 'var(--text-primary)' }}>₹{(businessSqft * 34).toLocaleString()}</strong></p>
+                            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>GST (18%): <strong style={{ color: 'var(--text-primary)' }}>₹{Math.round(businessSqft * 34 * 0.18).toLocaleString()}</strong></p>
+                            <p className="text-base font-black mt-2" style={{ color: 'var(--gold)' }}>Total: ₹{Math.round(businessSqft * 34 * 1.18).toLocaleString()}/mo</p>
+                          </div>
+                        </div>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Minimum booking: 1 month. Rate includes secure bay, CCTV, pest control. Packing & transport quoted separately.</p>
+                      </div>
+                    )}
+
+                    {/* ── DOCUMENT STORAGE ── */}
+                    {storageType === 'Document' && (
+                      <div className="p-5 overflow-y-auto flex-1">
+                        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Document Storage</h3>
+                        <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Secure, indexed, pest-free archival storage for your records.</p>
+                        <div className="space-y-5">
+                          <div>
+                            <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Document Type</label>
+                            <div className="flex gap-3">
+                              {['Standard Files', 'Confidential', 'Legal Records'].map(t => (
+                                <button key={t} onClick={() => setDocType(t)}
+                                  className="px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all"
+                                  style={{
+                                    borderColor: docType === t ? 'var(--gold)' : 'var(--border-color)',
+                                    background: docType === t ? 'var(--gold-surface)' : 'transparent',
+                                    color: docType === t ? 'var(--gold-dim)' : 'var(--text-secondary)',
+                                  }}>
+                                  {t}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Number of Boxes / Files</label>
+                            <div className="flex items-center gap-3">
+                              <button onClick={() => setDocBoxes(b => Math.max(1, b - 1))}
+                                className="w-10 h-10 rounded-xl font-bold text-lg border flex items-center justify-center"
+                                style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>−</button>
+                              <span className="text-2xl font-black w-16 text-center" style={{ color: 'var(--text-primary)' }}>{docBoxes}</span>
+                              <button onClick={() => setDocBoxes(b => b + 1)}
+                                className="w-10 h-10 rounded-xl font-bold text-lg flex items-center justify-center"
+                                style={{ background: 'var(--gold-surface)', color: 'var(--gold-dim)' }}>+</button>
+                            </div>
+                            <p className="text-sm mt-3" style={{ color: 'var(--text-muted)' }}>
+                              {docType === 'Confidential' ? '₹120' : '₹80'} per box/month · Total: <strong style={{ color: 'var(--gold)' }}>₹{(docBoxes * (docType === 'Confidential' ? 120 : 80)).toLocaleString()}/mo</strong>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── HOUSEHOLD STORAGE ── */}
+                    {storageType === 'Household' && (
+                      <>
+                    {/* Room tabs — horizontal scrollable */}
+                    <div className="flex overflow-x-auto justify-start p-3 gap-2 hide-scrollbar border-b shrink-0 shadow-sm relative z-10 w-full"
+                      style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+                    >
                       {ROOM_TABS.map(tab => (
                         <button
                           key={tab.id}
                           onClick={() => setActiveRoom(tab.id)}
-                          className={`whitespace-nowrap px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-3 ${activeRoom === tab.id ? 'bg-[#EAB308] text-black shadow-lg shadow-[#EAB308]/30 scale-105' : 'bg-gray-50 text-gray-500 hover:text-gray-900 hover:bg-gray-100 border border-transparent'}`}
+                          className="whitespace-nowrap px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 flex-shrink-0"
+                          style={activeRoom === tab.id
+                            ? { background: 'linear-gradient(135deg,#D4AF37,#FFD700)', color: '#000', boxShadow: '0 4px 12px var(--gold-glow)' }
+                            : { background: 'var(--bg-secondary)', color: 'var(--text-muted)', border: '1px solid var(--border-color)' }
+                          }
                         >
-                          <tab.icon className={`w-5 h-5 ${activeRoom === tab.id ? 'text-black' : 'text-gray-400'}`} />
+                          <tab.icon className="w-4 h-4" />
                           {tab.id}
                         </button>
                       ))}
                     </div>
 
-                    <div className="p-6 flex-1 overflow-y-auto bg-gray-50/50">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto w-full">
+                    {/* Inventory grid */}
+                    <div className="p-4 sm:p-5 flex-1 overflow-y-auto pb-28 lg:pb-5" style={{ background: 'var(--bg-secondary)' }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto w-full">
                         {BASE_ITEMS.filter(i => i.room === activeRoom).map(itemDef => {
                           const itemInstances = inventory.filter(inst => inst.itemId === itemDef.id);
 
                           return (
-                            <div key={itemDef.id} className={`p-5 border-2 rounded-2xl transition-all bg-white ${itemInstances.length > 0 ? 'border-[#EAB308]/50 shadow-md' : 'border-gray-100'}`}>
+                            <div key={itemDef.id}
+                              className="p-4 sm:p-5 rounded-2xl transition-all"
+                              style={{
+                                background: 'var(--bg-card)',
+                                border: `2px solid ${itemInstances.length > 0 ? 'var(--gold-border)' : 'var(--border-color)'}`,
+                                boxShadow: itemInstances.length > 0 ? 'var(--shadow-gold)' : 'var(--shadow-card)',
+                              }}
+                            >
                               <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100">
-                                    <itemDef.icon className="w-5 h-5 text-gray-500" />
+                                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+                                  >
+                                    <itemDef.icon className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
                                   </div>
                                   <div>
-                                    <h3 className="font-bold text-gray-900">{itemDef.name}</h3>
-                                    {itemInstances.length === 0 && <p className="text-xs text-gray-500 mt-0.5">{itemDef.options ? 'Configure options upon adding' : 'Standard item'}</p>}
+                                    <h3 className="font-bold" style={{ color: 'var(--text-primary)', fontSize: '0.9375rem' }}>{itemDef.name}</h3>
+                                    {itemInstances.length === 0 && <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{itemDef.options ? 'Tap + to configure' : 'Standard item'}</p>}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                  {itemInstances.length > 0 && <span className="font-bold text-lg bg-[#EAB308]/20 text-[#D9A006] w-8 h-8 rounded flex items-center justify-center">{itemInstances.reduce((sum, inst) => sum + inst.quantity, 0)}</span>}
-                                  <button onClick={() => addInstance(itemDef.id)} className="w-10 h-10 rounded-xl bg-[#EAB308]/10 flex items-center justify-center hover:bg-[#EAB308]/20 text-[#D9A006] transition-colors">
+                                <div className="flex items-center gap-2.5">
+                                  {itemInstances.length > 0 && <span className="font-bold text-base w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--gold-surface)', color: 'var(--gold-dim)' }}>{itemInstances.reduce((sum, inst) => sum + inst.quantity, 0)}</span>}
+                                  {/* Thumb-friendly + button */}
+                                  <button onClick={() => addInstance(itemDef.id)}
+                                    className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors"
+                                    style={{ background: 'var(--gold-surface)', color: 'var(--gold-dim)' }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--gold-border)')}
+                                    onMouseLeave={e => (e.currentTarget.style.background = 'var(--gold-surface)')}
+                                  >
                                     <Plus className="w-5 h-5" />
                                   </button>
                                 </div>
                               </div>
 
                               {itemInstances.length > 0 && (
-                                <div className="mt-4 space-y-3 pt-4 border-t border-gray-100">
+                                <div className="mt-4 space-y-3 pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
                                   {itemInstances.map((inst) => (
-                                    <div key={inst.instanceId} className="bg-gray-50 p-4 rounded-xl border border-gray-200 relative">
-                                      <button onClick={() => removeInstance(inst.instanceId)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
+                                    <div key={inst.instanceId} className="p-3 sm:p-4 rounded-xl relative"
+                                      style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+                                    >
+                                      <button onClick={() => removeInstance(inst.instanceId)}
+                                        className="absolute top-2.5 right-2.5 p-1.5 rounded-lg transition-colors"
+                                        style={{ color: '#e57373' }}
+                                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(229,115,115,0.1)')}
+                                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                      >
                                         <Trash2 className="w-4 h-4" />
                                       </button>
 
                                       {itemDef.options && Object.entries(itemDef.options).map(([optKey, optConfig]) => (
                                         <div key={optKey} className="mb-3 last:mb-0">
                                           {optConfig.isCheckbox ? (
-                                            <label className="flex items-center gap-3 cursor-pointer mt-1 py-1 w-fit">
+                                            <label className="flex items-center gap-3 cursor-pointer py-1 w-fit">
                                               <input
                                                 type="checkbox"
                                                 checked={inst.options[optKey] === 'true'}
                                                 onChange={(e) => updateInstanceOption(inst.instanceId, optKey, e.target.checked ? 'true' : 'false')}
-                                                className="w-5 h-5 accent-[#EAB308] rounded cursor-pointer"
+                                                className="w-5 h-5 accent-[#D4AF37] rounded cursor-pointer"
                                               />
-                                              <span className="text-sm font-semibold text-gray-800">{optConfig.label}</span>
+                                              <span className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>{optConfig.label}</span>
                                             </label>
                                           ) : (
                                             <>
-                                              <label className="block text-xs text-gray-600 font-medium mb-2 pr-8">{optConfig.label}</label>
+                                              <label className="block text-xs font-medium mb-2 pr-8" style={{ color: 'var(--text-muted)' }}>{optConfig.label}</label>
                                               <div className="flex flex-wrap gap-2">
                                                 {optConfig.choices?.map(choice => {
                                                   const isSelected = inst.options[optKey] === choice;
@@ -693,31 +912,35 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                                                     <button
                                                       key={choice}
                                                       onClick={() => updateInstanceOption(inst.instanceId, optKey, choice)}
-                                                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${isSelected ? 'bg-[#EAB308] text-black shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:border-[#EAB308]/50'}`}
+                                                      className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+                                                      style={isSelected
+                                                        ? { background: 'var(--gold)', color: '#000' }
+                                                        : { background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }
+                                                      }
                                                     >
                                                       {choice}
                                                     </button>
-                                                  )
+                                                  );
                                                 })}
                                               </div>
                                             </>
                                           )}
                                         </div>
                                       ))}
-                                      {!itemDef.options && <div className="text-sm text-gray-500 mt-1 mb-3">Standard item configuration.</div>}
-                                      <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-3">
-                                        <span className="text-sm font-bold text-gray-700">Quantity</span>
-                                        <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg p-1">
-                                          <button
-                                            onClick={() => updateInstanceQuantity(inst.instanceId, inst.quantity - 1)}
-                                            className="w-7 h-7 flex items-center justify-center rounded bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                      {!itemDef.options && <div className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>Standard item configuration.</div>}
+                                      <div className="mt-3 flex items-center justify-between border-t pt-3" style={{ borderColor: 'var(--border-color)' }}>
+                                        <span className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>Quantity</span>
+                                        <div className="flex items-center gap-2 rounded-lg p-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                                          <button onClick={() => updateInstanceQuantity(inst.instanceId, inst.quantity - 1)}
+                                            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+                                            style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
                                           >
                                             <Minus className="w-4 h-4" />
                                           </button>
-                                          <span className="font-bold text-sm w-4 text-center">{inst.quantity}</span>
-                                          <button
-                                            onClick={() => updateInstanceQuantity(inst.instanceId, inst.quantity + 1)}
-                                            className="w-7 h-7 flex items-center justify-center rounded bg-[#EAB308]/20 text-[#D9A006] hover:bg-[#EAB308]/30"
+                                          <span className="font-bold text-sm w-5 text-center" style={{ color: 'var(--text-primary)' }}>{inst.quantity}</span>
+                                          <button onClick={() => updateInstanceQuantity(inst.instanceId, inst.quantity + 1)}
+                                            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+                                            style={{ background: 'var(--gold-surface)', color: 'var(--gold-dim)' }}
                                           >
                                             <Plus className="w-4 h-4" />
                                           </button>
@@ -732,6 +955,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                         })}
                       </div>
                     </div>
+                    </>)}
                   </motion.div>
                 )}
 
@@ -744,8 +968,9 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full flex flex-col"
                   >
-                    <div className="bg-white rounded-2xl shadow-xl p-8 h-full overflow-y-auto">
-                      <h3 className="text-xl font-bold text-gray-900 mb-6">Service Requirements</h3>
+                    <div className="rounded-2xl shadow-xl p-6 h-full overflow-y-auto"
+                      style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                      <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Service Requirements</h3>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div>
@@ -947,12 +1172,35 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
           </div>
 
           {(!isDashboard || step === 5) && (
-            <div className="w-full lg:w-[400px] shrink-0">
+            <div className="w-full lg:w-[380px] shrink-0">
               {renderSidebar()}
             </div>
           )}
         </div>
       </div>
+
+      {/* Mobile sticky cost bar — shows on small screens */}
+      {!isDashboard && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-3 border-t border-white/10"
+          style={{ background: 'rgba(11,31,58,0.97)', backdropFilter: 'blur(12px)' }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Est. Monthly</p>
+              <p className="text-2xl font-black text-[#EAB308] leading-none">₹{costs.totalEstimate.toFixed(0)}</p>
+              <p className="text-[9px] text-gray-500 mt-0.5">incl. GST & setup</p>
+            </div>
+            <button
+              disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && inventory.length === 0)}
+              onClick={() => { if (step < 5) setStep(step + 1); else alert(`Booking Request Sent! ID: ${enquiryId}`); }}
+              className="flex-1 py-3.5 bg-[#EAB308] hover:bg-[#D9A006] text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 text-sm"
+            >
+              {step < 5 ? 'Continue' : 'Confirm Booking'} <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
+/* touch */ 

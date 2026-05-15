@@ -1,111 +1,191 @@
 import { motion } from "motion/react";
-import { Check } from "lucide-react";
+import { Check, Star } from "lucide-react";
+import { useTheme } from "../App";
+import { Link } from "react-router";
 
 const plans = [
   {
-    name: "BASIC PLAN",
-    color: "#10B981",
+    name: "Basic Storage",
+    subtitle: "Ideal for Household Luggage",
+    badge: "Most Affordable",
+    badgeColor: "#10B981",
+    popular: false,
     features: [
-      "Standard packing",
-      "Items stored in open warehouse space",
-      "Placed on wooden pallets",
-      "Cost-effective solution"
-    ]
+      "Standard protective packing",
+      "Open warehouse bay storage",
+      "Elevated wooden pallet placement",
+      "24/7 CCTV monitoring",
+      "Flexible monthly retrieval",
+      "Monthly pest control treatment",
+    ],
   },
   {
-    name: "PREMIUM PLAN",
-    color: "#3B82F6",
+    name: "Premium Warehousing",
+    subtitle: "Office Inventory & Business Storage",
+    badge: "Most Popular",
+    badgeColor: "#D4AF37",
     popular: true,
     features: [
-      "Premium packing materials",
-      "Items stored on dedicated pallets",
-      "Covered with thick tarpaulin",
-      "Protection from dust and moisture"
-    ]
+      "Premium multi-layer packing",
+      "Dedicated storage pallet zone",
+      "Heavy-duty tarpaulin cover",
+      "Dust & moisture barrier protection",
+      "Priority 24-hour retrieval",
+      "Monthly inventory report",
+    ],
   },
   {
-    name: "PROFESSIONAL PLAN",
-    color: "#D4AF37",
+    name: "Professional Plan",
+    subtitle: "Maximum Privacy & Protection",
+    badge: "Elite",
+    badgeColor: "#60A5FA",
+    popular: false,
     features: [
-      "High-end packaging",
-      "Fully enclosed wooden container storage",
-      "Individual secured unit",
-      "Physical key access provided",
-      "Maximum protection and privacy"
-    ]
-  }
+      "High-end custom packaging",
+      "Fully enclosed wooden container",
+      "Individual physical lock with key",
+      "Tamper-evident sealed unit",
+      "Same-day retrieval on request",
+      "Goods-in-storage insurance",
+      "Monthly condition report",
+    ],
+  },
 ];
 
 export function PricingPlans() {
+  const { dark } = useTheme();
+
   return (
-    <section className="py-24 bg-gradient-to-br from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto px-6">
+    <section id="pricing" className="py-20 sm:py-28 transition-colors duration-300" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="absolute left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, var(--gold-border), transparent)' }} />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-12 sm:mb-16"
         >
-          <h2 className="text-5xl md:text-6xl text-black mb-4">Storage Plans</h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Choose the perfect plan for your storage needs
+          <span className="inline-block px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] rounded-full mb-5 border"
+            style={{ backgroundColor: 'var(--gold-surface)', borderColor: 'var(--gold-border)', color: 'var(--gold-dim)' }}>
+            Transparent Pricing
+          </span>
+
+          {/* Fix: mobile-friendly heading — no pseudo-element lines on mobile */}
+          <h2 className="font-black tracking-tight mb-4"
+            style={{ fontSize: 'clamp(1.75rem, 4.5vw, 3.2rem)', color: 'var(--text-primary)' }}>
+            <span className="hidden sm:inline-flex items-center gap-4 justify-center w-full">
+              <span className="h-px flex-1" style={{ background: 'linear-gradient(to right, transparent, var(--gold-border))' }} />
+              Affordable Storage Plans{" "}
+              <span className="text-transparent bg-clip-text whitespace-nowrap"
+                style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
+                in Bangalore
+              </span>
+              <span className="h-px flex-1" style={{ background: 'linear-gradient(to left, transparent, var(--gold-border))' }} />
+            </span>
+            <span className="sm:hidden block text-center">
+              Affordable Storage Plans{" "}
+              <span className="text-transparent bg-clip-text"
+                style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
+                in Bangalore
+              </span>
+            </span>
+          </h2>
+
+          <p className="text-base sm:text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
+            No hidden fees. No callbacks. Get your exact price instantly with our quote engine.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        {/* Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.2 }}
-              className={`relative p-8 bg-white rounded-2xl shadow-lg border-2 transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-2xl ${
-                plan.popular ? 'border-[#D4AF37] scale-105 hover:scale-[1.07]' : 'border-gray-200 hover:scale-105'
-              }`}
+              transition={{ delay: index * 0.12 }}
+              className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5"
+              style={{
+                background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.9)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: plan.popular
+                  ? '1.5px solid var(--gold)'
+                  : '1px solid var(--border-color)',
+                boxShadow: plan.popular
+                  ? (dark ? '0 0 40px rgba(212,175,55,0.15)' : '0 0 30px rgba(212,175,55,0.12)')
+                  : (dark ? '0 2px 16px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)'),
+              }}
             >
+              {/* Top accent for popular */}
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#D4AF37] text-black text-sm font-semibold rounded-full">
-                  MOST POPULAR
-                </div>
+                <div className="h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
               )}
 
-              <div className="mb-6">
-                <div
-                  className="w-12 h-1 rounded-full mb-4"
-                  style={{ backgroundColor: plan.color }}
-                />
-                <h3 className="text-2xl text-black">
+              <div className="p-6 sm:p-7 flex flex-col flex-1">
+                {/* Badge row */}
+                <div className="flex items-center justify-between mb-4">
+                  <span
+                    className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                    style={{ backgroundColor: `${plan.badgeColor}18`, color: plan.badgeColor, border: `1px solid ${plan.badgeColor}35` }}
+                  >
+                    {plan.badge}
+                  </span>
+                  {plan.popular && (
+                    <span className="flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-black"
+                      style={{ background: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
+                      <Star className="w-2.5 h-2.5 fill-black" /> Popular
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-lg sm:text-xl font-black mb-1" style={{ color: plan.popular ? '#D4AF37' : 'var(--text-primary)' }}>
                   {plan.name}
                 </h3>
+                <p className="text-sm mb-6 leading-snug" style={{ color: 'var(--text-muted)' }}>{plan.subtitle}</p>
+
+                {/* Features */}
+                <ul className="space-y-2.5 mb-8 flex-1">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2.5">
+                      <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                        style={{ backgroundColor: `${plan.badgeColor}20` }}>
+                        <Check className="w-2.5 h-2.5" style={{ color: plan.badgeColor }} />
+                      </div>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <Link to="/get-quote"
+                  className="w-full py-3 rounded-xl font-bold text-sm text-center transition-all duration-300 hover:-translate-y-0.5 block"
+                  style={
+                    plan.popular
+                      ? { background: 'linear-gradient(90deg, #D4AF37, #FFD700)', color: '#000', boxShadow: '0 0 18px rgba(212,175,55,0.3)' }
+                      : { backgroundColor: 'transparent', color: plan.badgeColor, border: `1.5px solid ${plan.badgeColor}45` }
+                  }
+                >
+                  {plan.popular ? "Get Instant Quote" : "Select Plan"}
+                </Link>
               </div>
-
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ backgroundColor: `${plan.color}20` }}
-                    >
-                      <Check className="w-3 h-3" style={{ color: plan.color }} />
-                    </div>
-                    <span className="text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                className="w-full py-3 rounded-lg font-semibold transition-all hover:shadow-lg"
-                style={{
-                  backgroundColor: plan.color,
-                  color: plan.color === '#D4AF37' ? '#000' : '#fff'
-                }}
-              >
-                Select Plan
-              </button>
             </motion.div>
           ))}
         </div>
+
+        {/* Footnote */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center text-xs mt-8"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          All plans include pest control, CCTV monitoring, and doorstep pickup. Pricing based on cubic footage. +18% GST applicable.
+        </motion.p>
       </div>
     </section>
   );
