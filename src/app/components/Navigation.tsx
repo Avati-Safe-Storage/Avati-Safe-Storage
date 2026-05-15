@@ -75,7 +75,7 @@ function KeyFAB() {
   ];
 
   return (
-    <div ref={ref} className="fixed bottom-24 right-5 sm:bottom-8 sm:right-8 z-40 flex flex-col items-end gap-3">
+    <div ref={ref} className="fixed bottom-6 right-5 sm:bottom-8 sm:right-8 z-40 flex flex-col items-end gap-3">
       {/* Sub-items */}
       <AnimatePresence>
         {open && (
