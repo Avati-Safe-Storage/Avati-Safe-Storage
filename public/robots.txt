@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /avati-enterprise/
+
+Sitemap: https://www.avatisafestorage.com/sitemap.xml
