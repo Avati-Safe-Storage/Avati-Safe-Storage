@@ -311,6 +311,7 @@ export function Footer() {
                     </Link>
                   </li>
                 ))}
+              </ul>
             </div>
           </div>
         </div>
