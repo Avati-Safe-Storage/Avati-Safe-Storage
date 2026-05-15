@@ -108,10 +108,10 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
           transition={{ duration: 0.55 }}
         >
           <span
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide border"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-wide border whitespace-nowrap"
             style={{ backgroundColor: 'var(--gold-surface)', borderColor: 'var(--gold-border)', color: 'var(--gold-dim)' }}
           >
-            <Shield className="w-3.5 h-3.5" />
+            <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             Bangalore's Trusted Private Storage Since 2020
           </span>
         </motion.div>
