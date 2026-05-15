@@ -437,13 +437,15 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     let rawPackingCost = 0;
 
     if (storageType === 'Household') {
-      inventory.forEach(inst => {
-        const def = BASE_ITEMS.find(i => i.id === inst.itemId);
-        if (def) {
-          rawStorageCost += def.calculatePrice(inst.options) * inst.quantity;
-          rawPackingCost += def.calculatePacking(inst.options) * inst.quantity;
-        }
-      });
+      if (quoteMethod === 'inventory') {
+        inventory.forEach(inst => {
+          const def = BASE_ITEMS.find(i => i.id === inst.itemId);
+          if (def) {
+            rawStorageCost += def.calculatePrice(inst.options) * inst.quantity;
+            rawPackingCost += def.calculatePacking(inst.options) * inst.quantity;
+          }
+        });
+      }
     } else if (storageType === 'Business') {
       rawStorageCost = businessSqft * 34; // ₹34/sqft base
     } else if (storageType === 'Vehicle') {
@@ -597,13 +599,17 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         {/* Monthly storage */}
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Monthly Storage</span>
-          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>₹{costs.monthlyStorage.toFixed(0)}</span>
+          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>
+            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'To be quoted' : `₹${costs.monthlyStorage.toFixed(0)}`}
+          </span>
         </div>
 
         {/* GST on storage */}
         <div className="flex justify-between items-center text-sm">
           <span style={{ color: 'var(--text-muted)' }}>GST (18%)</span>
-          <span style={{ color: 'var(--text-secondary)' }}>₹{costs.storageGst.toFixed(0)}</span>
+          <span style={{ color: 'var(--text-secondary)' }}>
+            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `₹${costs.storageGst.toFixed(0)}`}
+          </span>
         </div>
 
         {/* Packing + Transport (no GST, grouped) */}
@@ -615,7 +621,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         )}
 
         {/* Pro-rata first month */}
-        {logistics.pickupDate && (
+        {logistics.pickupDate && (storageType !== 'Household' || quoteMethod === 'inventory') && (
           <div className="rounded-lg p-3 text-xs" style={{ background: 'var(--gold-surface)', border: '1px solid var(--gold-border)' }}>
             <p className="font-bold mb-1" style={{ color: 'var(--gold-dim)' }}>First Month (Pro-rata)</p>
             <p style={{ color: 'var(--text-secondary)' }}>
@@ -630,10 +636,12 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         <div className="flex flex-col mb-5">
           <span className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Total Monthly Charges</span>
           <span className="text-4xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>
-            ₹{costs.monthlyStorage.toFixed(0)}
-            <span className="text-base font-semibold ml-1" style={{ color: 'var(--text-muted)' }}>/mo</span>
+            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `₹${costs.monthlyStorage.toFixed(0)}`}
+            {!(storageType === 'Household' && quoteMethod !== 'inventory') && <span className="text-base font-semibold ml-1" style={{ color: 'var(--text-muted)' }}>/mo</span>}
           </span>
-          <span className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>+₹{costs.storageGst.toFixed(0)} GST · Packing/transport billed separately</span>
+          <span className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'Quotation pending analysis' : `+₹${costs.storageGst.toFixed(0)} GST · Packing/transport billed separately`}
+          </span>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 mb-3">
@@ -919,7 +927,46 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
                     {/* ── HOUSEHOLD STORAGE ── */}
                     {storageType === 'Household' && (
-                      <>
+                      <div className="flex flex-col h-full overflow-hidden">
+                        <div className="p-4 border-b shrink-0 flex gap-2" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}>
+                          {QUOTE_METHODS.map(m => (
+                            <button key={m.id} onClick={() => setQuoteMethod(m.id)}
+                              className="flex-1 py-3 px-2 rounded-xl text-xs sm:text-sm font-bold border-2 transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5"
+                              style={{
+                                borderColor: quoteMethod === m.id ? 'var(--gold)' : 'var(--border-color)',
+                                background: quoteMethod === m.id ? 'var(--gold-surface)' : 'var(--bg-secondary)',
+                                color: quoteMethod === m.id ? 'var(--gold-dim)' : 'var(--text-muted)'
+                              }}>
+                              <span className="text-lg">{m.icon}</span>
+                              <span>{m.label}</span>
+                            </button>
+                          ))}
+                        </div>
+
+                        {quoteMethod === 'upload' && (
+                          <div className="p-6 flex-1 overflow-y-auto" style={{ background: 'var(--bg-secondary)' }}>
+                            <div className="max-w-xl mx-auto bg-white rounded-2xl p-8 text-center border-2 border-dashed border-gray-300">
+                              <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                              <h4 className="text-lg font-bold text-gray-900 mb-2">Upload Room Photos or 360° Video</h4>
+                              <p className="text-sm text-gray-500 mb-6">Our experts will analyze your media to generate a highly accurate quote.</p>
+                              <input type="file" multiple accept="image/*,video/*" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#EAB308]/10 file:text-[#D4AF37] hover:file:bg-[#EAB308]/20 cursor-pointer" />
+                            </div>
+                          </div>
+                        )}
+
+                        {quoteMethod === 'visit' && (
+                          <div className="p-6 flex-1 overflow-y-auto" style={{ background: 'var(--bg-secondary)' }}>
+                            <div className="max-w-xl mx-auto bg-white rounded-2xl p-8 border border-gray-200 text-center shadow-sm">
+                              <Footprints className="w-12 h-12 text-[#D4AF37] mx-auto mb-4" />
+                              <h4 className="text-lg font-bold text-gray-900 mb-2">Request Supervisor Site Visit</h4>
+                              <p className="text-sm text-gray-500 mb-6">A storage supervisor will visit your location to assess the inventory precisely. Service charges may apply (approx ₹500).</p>
+                              <textarea placeholder="Any specific instructions for the visit?" className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-[#EAB308] min-h-[100px]" />
+                            </div>
+                          </div>
+                        )}
+
+                        {quoteMethod === 'inventory' && (
+                          <div className="flex flex-col flex-1 overflow-hidden">
                     {/* Room tabs — horizontal scrollable */}
                     <div className="flex overflow-x-auto justify-start p-3 gap-2 hide-scrollbar border-b shrink-0 shadow-sm relative z-10 w-full"
                       style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' }}
@@ -1059,9 +1106,23 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                             </div>
                           );
                         })}
+                        
+                        <div className="mt-8 p-6 bg-white rounded-2xl border border-gray-200 shadow-sm w-full">
+                          <label className="block text-sm font-bold text-gray-900 mb-2">Other Unlisted Items</label>
+                          <textarea
+                            placeholder="E.g., 1x Treadmill, 2x Bean bags..."
+                            value={newCustomItem}
+                            onChange={e => setNewCustomItem(e.target.value)}
+                            className="w-full p-4 rounded-xl border border-gray-300 focus:border-[#EAB308] outline-none min-h-[100px] resize-y"
+                          />
+                          <p className="text-xs text-gray-500 mt-2">These items will be manually verified during pickup and added to your quote.</p>
+                        </div>
                       </div>
                     </div>
-                    </>)}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 )}
 
@@ -1104,29 +1165,30 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                           <label className="flex items-start gap-4 cursor-pointer">
                             <input type="checkbox" checked={logistics.transportRequired} onChange={e => setLogistics({ ...logistics, transportRequired: e.target.checked })} className="mt-1 w-5 h-5 accent-[#EAB308]" />
                             <div>
-                              <div className="font-semibold text-gray-900">Transportation from NRI Layout, Bangalore?</div>
+                              <div className="font-semibold text-gray-900">Transportation?</div>
                               <div className="text-sm text-gray-500 mt-1">Base fee ₹1500 + API Distance Calculation (₹50/km)</div>
                             </div>
                           </label>
                           {logistics.transportRequired && (
                             <div className="ml-9 mt-4 pt-4 border-t border-gray-200">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Destination Area</label>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Pincode (Bangalore)</label>
                               <div className="relative mb-4 group">
                                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[#EAB308] w-5 h-5 z-10" />
-                                <select
+                                <input
+                                  type="text"
+                                  maxLength={6}
+                                  placeholder="e.g. 560016"
                                   value={logistics.pickupArea}
                                   onChange={e => {
-                                    const area = BANGALORE_AREAS.find(a => a.name === e.target.value);
-                                    setLogistics({ ...logistics, pickupArea: e.target.value, distance: area ? area.dist : logistics.distance });
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    let dist = 0;
+                                    if (val.length === 6) {
+                                      dist = Math.min(Math.abs(parseInt(val) - 560016) * 1.5, 60);
+                                    }
+                                    setLogistics({ ...logistics, pickupArea: val, distance: dist });
                                   }}
-                                  className="w-full pl-12 pr-12 py-4 bg-white rounded-xl border border-gray-200 focus:border-[#EAB308] focus:ring-4 focus:ring-[#EAB308]/20 outline-none transition-all appearance-none text-gray-900 font-bold cursor-pointer shadow-sm group-hover:border-[#EAB308]/50 relative z-0"
-                                >
-                                  <option value="" disabled>Select area...</option>
-                                  {BANGALORE_AREAS.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
-                                </select>
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center pointer-events-none text-gray-500 group-hover:bg-[#EAB308]/10 group-hover:text-[#EAB308] transition-colors z-10">
-                                  <ChevronDown className="w-4 h-4" />
-                                </div>
+                                  className="w-full pl-12 pr-4 py-4 bg-white rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none font-bold shadow-sm relative z-0"
+                                />
                               </div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">Calculated Distance (km)</label>
                               <input type="number" value={logistics.distance} readOnly className="w-full max-w-[150px] py-4 px-4 bg-gray-100 rounded-xl border border-gray-200 outline-none transition-all text-gray-600 font-bold cursor-not-allowed shadow-inner" />
@@ -1143,6 +1205,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                                   <option value="Apartment">Apartment</option>
                                   <option value="Villa">Villa</option>
                                   <option value="Independent Building">Independent Building</option>
+                                  <option value="Commercial Space">Commercial Space</option>
                                 </select>
                                 <div className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-white flex items-center justify-center pointer-events-none text-gray-500 group-hover:bg-[#EAB308]/10 group-hover:text-[#EAB308] transition-colors shadow-sm z-10">
                                   <ChevronDown className="w-4 h-4" />
@@ -1189,27 +1252,32 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                     <h3 className="text-2xl font-bold text-white mb-6 shrink-0">Select a Storage Plan</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {PLANS.map(plan => {
-                        const isSelected = selectedPlan === plan.id;
+                        const isLocked = plan.id === 'professional';
+                        const isSelected = selectedPlan === plan.id && !isLocked;
                         return (
                           <div
                             key={plan.id}
-                            onClick={() => setSelectedPlan(plan.id)}
-                            className={`p-6 rounded-2xl border-2 cursor-pointer transition-all relative overflow-hidden flex flex-col group ${isSelected ? 'border-[#EAB308] bg-[#EAB308]/10 shadow-[0_0_20px_rgba(234,179,8,0.2)]' : 'border-gray-700 hover:border-[#EAB308]/50 bg-gray-800/80 backdrop-blur-sm'}`}
+                            onClick={() => !isLocked && setSelectedPlan(plan.id)}
+                            className={`p-6 rounded-2xl border-2 transition-all relative overflow-hidden flex flex-col group ${isLocked ? 'border-gray-800 bg-gray-900/50 cursor-not-allowed opacity-70' : isSelected ? 'border-[#EAB308] bg-[#EAB308]/10 shadow-[0_0_20px_rgba(234,179,8,0.2)] cursor-pointer' : 'border-gray-700 hover:border-[#EAB308]/50 bg-gray-800/80 backdrop-blur-sm cursor-pointer'}`}
                           >
-                            <div className={`absolute inset-0 bg-gradient-to-br from-[#EAB308]/10 to-transparent opacity-0 transition-opacity duration-300 ${isSelected ? 'opacity-100' : 'group-hover:opacity-50'}`} />
+                            {isLocked && (
+                              <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center backdrop-blur-[2px]">
+                                <span className="bg-black text-white px-4 py-2 rounded-full font-bold text-sm border border-gray-700">Currently not available</span>
+                              </div>
+                            )}
 
                             {plan.popular && (
-                              <div className="absolute top-0 right-0 bg-gradient-to-r from-[#EAB308] to-[#D9A006] text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider shadow-md">
+                              <div className="absolute top-0 right-0 bg-gradient-to-r from-[#EAB308] to-[#D9A006] text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider shadow-md z-30">
                                 Most Popular
                               </div>
                             )}
-                            {isSelected && <div className="absolute top-4 right-4 text-[#EAB308]"><Check className="w-5 h-5" /></div>}
+                            {isSelected && <div className="absolute top-4 right-4 text-[#EAB308] z-30"><Check className="w-5 h-5" /></div>}
 
                             <h3 className={`text-xl font-bold capitalize mb-2 relative z-10 ${isSelected ? 'text-[#EAB308]' : 'text-white'}`}>{plan.name}</h3>
 
                             <div className="text-3xl font-bold text-white relative z-10 mb-4 border-b border-gray-600/50 pb-4">
-                              ₹{(costs.baseStorageCost * plan.mult).toFixed(0)}
-                              <span className="text-sm font-normal text-gray-400">/mo</span>
+                              {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `₹${(costs.baseStorageCost * plan.mult).toFixed(0)}`}
+                              {!(storageType === 'Household' && quoteMethod !== 'inventory') && <span className="text-sm font-normal text-gray-400">/mo</span>}
                             </div>
 
                             <ul className="space-y-3 flex-1 relative z-10">
@@ -1267,7 +1335,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                   </button>
                 )}
                 <button
-                  disabled={step === 3 && inventory.length === 0}
+                  disabled={step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0}
                   onClick={() => setStep(step + 1)}
                   className="flex-1 py-4 bg-[#EAB308] hover:bg-[#D9A006] text-black font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                 >
@@ -1290,22 +1358,30 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-3 border-t border-white/10"
           style={{ background: 'rgba(11,31,58,0.97)', backdropFilter: 'blur(12px)' }}
         >
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Est. Monthly</p>
-              <p className="text-2xl font-black text-[#EAB308] leading-none">₹{costs.totalEstimate.toFixed(0)}</p>
-              <p className="text-[9px] text-gray-500 mt-0.5">incl. GST & setup</p>
+          <div className="flex items-center gap-2 w-full">
+            {step > 1 && (
+              <button onClick={() => setStep(step - 1)} className="w-12 h-12 rounded-xl flex items-center justify-center border border-gray-600 bg-gray-800 text-white shrink-0 hover:bg-gray-700">
+                <ChevronRight className="w-6 h-6 rotate-180" />
+              </button>
+            )}
+            
+            <div className="flex-1 flex flex-col justify-center px-1">
+              <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Monthly</p>
+              <p className="text-xl font-black text-[#EAB308] leading-none truncate">
+                {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `₹${costs.totalEstimate.toFixed(0)}`}
+              </p>
             </div>
+
             <button
-              disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && inventory.length === 0)}
+              disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0)}
               onClick={async () => {
                 if (step === 1) await pushToZoho(true);
                 if (step < 5) setStep(step + 1);
                 else await handleConfirmBooking();
               }}
-              className="flex-1 py-3.5 bg-[#EAB308] hover:bg-[#D9A006] text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 text-sm"
+              className="px-5 py-3.5 bg-[#EAB308] hover:bg-[#D9A006] text-black font-bold rounded-xl transition-all flex items-center justify-center gap-1 disabled:opacity-40 text-sm shrink-0"
             >
-              {step < 5 ? 'Continue' : 'Confirm Booking'} <ChevronRight className="w-4 h-4" />
+              {step < 5 ? 'Next' : 'Confirm'} <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
