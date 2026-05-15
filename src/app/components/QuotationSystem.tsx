@@ -483,6 +483,67 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   const costs = calculateCosts();
 
+  const handleConfirmBooking = async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('xnQsjsdp', '2c9e1341c693dabbfc9b5be22073d905dd8ca73808a277604436fa2809ba9957');
+      formData.append('zc_gad', '');
+      formData.append('xmIwtLD', '1fe9648fd45d3551f9bca134b8d2ca8a63260563bbffeaf89cb463481f1191d969b37c46ffd41476715583bd1276ab8a');
+      formData.append('actionType', 'TGVhZHM=');
+      formData.append('returnURL', 'null');
+      
+      formData.append('Company', 'Avati Website Lead');
+      formData.append('Last Name', customer.name || 'Unknown');
+      formData.append('Phone', customer.phone);
+      formData.append('Email', customer.email);
+      
+      formData.append('LEADCF2', storageType);
+      
+      let invList = '';
+      if (storageType === 'Household') {
+        invList = inventory.map(i => {
+          const def = BASE_ITEMS.find(b => b.id === i.itemId);
+          return def ? `${i.quantity}x ${def.name}` : '';
+        }).join(', ');
+      } else if (storageType === 'Business') {
+        invList = `${businessSqft} sqft`;
+      } else if (storageType === 'Vehicle') {
+        invList = Object.keys(selectedVehicles).filter(k => selectedVehicles[k]).join(', ');
+      } else if (storageType === 'Document') {
+        invList = `${docBoxes} boxes of ${docType}`;
+      }
+      formData.append('LEADCF1', invList || 'No specific inventory');
+      
+      formData.append('Address - Zip / Postal Code', logistics.pickupArea);
+      formData.append('Description', `Enquiry ID: ${enquiryId} | Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
+      
+      const planMapping: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Pro' };
+      formData.append('LEADCF3', planMapping[selectedPlan] || 'Basic');
+      
+      if (logistics.packingRequired) formData.append('LEADCF101', 'on');
+      if (logistics.transportRequired) formData.append('LEADCF102', 'on');
+      
+      formData.append('LEADCF67', Math.round(costs.monthlyStorage).toString());
+      formData.append('LEADCF66', Math.round(costs.packingAndTransport).toString());
+      
+      formData.append('Lead Source', 'Online Store');
+      formData.append('Lead Status', 'Quotation Generated');
+      formData.append('aG9uZXlwb3Q', '');
+
+      await fetch('https://crm.zoho.in/crm/WebToLeadForm', {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+      });
+    } catch(_) {}
+    
+    alert(`Booking Request Sent!\nYour Lead ID: ${enquiryId}\n\nOur team will contact you within 24 hours.`);
+    if (isDashboard && onClose) {
+      onClose();
+    }
+  };
+
   const renderSidebar = () => (
     <div className="rounded-2xl shadow-xl p-6 border h-full flex flex-col relative"
       style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
@@ -555,32 +616,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             if (step < 5) {
               setStep(step + 1);
             } else {
-              if (isDashboard && onClose) {
-                onClose();
-              } else {
-                const webhookUrl = (import.meta as any).env?.VITE_ZOHO_FLOW_WEBHOOK_URL;
-                if (webhookUrl && webhookUrl !== 'YOUR_ZOHO_FLOW_WEBHOOK_URL_HERE') {
-                  try {
-                    await fetch(webhookUrl, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        action: 'new_lead_intake',
-                        leadId: enquiryId,
-                        data: {
-                          name: customer.name, phone: customer.phone, email: customer.email,
-                          storageType, plan: selectedPlan, area: logistics.pickupArea,
-                          pickupDate: logistics.pickupDate, duration: logistics.duration,
-                          monthlyEstimate: Math.round(costs.monthlyStorage),
-                          totalEstimate: Math.round(costs.totalEstimate),
-                          status: 'Quotation Sent',
-                        },
-                      }),
-                    });
-                  } catch(_) {}
-                }
-                alert(`Booking Request Sent!\nYour Lead ID: ${enquiryId}\n\nOur team will contact you within 24 hours.`);
-              }
+              await handleConfirmBooking();
             }
           }}
           className="w-full py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1211,7 +1247,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             </div>
             <button
               disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && inventory.length === 0)}
-              onClick={() => { if (step < 5) setStep(step + 1); else alert(`Booking Request Sent! ID: ${enquiryId}`); }}
+              onClick={async () => { if (step < 5) setStep(step + 1); else await handleConfirmBooking(); }}
               className="flex-1 py-3.5 bg-[#EAB308] hover:bg-[#D9A006] text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 text-sm"
             >
               {step < 5 ? 'Continue' : 'Confirm Booking'} <ChevronRight className="w-4 h-4" />
