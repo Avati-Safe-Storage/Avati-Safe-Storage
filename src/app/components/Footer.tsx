@@ -142,7 +142,7 @@ export function Footer() {
 
       {/* ── Main content ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-12">
 
           {/* Col 1 — Company */}
           <div className="flex flex-col gap-4">
@@ -311,32 +311,6 @@ export function Footer() {
                     </Link>
                   </li>
                 ))}
-              </ul>
-            </div>
-
-            {/* MonoMorph Minds partnership */}
-            <div
-              className="rounded-xl p-4 border"
-              style={{
-                background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                borderColor: 'var(--border-color)',
-              }}
-            >
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-                Technology Partner
-              </p>
-
-
-
-              <p className="text-xs font-bold mb-1" style={{ color: 'var(--text-primary)' }}>MonoMorph Minds</p>
-              <p className="text-[11px] leading-relaxed mb-2" style={{ color: 'var(--text-muted)' }}>
-                Powering the Avati digital ecosystem — website, quotation engine, CRM, customer portal & storage systems.
-              </p>
-              <a href="https://monomorphminds.com" target="_blank" rel="noopener noreferrer"
-                className="text-[11px] font-semibold transition-colors hover:underline"
-                style={{ color: 'var(--gold-dim)' }}>
-                monomorphminds.com →
-              </a>
             </div>
           </div>
         </div>

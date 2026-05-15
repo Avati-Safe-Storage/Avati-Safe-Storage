@@ -43,7 +43,7 @@ const regions = [
 
 export function AreasSection() {
   const { dark } = useTheme();
-  const [openRegion, setOpenRegion] = useState<string | null>("east");
+  const [openRegion, setOpenRegion] = useState<string | null>(null);
   const [openArea, setOpenArea] = useState<string | null>(null);
   const servicePopupRef = useRef<HTMLDivElement>(null);
 
