@@ -239,66 +239,36 @@ export function Services() {
           </div>
         </div>
 
-        {/* Mobile slider */}
-        <div
-          className="md:hidden"
-          ref={sliderRef}
-          onMouseDown={e => handleDragStart(e.clientX)}
-          onMouseUp={e => handleDragEnd(e.clientX)}
-          onTouchStart={e => handleDragStart(e.touches[0].clientX)}
-          onTouchEnd={e => handleDragEnd(e.changedTouches[0].clientX)}
-        >
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.22 }}
-            className="flex flex-col p-5"
-            style={cardStyle}
-          >
-            <span className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--gold-dim)' }}>
-              {services[currentIndex].subtitle}
-            </span>
-            <div className="mb-4 w-12 h-12 rounded-xl flex items-center justify-center border"
-              style={{ borderColor: 'var(--gold-border)', backgroundColor: 'var(--gold-surface)' }}>
-              {(() => { const Icon = services[currentIndex].icon; return <Icon className="w-5 h-5" style={{ color: 'var(--gold)' }} />; })()}
+        {/* Mobile CSS Scroll Snap Slider */}
+        <div className="md:hidden flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-4 px-4 -mx-4">
+          {services.map((service, i) => (
+            <div
+              key={`mobile-${i}`}
+              className="flex flex-col p-5 flex-shrink-0 snap-center w-[85vw]"
+              style={cardStyle}
+            >
+              <span className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--gold-dim)' }}>
+                {service.subtitle}
+              </span>
+              <div className="mb-4 w-12 h-12 rounded-xl flex items-center justify-center border"
+                style={{ borderColor: 'var(--gold-border)', backgroundColor: 'var(--gold-surface)' }}>
+                {(() => { const Icon = service.icon; return <Icon className="w-5 h-5" style={{ color: 'var(--gold)' }} />; })()}
+              </div>
+              <h3 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{service.title}</h3>
+              <p className="text-sm leading-relaxed mb-4 flex-1" style={{ color: 'var(--text-secondary)' }}>{service.description}</p>
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {service.highlights.map(h => (
+                  <span key={h} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                    style={{ backgroundColor: 'var(--gold-surface)', color: 'var(--gold-dim)', border: '1px solid var(--gold-border)' }}>
+                    {h}
+                  </span>
+                ))}
+              </div>
+              <Link to={service.link} className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--gold)' }}>
+                Learn More <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <h3 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{services[currentIndex].title}</h3>
-            <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>{services[currentIndex].description}</p>
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {services[currentIndex].highlights.map(h => (
-                <span key={h} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                  style={{ backgroundColor: 'var(--gold-surface)', color: 'var(--gold-dim)', border: '1px solid var(--gold-border)' }}>
-                  {h}
-                </span>
-              ))}
-            </div>
-            <Link to={services[currentIndex].link} className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--gold)' }}>
-              Learn More <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </motion.div>
-
-          {/* Mobile controls */}
-          <div className="flex items-center justify-center gap-3 mt-5">
-            <button onClick={prevMobile}
-              className="w-9 h-9 rounded-full flex items-center justify-center border"
-              style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}>
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <div className="flex gap-1.5">
-              {services.map((_, i) => (
-                <button key={i} onClick={() => setCurrentIndex(i)}
-                  className="h-1.5 rounded-full transition-all duration-300"
-                  style={{ width: i === currentIndex ? '20px' : '6px', backgroundColor: i === currentIndex ? 'var(--gold)' : 'var(--border-color)' }} />
-              ))}
-            </div>
-            <button onClick={nextMobile}
-              className="w-9 h-9 rounded-full flex items-center justify-center border"
-              style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          <p className="text-center text-xs mt-2 opacity-40" style={{ color: 'var(--text-muted)' }}>Swipe to browse services</p>
+          ))}
         </div>
 
         {/* View all link */}

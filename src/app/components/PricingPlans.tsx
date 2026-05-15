@@ -98,8 +98,8 @@ export function PricingPlans() {
           </p>
         </motion.div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
+        {/* Cards slider */}
+        <div className="flex md:grid md:grid-cols-3 overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-5 sm:gap-6 pb-6 px-4 -mx-4 md:px-0 md:mx-0 md:pb-0">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -107,7 +107,7 @@ export function PricingPlans() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.12 }}
-              className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5"
+              className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 flex-shrink-0 snap-center w-[85vw] md:w-auto md:flex-shrink-1"
               style={{
                 background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.9)',
                 backdropFilter: 'blur(20px)',
@@ -162,7 +162,7 @@ export function PricingPlans() {
 
                 {/* CTA */}
                 <Link to="/get-quote"
-                  className="w-full py-3 rounded-xl font-bold text-sm text-center transition-all duration-300 hover:-translate-y-0.5 block"
+                  className="w-full py-3 rounded-xl font-bold text-sm text-center transition-all duration-300 hover:-translate-y-0.5 block mt-auto"
                   style={
                     plan.popular
                       ? { background: 'linear-gradient(90deg, #D4AF37, #FFD700)', color: '#000', boxShadow: '0 0 18px rgba(212,175,55,0.3)' }

@@ -203,80 +203,39 @@ export function Testimonials() {
           </div>
         </div>
 
-        {/* Mobile: swipeable single card */}
-        <div
-          ref={sliderRef}
-          className="md:hidden"
-          onMouseDown={e => handleDragStart(e.clientX)}
-          onMouseUp={e => handleDragEnd(e.clientX)}
-          onTouchStart={e => handleDragStart(e.touches[0].clientX)}
-          onTouchEnd={e => handleDragEnd(e.changedTouches[0].clientX)}
-        >
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.25 }}
-            className="flex flex-col p-5 gap-4"
-            style={cardStyle}
-          >
-            <div className="flex items-start justify-between">
-              <Quote className="w-5 h-5 opacity-40" style={{ color: 'var(--gold)' }} />
-              <div className="flex gap-0.5">
-                {[...Array(reviews[currentIndex].rating)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-[#D4AF37] text-[#D4AF37]" />
-                ))}
-              </div>
-            </div>
-
-            <p className="text-sm leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>
-              "{reviews[currentIndex].text}"
-            </p>
-
-            <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                style={{ backgroundColor: reviews[currentIndex].avatarBg }}>
-                {reviews[currentIndex].avatar}
-              </div>
-              <div>
-                <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{reviews[currentIndex].name}</p>
-                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{reviews[currentIndex].role} · {reviews[currentIndex].date}</p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Mobile nav dots */}
-          <div className="flex items-center justify-center gap-3 mt-6">
-            <button onClick={prev}
-              className="w-9 h-9 rounded-full flex items-center justify-center border"
-              style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}
+        {/* Mobile CSS Scroll Snap Slider */}
+        <div className="md:hidden flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-4 px-4 -mx-4 mt-8">
+          {reviews.map((r, i) => (
+            <div
+              key={`mobile-${i}`}
+              className="flex flex-col p-6 gap-4 flex-shrink-0 snap-center w-[85vw]"
+              style={cardStyle}
             >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+              <div className="flex items-start justify-between">
+                <Quote className="w-5 h-5 opacity-40" style={{ color: 'var(--gold)' }} />
+                <div className="flex gap-0.5">
+                  {[...Array(r.rating)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-[#D4AF37] text-[#D4AF37]" />
+                  ))}
+                </div>
+              </div>
 
-            <div className="flex gap-1.5">
-              {reviews.map((_, i) => (
-                <button key={i} onClick={() => setCurrentIndex(i)}
-                  className="h-1.5 rounded-full transition-all duration-300"
-                  style={{
-                    width: i === currentIndex ? '20px' : '6px',
-                    backgroundColor: i === currentIndex ? 'var(--gold)' : 'var(--border-color)',
-                  }}
-                />
-              ))}
+              <p className="text-sm leading-relaxed flex-1 italic" style={{ color: 'var(--text-secondary)' }}>
+                "{r.text}"
+              </p>
+
+              <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                  style={{ backgroundColor: r.avatarBg }}>
+                  {r.avatar}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>{r.name}</p>
+                  <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{r.role} · {r.date}</p>
+                </div>
+              </div>
             </div>
-
-            <button onClick={next}
-              className="w-9 h-9 rounded-full flex items-center justify-center border"
-              style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <p className="text-center text-xs mt-2 opacity-50" style={{ color: 'var(--text-muted)' }}>
-            Swipe or tap arrows to browse reviews
-          </p>
+          ))}
         </div>
 
         {/* Google Maps link */}

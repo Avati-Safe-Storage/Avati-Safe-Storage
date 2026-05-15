@@ -196,62 +196,26 @@ export function TrustSection() {
           </div>
         </div>
 
-        {/* Mobile swipeable single-card slider */}
-        <div
-          className="md:hidden"
-          ref={sliderRef}
-          onMouseDown={e => handleDragStart(e.clientX)}
-          onMouseUp={e => handleDragEnd(e.clientX)}
-          onTouchStart={e => handleDragStart(e.touches[0].clientX)}
-          onTouchEnd={e => handleDragEnd(e.changedTouches[0].clientX)}
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.22 }}
-              className="flex flex-col p-6"
+        {/* Mobile CSS Scroll Snap Slider */}
+        <div className="md:hidden flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-4 px-4 -mx-4 mt-8">
+          {features.map((feature, i) => (
+            <div
+              key={`mobile-${i}`}
+              className="flex flex-col p-6 flex-shrink-0 snap-center w-[85vw]"
               style={glassCard}
             >
               <div className="mb-4 w-14 h-14 rounded-xl flex items-center justify-center border flex-shrink-0"
                 style={{ background: 'var(--gold-surface)', borderColor: 'var(--gold-border)' }}>
-                {(() => { const Icon = features[currentIndex].icon; return <Icon className="w-6 h-6" style={{ color: '#D4AF37' }} />; })()}
+                {(() => { const Icon = feature.icon; return <Icon className="w-6 h-6" style={{ color: '#D4AF37' }} />; })()}
               </div>
               <h3 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                {features[currentIndex].title}
+                {feature.title}
               </h3>
-              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                {features[currentIndex].description}
+              <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--text-secondary)' }}>
+                {feature.description}
               </p>
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Mobile controls */}
-          <div className="flex items-center justify-center gap-3 mt-5">
-            <button onClick={prevMobile}
-              className="w-9 h-9 rounded-full flex items-center justify-center border"
-              style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}>
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <div className="flex gap-1.5">
-              {features.map((_, i) => (
-                <button key={i} onClick={() => setCurrentIndex(i)}
-                  className="h-1.5 rounded-full transition-all duration-300"
-                  style={{
-                    width: i === currentIndex ? '20px' : '6px',
-                    backgroundColor: i === currentIndex ? 'var(--gold)' : 'var(--border-color)',
-                  }} />
-              ))}
             </div>
-            <button onClick={nextMobile}
-              className="w-9 h-9 rounded-full flex items-center justify-center border"
-              style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          <p className="text-center text-xs mt-2 opacity-40" style={{ color: 'var(--text-muted)' }}>Swipe to browse</p>
+          ))}
         </div>
 
         {/* Bottom trust bar */}

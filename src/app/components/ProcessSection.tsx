@@ -84,8 +84,8 @@ export function ProcessSection() {
           </p>
         </motion.div>
 
-        {/* Steps grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 relative">
+        {/* Steps grid / slider */}
+        <div className="flex md:grid md:grid-cols-4 overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 sm:gap-5 pb-4 px-4 -mx-4 md:px-0 md:mx-0 md:pb-0 relative">
           {/* Desktop connector line — sits behind cards, centered at icon level */}
           <div className="hidden lg:block absolute top-[52px] left-[calc(12.5%+28px)] right-[calc(12.5%+28px)] h-px pointer-events-none z-0"
             style={{ background: 'linear-gradient(90deg, #D4AF37, #D4AF37)', opacity: 0.15 }}
@@ -99,7 +99,7 @@ export function ProcessSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.12 }}
-              className="group relative flex flex-col p-6 transition-all duration-300 hover:-translate-y-1.5"
+              className="group relative flex flex-col p-6 transition-all duration-300 hover:-translate-y-1.5 flex-shrink-0 snap-center w-[85vw] md:w-auto md:flex-shrink-1"
               style={glassCard}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.borderColor = 'var(--gold)';
