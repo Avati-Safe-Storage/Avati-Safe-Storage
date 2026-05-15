@@ -483,7 +483,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   const costs = calculateCosts();
 
-  const handleConfirmBooking = async () => {
+  const pushToZoho = async (isPartial: boolean) => {
     try {
       const formData = new URLSearchParams();
       formData.append('xnQsjsdp', '2c9e1341c693dabbfc9b5be22073d905dd8ca73808a277604436fa2809ba9957');
@@ -497,37 +497,42 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       formData.append('Phone', customer.phone);
       formData.append('Email', customer.email);
       
-      formData.append('LEADCF2', storageType);
-      
-      let invList = '';
-      if (storageType === 'Household') {
-        invList = inventory.map(i => {
-          const def = BASE_ITEMS.find(b => b.id === i.itemId);
-          return def ? `${i.quantity}x ${def.name}` : '';
-        }).join(', ');
-      } else if (storageType === 'Business') {
-        invList = `${businessSqft} sqft`;
-      } else if (storageType === 'Vehicle') {
-        invList = Object.keys(selectedVehicles).filter(k => selectedVehicles[k]).join(', ');
-      } else if (storageType === 'Document') {
-        invList = `${docBoxes} boxes of ${docType}`;
+      if (!isPartial) {
+        formData.append('LEADCF2', storageType);
+        
+        let invList = '';
+        if (storageType === 'Household') {
+          invList = inventory.map(i => {
+            const def = BASE_ITEMS.find(b => b.id === i.itemId);
+            return def ? `${i.quantity}x ${def.name}` : '';
+          }).join(', ');
+        } else if (storageType === 'Business') {
+          invList = `${businessSqft} sqft`;
+        } else if (storageType === 'Vehicle') {
+          invList = Object.keys(selectedVehicles).filter(k => selectedVehicles[k]).join(', ');
+        } else if (storageType === 'Document') {
+          invList = `${docBoxes} boxes of ${docType}`;
+        }
+        formData.append('LEADCF1', invList || 'No specific inventory');
+        
+        formData.append('Address - Zip / Postal Code', logistics.pickupArea);
+        formData.append('Description', `Enquiry ID: ${enquiryId} | Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
+        
+        const planMapping: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Pro' };
+        formData.append('LEADCF3', planMapping[selectedPlan] || 'Basic');
+        
+        if (logistics.packingRequired) formData.append('LEADCF101', 'on');
+        if (logistics.transportRequired) formData.append('LEADCF102', 'on');
+        
+        formData.append('LEADCF67', Math.round(costs.monthlyStorage).toString());
+        formData.append('LEADCF66', Math.round(costs.packingAndTransport).toString());
+        formData.append('Lead Status', 'Quotation Generated');
+      } else {
+        formData.append('Description', `Enquiry ID: ${enquiryId}`);
+        formData.append('Lead Status', 'Contact only');
       }
-      formData.append('LEADCF1', invList || 'No specific inventory');
-      
-      formData.append('Address - Zip / Postal Code', logistics.pickupArea);
-      formData.append('Description', `Enquiry ID: ${enquiryId} | Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
-      
-      const planMapping: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Pro' };
-      formData.append('LEADCF3', planMapping[selectedPlan] || 'Basic');
-      
-      if (logistics.packingRequired) formData.append('LEADCF101', 'on');
-      if (logistics.transportRequired) formData.append('LEADCF102', 'on');
-      
-      formData.append('LEADCF67', Math.round(costs.monthlyStorage).toString());
-      formData.append('LEADCF66', Math.round(costs.packingAndTransport).toString());
       
       formData.append('Lead Source', 'Online Store');
-      formData.append('Lead Status', 'Quotation Generated');
       formData.append('aG9uZXlwb3Q', '');
 
       await fetch('https://crm.zoho.in/crm/WebToLeadForm', {
@@ -537,17 +542,36 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         body: formData.toString()
       });
     } catch(_) {}
-    
+  };
+
+  const handleConfirmBooking = async () => {
+    await pushToZoho(false);
     alert(`Booking Request Sent!\nYour Lead ID: ${enquiryId}\n\nOur team will contact you within 24 hours.`);
     if (isDashboard && onClose) {
       onClose();
     }
   };
 
+  const resetQuote = () => {
+    if (window.confirm("Are you sure you want to clear your current progress and start a new quote?")) {
+      const keys = Object.keys(localStorage);
+      for (const key of keys) {
+        if (key.startsWith('avati_q_')) {
+          localStorage.removeItem(key);
+        }
+      }
+      window.location.reload();
+    }
+  };
+
   const renderSidebar = () => (
     <div className="rounded-2xl shadow-xl p-6 border h-full flex flex-col relative"
       style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-      <div className="shrink-0 mb-6 border-b pb-5 text-center" style={{ borderColor: 'var(--border-color)' }}>
+      <div className="shrink-0 mb-6 border-b pb-5 text-center relative" style={{ borderColor: 'var(--border-color)' }}>
+        <button onClick={resetQuote} className="absolute right-0 top-0 text-[10px] font-bold text-red-500 hover:text-red-400 uppercase tracking-widest flex items-center gap-1">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          Restart
+        </button>
         <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Enquiry ID: {enquiryId}</div>
         <h2 className="text-2xl font-black tracking-tight uppercase" style={{ color: 'var(--text-primary)' }}>Avati Safe Storage</h2>
         <div className="text-sm font-bold mt-1 tracking-widest uppercase" style={{ color: 'var(--gold)' }}>Live Quotation</div>
@@ -613,6 +637,9 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         <button
           disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@')))}
           onClick={async () => {
+            if (step === 1) {
+              await pushToZoho(true);
+            }
             if (step < 5) {
               setStep(step + 1);
             } else {
@@ -1247,7 +1274,11 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             </div>
             <button
               disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && inventory.length === 0)}
-              onClick={async () => { if (step < 5) setStep(step + 1); else await handleConfirmBooking(); }}
+              onClick={async () => {
+                if (step === 1) await pushToZoho(true);
+                if (step < 5) setStep(step + 1);
+                else await handleConfirmBooking();
+              }}
               className="flex-1 py-3.5 bg-[#EAB308] hover:bg-[#D9A006] text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 text-sm"
             >
               {step < 5 ? 'Continue' : 'Confirm Booking'} <ChevronRight className="w-4 h-4" />
