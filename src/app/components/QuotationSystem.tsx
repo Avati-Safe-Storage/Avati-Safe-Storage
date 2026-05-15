@@ -1,5 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+
+function useStickyState<T>(defaultValue: T | (() => T), key: string): [T, React.Dispatch<React.SetStateAction<T>>] {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const stickyValue = window.localStorage.getItem(key);
+      if (stickyValue !== null) {
+        return JSON.parse(stickyValue);
+      }
+    } catch (e) {}
+    return typeof defaultValue === 'function' ? (defaultValue as any)() : defaultValue;
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {}
+  }, [key, value]);
+  return [value, setValue];
+}
 import {
   MapPin, ChevronRight, Minus, Plus, Check, Home, Building, Briefcase, FileText, Car, Trash2,
   Tv, Bed, Utensils, BookOpen, Archive, Sofa, Table, Box, Speaker, BatteryCharging,
@@ -310,38 +328,38 @@ interface InventoryInstance {
 }
 
 export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolean, onClose?: () => void }) {
-  const [step, setStep] = useState(isDashboard ? 2 : 1);
+  const [step, setStep] = useStickyState(isDashboard ? 2 : 1, 'avati_q_step');
 
   // Step 1: State
-  const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
-  const [enquiryId] = useState(`AVT-LEAD-${Math.floor(1000 + Math.random() * 9000)}`);
-  const [storageType, setStorageType] = useState('Household');
+  const [customer, setCustomer] = useStickyState({ name: '', phone: '', email: '' }, 'avati_q_customer');
+  const [enquiryId] = useStickyState(() => `AVT-LEAD-${Math.floor(1000 + Math.random() * 9000)}`, 'avati_q_enquiryId');
+  const [storageType, setStorageType] = useStickyState('Household', 'avati_q_storageType');
 
   // Quote method (for step 3)
-  const [quoteMethod, setQuoteMethod] = useState('inventory');
+  const [quoteMethod, setQuoteMethod] = useStickyState('inventory', 'avati_q_quoteMethod');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [visitNote, setVisitNote] = useState('');
+  const [visitNote, setVisitNote] = useStickyState('', 'avati_q_visitNote');
 
   // Step 2: Inventory (Household)
-  const [activeRoom, setActiveRoom] = useState(ROOM_TABS[0].id);
-  const [inventory, setInventory] = useState<InventoryInstance[]>([]);
-  const [customItems, setCustomItems] = useState<{id:string;name:string;qty:number}[]>([]);
-  const [newCustomItem, setNewCustomItem] = useState('');
+  const [activeRoom, setActiveRoom] = useStickyState(ROOM_TABS[0].id, 'avati_q_activeRoom');
+  const [inventory, setInventory] = useStickyState<InventoryInstance[]>([], 'avati_q_inventory');
+  const [customItems, setCustomItems] = useStickyState<{id:string;name:string;qty:number}[]>([], 'avati_q_customItems');
+  const [newCustomItem, setNewCustomItem] = useStickyState('', 'avati_q_newCustomItem');
 
   // Vehicle storage state
-  const [selectedVehicles, setSelectedVehicles] = useState<Record<string, boolean>>({});
-  const [vehicleMaintenance, setVehicleMaintenance] = useState(false);
-  const [vehiclePickup, setVehiclePickup] = useState(false);
+  const [selectedVehicles, setSelectedVehicles] = useStickyState<Record<string, boolean>>({}, 'avati_q_selectedVehicles');
+  const [vehicleMaintenance, setVehicleMaintenance] = useStickyState(false, 'avati_q_vehicleMaintenance');
+  const [vehiclePickup, setVehiclePickup] = useStickyState(false, 'avati_q_vehiclePickup');
 
   // Business/Office storage state
-  const [businessSqft, setBusinessSqft] = useState(100);
+  const [businessSqft, setBusinessSqft] = useStickyState(100, 'avati_q_businessSqft');
 
   // Document storage state
-  const [docBoxes, setDocBoxes] = useState(1);
-  const [docType, setDocType] = useState('Standard Files');
+  const [docBoxes, setDocBoxes] = useStickyState(1, 'avati_q_docBoxes');
+  const [docType, setDocType] = useStickyState('Standard Files', 'avati_q_docType');
 
   // Step 3: Logistics
-  const [logistics, setLogistics] = useState({
+  const [logistics, setLogistics] = useStickyState({
     pickupDate: '',
     duration: 1,
     buildingType: 'Apartment',
@@ -351,12 +369,12 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     distance: 10,
     packingRequired: false,
     transportRequired: false,
-  });
+  }, 'avati_q_logistics');
 
   // Step 4: Plans & Financial
-  const [selectedPlan, setSelectedPlan] = useState('basic');
-  const [hasGstin, setHasGstin] = useState(false);
-  const [gstin, setGstin] = useState('');
+  const [selectedPlan, setSelectedPlan] = useStickyState('basic', 'avati_q_selectedPlan');
+  const [hasGstin, setHasGstin] = useStickyState(false, 'avati_q_hasGstin');
+  const [gstin, setGstin] = useStickyState('', 'avati_q_gstin');
 
   // Pro-rata: days from pickup to 5th of next month
   const calcProRata = (monthlyRate: number) => {
@@ -454,6 +472,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     const totalEstimate = proRataFirst + storageGst + packingAndTransport;
 
     return {
+      baseStorageCost,
       monthlyStorage: finalMonthlyStorage,
       packingAndTransport,
       storageGst,
@@ -1102,7 +1121,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                             <h3 className={`text-xl font-bold capitalize mb-2 relative z-10 ${isSelected ? 'text-[#EAB308]' : 'text-white'}`}>{plan.name}</h3>
 
                             <div className="text-3xl font-bold text-white relative z-10 mb-4 border-b border-gray-600/50 pb-4">
-                              ₹{(baseStorageCost * plan.mult).toFixed(0)}
+                              ₹{(costs.baseStorageCost * plan.mult).toFixed(0)}
                               <span className="text-sm font-normal text-gray-400">/mo</span>
                             </div>
 
