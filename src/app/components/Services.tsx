@@ -199,7 +199,7 @@ export function Services() {
                   className="flex items-center gap-1.5 text-xs font-bold transition-colors"
                   style={{ color: 'var(--gold)' }}
                 >
-                  Explore This Service <ArrowRight className="w-3.5 h-3.5" />
+                  Explore {service.title} <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </motion.div>
             ))}
@@ -265,7 +265,7 @@ export function Services() {
                 ))}
               </div>
               <Link to={service.link} className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--gold)' }}>
-                Learn More <ArrowRight className="w-3.5 h-3.5" />
+                Explore {service.title} <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           ))}
