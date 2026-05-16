@@ -546,7 +546,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       appendField('zc_gad', '');
       appendField('xmIwtLD', '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d');
       appendField('actionType', 'TGVhZHM=');
-      appendField('returnURL', 'null');
+      appendField('returnURL', 'https://the-monomorph.github.io/Avati-Safe-Storage/');
       
       appendField('Company', 'Avati Website Lead');
       
@@ -607,7 +607,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         else if (step === 2) currentStatus = 'Storage Type Selected';
         else if (step === 3) currentStatus = 'Inventory Provided';
         else if (step === 4) currentStatus = 'Logistics Provided';
-        else if (step === 5) currentStatus = 'Plan Selected';
+        else if (step === 5) currentStatus = 'Plan selected';
       }
       
       appendField('Lead Status', currentStatus);
