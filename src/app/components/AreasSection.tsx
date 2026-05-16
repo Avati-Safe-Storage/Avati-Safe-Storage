@@ -117,12 +117,12 @@ export function AreasSection() {
               viewport={{ once: true }}
               transition={{ delay: ri * 0.07 }}
               style={cardBase}
-              className="overflow-hidden"
+              className="relative z-10"
             >
               {/* Region header button */}
               <button
                 onClick={() => toggleRegion(region.id)}
-                className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors relative z-20"
                 style={{ color: 'var(--text-primary)' }}
               >
                 <div className="flex items-center gap-3">
@@ -148,11 +148,10 @@ export function AreasSection() {
               <AnimatePresence>
                 {openRegion === region.id && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
+                    initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+                    animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'visible' } }}
+                    exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
                     transition={{ duration: 0.25 }}
-                    className="overflow-hidden"
                   >
                     <div className="px-5 pb-5 pt-1">
                       <div className="h-px mb-4" style={{ background: 'var(--border-color)' }} />
@@ -161,7 +160,7 @@ export function AreasSection() {
                           const key = `${region.id}-${area}`;
                           const isOpen = openArea === key;
                           return (
-                            <div key={area} className="relative">
+                            <div key={area} className="relative z-30">
                               <button
                                 onClick={() => toggleArea(region.id, area)}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border"
@@ -187,11 +186,11 @@ export function AreasSection() {
                                 {isOpen && (
                                   <motion.div
                                     ref={servicePopupRef}
-                                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                                    initial={{ opacity: 0, y: -6, scale: 0.97 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                                    exit={{ opacity: 0, y: -6, scale: 0.97 }}
                                     transition={{ duration: 0.15 }}
-                                    className="absolute bottom-full left-0 mb-2 z-50 rounded-xl overflow-hidden w-56 shadow-2xl"
+                                    className="absolute top-full left-0 mt-2 z-50 rounded-xl overflow-hidden w-56 shadow-2xl"
                                     style={{
                                       background: dark ? 'rgba(10,10,10,0.99)' : 'rgba(255,255,255,0.99)',
                                       backdropFilter: 'blur(20px)',
