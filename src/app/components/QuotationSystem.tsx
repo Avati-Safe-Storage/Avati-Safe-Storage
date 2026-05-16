@@ -550,44 +550,57 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       appendField('returnURL', 'null');
       
       appendField('Company', 'Avati Website Lead');
-      appendField('Last Name', customer.name || 'Unknown');
-      appendField('Phone', customer.phone);
-      appendField('Email', customer.email);
       
-      if (!isPartial) {
-        appendField('LEADCF2', storageType);
-        
-        let invList = '';
-        if (storageType === 'Household') {
-          invList = inventory.map(i => {
-            const def = BASE_ITEMS.find(b => b.id === i.itemId);
-            return def ? `${i.quantity}x ${def.name}` : '';
-          }).join(', ');
-        } else if (storageType === 'Business') {
-          invList = `${businessSqft} sqft`;
-        } else if (storageType === 'Vehicle') {
-          invList = Object.keys(selectedVehicles).filter(k => selectedVehicles[k]).join(', ');
-        } else if (storageType === 'Document') {
-          invList = `${docBoxes} boxes of ${docType}`;
-        }
-        appendField('LEADCF1', invList || 'No specific inventory');
-        
-        appendField('Address - Zip / Postal Code', logistics.pickupArea);
-        appendField('Description', `Enquiry ID: ${enquiryId} | Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
-        
-        const planMapping: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Pro' };
-        appendField('LEADCF3', planMapping[selectedPlan] || 'Basic');
-        
-        if (logistics.packingRequired) appendField('LEADCF101', 'on');
-        if (logistics.transportRequired) appendField('LEADCF102', 'on');
-        
-        appendField('LEADCF67', Math.round(costs.monthlyStorage).toString());
-        appendField('LEADCF66', Math.round(costs.packingAndTransport).toString());
-        appendField('Lead Status', 'Quotation Generated');
-      } else {
-        appendField('Description', `Enquiry ID: ${enquiryId}`);
-        appendField('Lead Status', 'Contact only');
+      // Standard Fields
+      const names = customer.name.trim().split(' ');
+      const firstName = names.length > 1 ? names[0] : '';
+      const lastName = names.length > 1 ? names.slice(1).join(' ') : (names[0] || 'Unknown');
+      
+      appendField('First Name', firstName);
+      appendField('Last Name', lastName);
+      appendField('Mobile', customer.phone);
+      appendField('Email', customer.email);
+      appendField('Lead Source', 'Online Store');
+      
+      // Custom Fields mapped from user request
+      const methodMap: Record<string, string> = { 'inventory': 'Live Quotation', 'upload': 'Upload 360 video', 'visit': 'Request Site Visit' };
+      appendField('Quote Method', methodMap[quoteMethod] || 'Live Quotation');
+      appendField('Storage Type', storageType);
+
+      let invList = '';
+      if (storageType === 'Household') {
+        invList = inventory.map(i => {
+          const def = BASE_ITEMS.find(b => b.id === i.itemId);
+          return def ? `${i.quantity}x ${def.name}` : '';
+        }).join(', ');
+      } else if (storageType === 'Business') {
+        invList = `${businessSqft} sqft`;
+      } else if (storageType === 'Vehicle') {
+        invList = Object.keys(selectedVehicles).filter(k => selectedVehicles[k]).join(', ');
+      } else if (storageType === 'Document') {
+        invList = `${docBoxes} boxes of ${docType}`;
       }
+      appendField('Inventory List', invList || 'No specific inventory');
+      
+      const unlisted = customItems.map(c => `${c.qty}x ${c.name}`).join(', ');
+      appendField('Unlisted Items', unlisted || 'None');
+      
+      const planMapping: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Professional' };
+      appendField('Plan Selected', planMapping[selectedPlan] || 'Basic');
+      
+      appendField('Packing needed?', logistics.packingRequired ? 'true' : 'false');
+      appendField('Transportation needed', logistics.transportRequired ? 'true' : 'false');
+      
+      appendField('Total Monthly Charges', Math.round(costs.monthlyStorage).toString());
+      appendField('Packing & Transportation charges', Math.round(costs.packingAndTransport).toString());
+      
+      appendField('Zip / Postal Code', logistics.pickupArea);
+      appendField('City', 'Bangalore');
+      appendField('State / Province', 'Karnataka');
+      appendField('Country / Region', 'India');
+      
+      appendField('Lead Status', isPartial ? 'Contact only' : 'Quotation Generated');
+      appendField('Description', `Enquiry ID: ${enquiryId} | Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
       
       appendField('Lead Source', 'Online Store');
       appendField('aG9uZXlwb3Q', '');
@@ -697,9 +710,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         <button
           disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@')))}
           onClick={async () => {
-            if (step === 1) {
-              await pushToZoho(true);
-            }
+            await pushToZoho(true);
             if (step < 5) {
               setStep(step + 1);
             } else {
@@ -1516,7 +1527,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             <button
               disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0)}
               onClick={async () => {
-                if (step === 1) await pushToZoho(true);
+                await pushToZoho(true);
                 if (step < 5) setStep(step + 1);
                 else await handleConfirmBooking();
               }}
