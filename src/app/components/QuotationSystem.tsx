@@ -599,7 +599,18 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       appendField('State / Province', 'Karnataka');
       appendField('Country / Region', 'India');
       
-      appendField('Lead Status', isPartial ? 'Contact only' : 'Quotation Generated');
+      let currentStatus = 'Contact only';
+      if (!isPartial) {
+        currentStatus = 'Quotation Generated';
+      } else {
+        if (step === 1) currentStatus = 'Quote Method Selected';
+        else if (step === 2) currentStatus = 'Storage Type Selected';
+        else if (step === 3) currentStatus = 'Inventory Provided';
+        else if (step === 4) currentStatus = 'Logistics Provided';
+        else if (step === 5) currentStatus = 'Plan Selected';
+      }
+      
+      appendField('Lead Status', currentStatus);
       appendField('Description', `Enquiry ID: ${enquiryId} | Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
       
       appendField('Lead Source', 'Online Store');
