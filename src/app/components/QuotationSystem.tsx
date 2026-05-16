@@ -1295,7 +1295,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                                   className="avati-input !pl-12"
                                 />
                                 {showAreaSuggest && logistics.pickupArea.length > 0 && (
-                                  <div className="absolute top-full left-0 right-0 mt-2 rounded-xl border shadow-2xl z-50 max-h-60 overflow-y-auto" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                                  <div className="absolute top-full left-0 right-0 mt-2 rounded-xl border shadow-2xl z-50 max-h-60 overflow-y-auto" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
                                     {BANGALORE_AREAS.filter(a => a.name.toLowerCase().includes(logistics.pickupArea.toLowerCase())).length > 0 ? (
                                       BANGALORE_AREAS.filter(a => a.name.toLowerCase().includes(logistics.pickupArea.toLowerCase())).map(area => (
                                         <div
