@@ -533,6 +533,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       form.action = 'https://crm.zoho.in/crm/WebToLeadForm';
       form.target = iframeName;
       form.style.display = 'none';
+      form.acceptCharset = 'UTF-8';
 
       const appendField = (name: string, value: string) => {
         const input = document.createElement('input');
@@ -590,14 +591,10 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       if (logistics.packingRequired) appendField('LEADCF101', 'on'); // Packing needed
       if (logistics.transportRequired) appendField('LEADCF102', 'on'); // Transport needed
       
-      appendField('LEADCF67', Math.round(costs.monthlyStorage).toString()); // Total Monthly Charges
-      appendField('LEADCF66', Math.round(costs.packingAndTransport).toString()); // Packing & Transport charges
+      appendField('LEADCF67', (Math.round(costs.monthlyStorage) || 0).toString()); // Total Monthly Charges
+      appendField('LEADCF66', (Math.round(costs.packingAndTransport) || 0).toString()); // Packing & Transport charges
       
-      appendField('Address - Flat / House No./ Building / Apartment Name', logistics.pickupArea);
-      appendField('Zip / Postal Code', logistics.pickupArea);
-      appendField('City', 'Bangalore');
-      appendField('State / Province', 'Karnataka');
-      appendField('Country / Region', 'India');
+      appendField('Address - Flat &#x2f; House No.&#x2f; Building &#x2f; Apartment Name', logistics.pickupArea);
       
       let currentStatus = 'Contact only';
       if (!isPartial) {
@@ -623,7 +620,9 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         document.body.removeChild(form);
         document.body.removeChild(iframe);
       }, 5000);
-    } catch(_) {}
+    } catch(err) {
+      console.error("Zoho Sync Error:", err);
+    }
   };
 
   const handleConfirmBooking = async () => {
