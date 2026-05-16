@@ -348,6 +348,14 @@
 .dark .avati-input::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
+select.avati-input option {
+  background-color: #ffffff;
+  color: #000000;
+}
+.dark select.avati-input option {
+  background-color: #111111;
+  color: #ffffff;
+}
 
 /* Section separator */
 .avati-separator {
