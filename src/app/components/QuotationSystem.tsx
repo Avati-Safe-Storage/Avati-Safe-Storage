@@ -366,7 +366,6 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   // Step 1: State
   const [customer, setCustomer] = useStickyState({ name: '', phone: '', email: '' }, 'avati_q_customer');
-  const [enquiryId] = useStickyState(() => `AVT-LEAD-${Math.floor(1000 + Math.random() * 9000)}`, 'avati_q_enquiryId');
   const [storageType, setStorageType] = useStickyState('Household', 'avati_q_storageType');
 
   // Quote method (for step 3)
@@ -611,7 +610,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       }
       
       appendField('Lead Status', currentStatus);
-      appendField('Description', `Enquiry ID: ${enquiryId} | Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
+      appendField('Description', `Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
       
       appendField('Lead Source', 'Online Store');
       appendField('aG9uZXlwb3Q', '');
@@ -628,7 +627,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   const handleConfirmBooking = async () => {
     await pushToZoho(false);
-    alert(`Booking Request Sent!\nYour Lead ID: ${enquiryId}\n\nOur team will contact you within 24 hours.`);
+    alert(`Booking Request Sent!\nYour Lead has been successfully registered in our system.\n\nOur team will contact you within 24 hours.`);
     if (isDashboard && onClose) {
       onClose();
     }
@@ -650,7 +649,9 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     <div className="rounded-2xl shadow-xl p-6 border h-full flex flex-col relative"
       style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
       <div className="shrink-0 mb-6 border-b pb-5 text-center relative" style={{ borderColor: 'var(--border-color)' }}>
-        <div className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Enquiry ID: {enquiryId}</div>
+        <div className="flex flex-col">
+          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Your Quote Summary</h2>
+        </div>
         <h2 className="text-2xl font-black tracking-tight uppercase" style={{ color: 'var(--text-primary)' }}>Avati Safe Storage</h2>
         <div className="text-sm font-bold mt-1 tracking-widest uppercase" style={{ color: 'var(--gold)' }}>Live Quotation</div>
       </div>
@@ -709,7 +710,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
             <Download className="w-3.5 h-3.5" /> PDF
           </button>
-          <a href={`https://wa.me/918095589888?text=${encodeURIComponent(`Hi Avati Team, I have generated a quote on your website.\n\n*Enquiry ID:* ${enquiryId}\n*Name:* ${customer.name || 'Not provided'}\n*Storage Type:* ${storageType}\n*Plan:* ${selectedPlan.toUpperCase()}\n*Monthly Cost:* ₹${costs.monthlyStorage.toFixed(0)} + GST\n\nPlease contact me at ${customer.phone} to proceed!`)}`}
+          <a href={`https://wa.me/918095589888?text=${encodeURIComponent(`Hi Avati Team, I have generated a quote on your website.\n\n*Name:* ${customer.name || 'Not provided'}\n*Storage Type:* ${storageType}\n*Plan:* ${selectedPlan.toUpperCase()}\n*Monthly Cost:* ₹${costs.monthlyStorage.toFixed(0)} + GST\n\nPlease contact me at ${customer.phone} to proceed!`)}`}
             target="_blank" rel="noopener noreferrer"
             className="py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all"
             style={{ background: 'rgba(37,211,102,0.12)', color: '#128C7E', border: '1px solid rgba(37,211,102,0.25)' }}>
