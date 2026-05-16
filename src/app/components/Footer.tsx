@@ -146,7 +146,7 @@ export function Footer() {
 
           {/* Col 1 — Company */}
           <div className="flex flex-col gap-4">
-            <img src={logoImg} alt="Avati Safe Storage" className="h-12 w-auto object-contain" style={{ maxWidth: 130 }} />
+            <img src={logoImg} alt="Avati Safe Storage" className="h-12 w-auto object-contain" style={{ maxWidth: 130 }} width="130" height="48" />
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
               Professional storage with doorstep pickup across Bangalore. Secure, clean, and affordable — trusted since 2020.
             </p>

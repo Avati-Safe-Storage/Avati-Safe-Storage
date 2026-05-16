@@ -39,11 +39,20 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
     >
       {/* Background video */}
       <video autoPlay loop muted playsInline preload="none" aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover hidden sm:block"
         style={{ opacity: dark ? 0.92 : 0.88 }}
       >
         <source src={videoUrl} type="video/webm" />
       </video>
+
+      {/* Mobile background fallback */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-cover bg-center sm:hidden"
+        style={{ 
+          backgroundImage: `url(${import.meta.env.BASE_URL}assets/avati-premium-storage-preview.jpg)`,
+          opacity: dark ? 0.92 : 0.88 
+        }} 
+      />
 
       {/* Gradient overlay */}
       <div className="absolute inset-0"

@@ -189,11 +189,9 @@ export function Testimonials() {
                     <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{r.role} · {r.date}</p>
                   </div>
                   <a href={r.profileUrl} target="_blank" rel="noopener noreferrer"
-                    className="flex-shrink-0 p-1.5 rounded-lg transition-colors"
+                    className="flex-shrink-0 p-1.5 rounded-lg transition-all hover:opacity-70 hover:scale-105"
                     style={{ color: 'var(--text-muted)' }}
                     title="View on Google Maps"
-                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
@@ -244,10 +242,8 @@ export function Testimonials() {
             href="https://www.google.com/maps/place/Avati+Safe+Storage/@13.0279312,77.6791556,19.83z"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold transition-all hover:opacity-70 hover:-translate-y-0.5"
             style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
           >
             <ExternalLink className="w-3.5 h-3.5" />
             View all reviews on Google Maps

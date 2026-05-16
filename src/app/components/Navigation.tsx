@@ -255,7 +255,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
 
           {/* Logo */}
           <Link to="/" className="flex-shrink-0 transition-transform hover:scale-[1.03]" aria-label="Avati Safe Storage home">
-            <img src={logoImg} alt="Avati Safe Storage" className="h-10 sm:h-11 w-auto object-contain" />
+            <img src={logoImg} alt="Avati Safe Storage" className="h-10 sm:h-11 w-auto object-contain" width="130" height="44" />
           </Link>
 
           {/* Desktop links */}
@@ -448,7 +448,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
               }}
             >
               <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                <img src={logoImg} alt="Avati" className="h-9 w-auto object-contain" />
+                <img src={logoImg} alt="Avati" className="h-9 w-auto object-contain" width="106" height="36" />
                 <button onClick={() => setMobileOpen(false)} className="p-2 rounded-lg" style={{ color: 'var(--text-muted)' }}>
                   <X className="w-5 h-5" />
                 </button>

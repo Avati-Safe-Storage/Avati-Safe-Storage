@@ -179,7 +179,7 @@ export function Services() {
                   <service.icon className="w-5 h-5" style={{ color: 'var(--gold)' }} />
                 </div>
 
-                <h3 className="text-base font-bold mb-2 group-hover:text-[#D4AF37] transition-colors" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-base font-bold mb-2 group-hover:opacity-80 transition-opacity" style={{ color: 'var(--text-primary)' }}>
                   {service.title}
                 </h3>
                 <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color: 'var(--text-secondary)' }}>
