@@ -117,7 +117,7 @@ export function AreasSection() {
               viewport={{ once: true }}
               transition={{ delay: ri * 0.07 }}
               style={cardBase}
-              className="relative z-10"
+              className={`relative ${openRegion === region.id ? 'z-50' : 'z-10'}`}
             >
               {/* Region header button */}
               <button
