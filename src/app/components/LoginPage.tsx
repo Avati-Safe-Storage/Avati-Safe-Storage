@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Mail, Phone, ArrowLeft, MessageCircle } from "lucide-react";
-import logoImg from "../../imports/image.png";
+import logoImg from "../../imports/image.webp";
 import { fetchCustomerData } from "../../lib/googleSheets";
 
 export function LoginPage({ onLogin, onBack }: { onLogin: (data: any) => void, onBack?: () => void }) {

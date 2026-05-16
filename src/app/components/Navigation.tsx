@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { useTheme } from "../App";
-import logoImg from "../../imports/image.png";
+import logoImg from "../../imports/image.webp";
 
 const STORAGE_PHONE = "+918095589888";
 const LOGISTICS_PHONE = "+918095589888"; // update with logistics number when available

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import logoImg from "../../imports/image.png";
+import logoImg from "../../imports/image.webp";
 import { 
   Package, Plus, RotateCcw, LogOut, Calendar, IndianRupee, 
   MapPin, Phone, Mail, User, ShieldCheck, History, ArrowRight, 

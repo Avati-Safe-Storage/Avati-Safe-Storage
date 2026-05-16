@@ -38,7 +38,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
       aria-label="Avati Safe Storage – Secure Storage in Bangalore"
     >
       {/* Background video */}
-      <video autoPlay loop muted playsInline aria-hidden="true"
+      <video autoPlay loop muted playsInline preload="none" aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover"
         style={{ opacity: dark ? 0.92 : 0.88 }}
       >
