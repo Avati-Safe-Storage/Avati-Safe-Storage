@@ -127,15 +127,15 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
             className="font-black tracking-tight leading-[1.05]"
             style={{ fontSize: 'clamp(2.5rem, 7.5vw, 5.5rem)', color: 'var(--text-primary)' }}
           >
-            Store Safely.{" "}
+            Best Storage Space{" "}
             <span className="text-transparent bg-clip-text"
               style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700, #D4AF37)' }}>
-              Live Freely.
+              in Bangalore
             </span>
           </h1>
 
           <p className="font-medium" style={{ fontSize: 'clamp(0.78rem, 1.5vw, 0.95rem)', color: 'var(--text-muted)' }}>
-            Household · Business · Vehicle · Document · E-Commerce Storage
+            Bangalore's #1 Self Storage Facility · Household · Business · Vehicle · Luggage Storage
           </p>
         </motion.div>
 
@@ -147,8 +147,8 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
           className="leading-relaxed max-w-2xl"
           style={{ fontSize: 'clamp(0.9rem, 1.9vw, 1.1rem)', color: 'var(--text-secondary)' }}
         >
-          Professional packing, doorstep pickup, and secure warehousing — all at reasonable rates.
-          Serving <span style={{ color: 'var(--gold-dim)', fontWeight: 600 }}>Whitefield, Indiranagar, Koramangala, HSR Layout</span> and 50+ areas across Bangalore.
+          Premium household storage space in Bangalore with professional packing, free doorstep pickup, and secure climate-controlled warehousing.
+          Serving <span style={{ color: 'var(--gold-dim)', fontWeight: 600 }}>Whitefield, Indiranagar, Koramangala, HSR Layout, Marathahalli, Horamavu</span> and 50+ areas across Bangalore.
         </motion.p>
 
         {/* CTAs */}
@@ -202,8 +202,10 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
 
         {/* Hidden SEO block */}
         <p className="sr-only">
-          Avati Safe Storage — secure, affordable storage facility in Bangalore at #429/5, 8th Main, N.R.I. Layout, Kalkere, Horamavu Post, Bangalore 560043.
-          Professional packing and doorstep pickup for household, business, vehicle, and document storage. Serving Horamavu, Whitefield, Indiranagar, Koramangala, HSR Layout, Marathahalli, Hebbal, Jayanagar, JP Nagar and all of Bangalore.
+          Avati Safe Storage — the best storage space in Bangalore. Premium self storage facility offering household storage space, luggage storage, business storage, vehicle storage, and document storage in Bangalore.
+          Located at #429/5, 8th Main, N.R.I. Layout, Kalkere, Horamavu Post, Bangalore 560043. Climate-controlled, pest-free warehouse with 24/7 CCTV security.
+          Free doorstep pickup across Horamavu, Whitefield, Indiranagar, Koramangala, HSR Layout, Marathahalli, Hebbal, Jayanagar, JP Nagar, Electronic City, Bellandur, Sarjapur Road, BTM Layout, and all of Bangalore.
+          Monthly storage from Rs 999. Call +91 8095589888 for instant quote. Best self storage facility in Bangalore.
         </p>
       </div>
 

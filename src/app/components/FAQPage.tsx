@@ -5,6 +5,31 @@ import { useTheme } from "../App";
 
 const faqCategories = [
   {
+    category: "Storage Costs & Safety",
+    faqs: [
+      {
+        q: "How much does self storage cost per month in Bangalore?",
+        a: "At Avati Safe Storage, monthly storage costs depend on the volume of your belongings. For a 1 BHK household, expect \u20b92,500\u2013\u20b94,500/month. A 2 BHK ranges from \u20b94,500\u2013\u20b97,500/month, while a 3 BHK costs \u20b97,500\u2013\u20b912,000/month. Pricing includes professional packing materials, doorstep pickup from anywhere in Bangalore, secure 24/7 CCTV-monitored warehousing, and pest-free climate-managed storage. Vehicle storage starts at \u20b91,500/month for bikes and \u20b93,500/month for cars. Luggage and document storage starts from \u20b9999/month. Long-term commitments of 6 months or more qualify for discounted rates. Get an exact quote instantly using our online tool or call +91 8095589888."
+      },
+      {
+        q: "How does Avati Safe Storage protect items from Bangalore monsoon moisture and pests?",
+        a: "We employ a multi-layer protection protocol specifically designed for Bangalore's tropical climate. All stored items are elevated on industrial wooden pallets, keeping them 6\u20138 inches off the ground to prevent moisture contact during heavy monsoon rains. Our warehouse features commercial-grade dehumidification and ventilation systems maintaining optimal humidity year-round. Pest control is administered monthly by certified professionals using food-safe, non-toxic treatments. Every item is individually wrapped in industrial-grade bubble wrap, foam padding, and moisture-resistant shrink wrap. Our facility at Kalkere, Horamavu is a purpose-built concrete warehouse with sealed flooring and rainwater drainage systems \u2014 not a converted residential space."
+      },
+      {
+        q: "Is there insurance coverage for goods stored at Avati Safe Storage?",
+        a: "Yes. We offer goods-in-storage insurance coverage for customers on our Professional Plan, protecting against damage from fire, natural disasters, and structural incidents. We maintain a 100% claim-free track record since our establishment in 2020. For Basic and Premium plan customers, we recommend maintaining your existing homeowner's or renter's insurance policy that covers off-premises belongings. Our facility itself is fully insured with comprehensive structural and liability coverage. Every customer receives a detailed digital inventory with photographic documentation at the time of storage, ensuring complete transparency and proof of condition."
+      },
+      {
+        q: "How quickly can I retrieve my stored items?",
+        a: "Retrieval timelines depend on your plan. Professional Plan customers enjoy same-day retrieval \u2014 request before noon and your items are delivered to your doorstep by evening. Premium Plan customers get guaranteed next-day delivery within 24 hours. Basic Plan retrievals are completed within 24\u201348 hours. Partial retrieval is available \u2014 you don't need to take back everything at once. For urgent needs, call us directly at +91 8095589888 and we'll accommodate expedited requests wherever possible. Delivery is available to any address across Bangalore including Whitefield, Indiranagar, Koramangala, HSR Layout, Marathahalli, and all 50+ areas we serve."
+      },
+      {
+        q: "Does Avati Safe Storage offer free doorstep pickup in Bangalore?",
+        a: "Yes, we provide complimentary doorstep pickup across all of Bangalore \u2014 it's included in every plan at no extra cost. Our trained packing team arrives at your home or office at your scheduled time, professionally packs every item using bubble wrap, foam, and corrugated boxes, and transports them safely to our facility in Kalkere, Horamavu. We serve 50+ neighborhoods including Whitefield, Indiranagar, Koramangala, HSR Layout, Marathahalli, Hebbal, JP Nagar, Electronic City, and more. Schedule a free pickup consultation by calling +91 8095589888 or generate an instant quote online."
+      },
+    ]
+  },
+  {
     category: "General",
     faqs: [
       {

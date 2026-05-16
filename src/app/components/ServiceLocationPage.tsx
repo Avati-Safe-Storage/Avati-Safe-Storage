@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { useParams, useLocation } from "react-router";
-import { ArrowRight, CheckCircle2, MapPin, Phone, ChevronDown } from "lucide-react";
+import { ArrowRight, CheckCircle2, MapPin, Phone, ChevronDown, Star, Quote, Clock, Truck } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence } from "motion/react";
 import { Link } from "react-router";
@@ -216,6 +216,87 @@ const regionNames: Record<string, string> = {
   "west-bangalore": "West Bangalore",
 };
 
+// Geo-targeted area-specific content for hyper-local SEO
+const areaData: Record<string, {
+  proximity: string;
+  pickupLogistics: string;
+  introDescription: string;
+  review: { name: string; role: string; text: string; rating: number; avatarBg: string };
+}> = {
+  "whitefield": {
+    proximity: "Located just 14 km from Whitefield via the Outer Ring Road, our Kalkere facility is easily accessible in under 35 minutes.",
+    pickupLogistics: "Our dedicated Whitefield pickup team covers ITPL Main Road, Varthur, Kadugodi, Brookefield, and all gated communities in the Whitefield corridor. Pickups are typically scheduled within 24 hours of booking.",
+    introDescription: "Whitefield residents and IT professionals trust Avati Safe Storage for secure, hassle-free household and office storage. Whether you're relocating from a tech park apartment or storing furniture during renovation, we handle everything from your doorstep.",
+    review: {
+      name: "Priya Venkatesh",
+      role: "Business Owner, Whitefield",
+      text: "Excellent storage facility! I stored all my office furniture and equipment here during our office renovation. Everything was well-maintained and returned in perfect condition. The staff is very professional and the facility is clean.",
+      rating: 5,
+      avatarBg: "#7C3AED"
+    }
+  },
+  "indiranagar": {
+    proximity: "Just 12 km from Indiranagar via Old Madras Road, our facility is a quick 25-minute drive from the 100 Feet Road area.",
+    pickupLogistics: "We cover all of Indiranagar including 100 Feet Road, Defence Colony, CMH Road, HAL 2nd Stage, and surrounding areas. Our Indiranagar pickups run daily with morning and afternoon slots.",
+    introDescription: "Indiranagar's vibrant community of professionals and families rely on Avati Safe Storage when they need secure storage during home renovations, international transfers, or simply to declutter their living spaces.",
+    review: {
+      name: "Rajesh Nair",
+      role: "IT Professional, Indiranagar",
+      text: "Avati Safe Storage is the best in Bangalore! I was moving to a new city for work and needed a reliable place to store my belongings. The pickup was on time, packing was superb, and the price is very reasonable.",
+      rating: 5,
+      avatarBg: "#059669"
+    }
+  },
+  "koramangala": {
+    proximity: "Our Kalkere warehouse is approximately 16 km from Koramangala, reachable in about 40 minutes via Hosur Road and the Outer Ring Road.",
+    pickupLogistics: "We service all 8 blocks of Koramangala, including the startup hub areas around Sony World Junction, Forum Mall vicinity, and the residential zones off Sarjapur Road. Weekend pickups are available for working professionals.",
+    introDescription: "Koramangala's startup founders, young professionals, and families choose Avati Safe Storage for its reliability and transparent pricing. Store your belongings safely while you focus on building your next big thing.",
+    review: {
+      name: "Ananya Krishnan",
+      role: "Interior Designer, Koramangala",
+      text: "I regularly use Avati for storing client furniture and decor items between projects. The facility is very well managed, items are always in perfect condition when retrieved. Great service overall!",
+      rating: 5,
+      avatarBg: "#DC2626"
+    }
+  },
+  "hsr-layout": {
+    proximity: "HSR Layout is approximately 18 km from our Kalkere facility, accessible in about 40 minutes via the Outer Ring Road.",
+    pickupLogistics: "Our team covers all sectors of HSR Layout from Sector 1 through Sector 7, including the areas near Agara Lake, BDA Complex, and the 27th Main Road commercial zone. We offer flexible evening pickups for HSR residents.",
+    introDescription: "HSR Layout residents enjoy Avati Safe Storage's premium household storage services with free doorstep pickup. Whether you're an entrepreneur storing business inventory or a family between homes, we've got you covered.",
+    review: {
+      name: "Mohammed Siddiq",
+      role: "Entrepreneur, HSR Layout",
+      text: "Very trustworthy and reliable service. I had to travel abroad for 8 months and stored all my household goods here. When I returned, everything was exactly as I left it \u2014 no damage, no missing items.",
+      rating: 5,
+      avatarBg: "#D97706"
+    }
+  },
+  "marathahalli": {
+    proximity: "Marathahalli is just 10 km from our Kalkere warehouse \u2014 one of our closest service areas, reachable in under 25 minutes.",
+    pickupLogistics: "We provide rapid pickup service across Marathahalli including the ORR stretch, Brookefield junction, Kundalahalli, and Varthur Road. Being one of our nearest neighborhoods, Marathahalli customers often get same-day pickup slots.",
+    introDescription: "Marathahalli's close proximity to our Kalkere facility makes it one of our fastest-served neighborhoods. IT professionals relocating from the ORR tech corridor and families in the area benefit from quick turnaround times.",
+    review: {
+      name: "Deepa Menon",
+      role: "Homeowner, Marathahalli",
+      text: "Good storage facility with friendly staff. The packing team was careful with all items, especially my antique furniture. Pricing is fair and transparent. Absolutely worth it for the quality of service.",
+      rating: 4,
+      avatarBg: "#0891B2"
+    }
+  },
+  "horamavu": {
+    proximity: "Our warehouse is located right in Kalkere, Horamavu \u2014 making this our home turf. Pickup and delivery within minutes.",
+    pickupLogistics: "Being our home base, Horamavu, Kalkere, Kalyan Nagar, Ramamurthy Nagar, and HRBR Layout residents get the fastest service. Same-day pickup is almost always available for this zone.",
+    introDescription: "As our home neighborhood, Horamavu residents enjoy the fastest pickup times and most convenient access to our facility. Visit us anytime at our Kalkere warehouse or let our team come to you.",
+    review: {
+      name: "Suresh Kumar",
+      role: "Homeowner, Horamavu",
+      text: "Very good service. Packing was done very professionally and all my household items were safely stored. The team was very cooperative and helpful throughout the process. Highly recommended for anyone shifting homes.",
+      rating: 5,
+      avatarBg: "#2563EB"
+    }
+  },
+};
+
 function capitalizeArea(area: string) {
   return area.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
@@ -247,6 +328,8 @@ export function ServiceLocationPage() {
   }
 
   const pageTitle = area ? `${data.title} in ${areaName}, ${regionName}` : data.title;
+  const areaInfo = areaData[area] || null;
+  const seoH1 = area ? `${data.title} in ${areaName} \u2014 Free Doorstep Pickup` : data.title;
 
   return (
     <main className="min-h-screen pt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -285,11 +368,11 @@ export function ServiceLocationPage() {
           )}
 
           <h1 className="font-black tracking-tight mb-4" style={{ fontSize: 'clamp(1.75rem, 4vw, 3rem)', color: 'var(--text-primary)' }}>
-            {pageTitle}
+            {seoH1}
           </h1>
           <p className="text-lg mb-6" style={{ color: 'var(--text-secondary)' }}>
-            {data.description}
-            {areaName && ` We offer doorstep pickup right from ${areaName}.`}
+            {areaInfo ? areaInfo.introDescription : data.description}
+            {areaName && !areaInfo && ` We offer doorstep pickup right from ${areaName}.`}
           </p>
           <div className="flex gap-3 flex-wrap">
             <Link to="/get-quote" className="avati-btn-gold text-sm">
@@ -395,6 +478,84 @@ export function ServiceLocationPage() {
           </div>
         </div>
       </section>
+
+      {/* Proximity & Pickup Logistics (area-specific) */}
+      {areaInfo && (
+        <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <h2 className="font-bold text-2xl mb-8" style={{ color: 'var(--text-primary)' }}>
+              Doorstep Pickup from {areaName}
+            </h2>
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div className="p-6 rounded-xl" style={{
+                background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.75)',
+                border: '1px solid var(--border-color)',
+                backdropFilter: 'blur(10px)',
+              }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #D4AF37, #FFD700)' }}>
+                    <MapPin className="w-5 h-5 text-black" />
+                  </div>
+                  <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Proximity to {areaName}</h3>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{areaInfo.proximity}</p>
+              </div>
+              <div className="p-6 rounded-xl" style={{
+                background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.75)',
+                border: '1px solid var(--border-color)',
+                backdropFilter: 'blur(10px)',
+              }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #D4AF37, #FFD700)' }}>
+                    <Truck className="w-5 h-5 text-black" />
+                  </div>
+                  <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Pickup Coverage</h3>
+                </div>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{areaInfo.pickupLogistics}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Customer Review from this area */}
+      {areaInfo && (
+        <section className="py-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <h2 className="font-bold text-2xl mb-8" style={{ color: 'var(--text-primary)' }}>
+              What {areaName} Customers Say
+            </h2>
+            <div className="p-6 rounded-xl" style={{
+              background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.75)',
+              backdropFilter: 'blur(15px)',
+              border: '1px solid var(--gold-border)',
+              boxShadow: dark ? '0 4px 30px rgba(0,0,0,0.4)' : '0 4px 20px rgba(0,0,0,0.08)',
+            }}>
+              <div className="flex items-start justify-between mb-4">
+                <Quote className="w-6 h-6 opacity-40" style={{ color: 'var(--gold)' }} />
+                <div className="flex gap-0.5">
+                  {[...Array(areaInfo.review.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-[#D4AF37] text-[#D4AF37]" />
+                  ))}
+                </div>
+              </div>
+              <p className="text-base leading-relaxed italic mb-6" style={{ color: 'var(--text-secondary)' }}>
+                "{areaInfo.review.text}"
+              </p>
+              <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ backgroundColor: areaInfo.review.avatarBg }}>
+                  {areaInfo.review.name.split(' ').map(n => n[0]).join('')}
+                </div>
+                <div>
+                  <p className="font-bold" style={{ color: 'var(--text-primary)' }}>{areaInfo.review.name}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{areaInfo.review.role} · Verified Google Review</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
