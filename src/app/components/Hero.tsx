@@ -29,7 +29,7 @@ const lineArtPaths = [
 
 export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
   const { dark } = useTheme();
-  const videoUrl = import.meta.env.BASE_URL + 'homepage-video.mp4';
+  const videoUrl = import.meta.env.BASE_URL + 'homepage-video.webm';
 
   return (
     <section
@@ -42,7 +42,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
         className="absolute inset-0 w-full h-full object-cover"
         style={{ opacity: dark ? 0.92 : 0.88 }}
       >
-        <source src={videoUrl} type="video/mp4" />
+        <source src={videoUrl} type="video/webm" />
       </video>
 
       {/* Gradient overlay */}
