@@ -513,8 +513,8 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       monthlyStorage: finalMonthlyStorage,
       packingAndTransport,
       storageGst,
-      proRataFirst,
-      totalEstimate
+      proRataFirst: proRataFirst,
+      totalEstimate: totalEstimate,
     };
   };
 
@@ -522,12 +522,14 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   const pushToZoho = async (isPartial: boolean) => {
     try {
-      const iframeName = `zoho_iframe_${Math.random()}`;
+      // Create hidden iframe to receive form response
+      const iframeName = 'zoho_iframe_' + Date.now();
       const iframe = document.createElement('iframe');
       iframe.name = iframeName;
       iframe.style.display = 'none';
       document.body.appendChild(iframe);
 
+      // Build the form exactly as Zoho's Web-to-Lead HTML specifies
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = 'https://crm.zoho.in/crm/WebToLeadForm';
@@ -535,44 +537,50 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       form.style.display = 'none';
       form.acceptCharset = 'UTF-8';
 
-      const appendField = (name: string, value: string) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
+      // Helper to add hidden fields
+      const add = (name: string, value: string) => {
+        const el = document.createElement('input');
+        el.type = 'hidden';
+        el.name = name;
+        el.value = value;
+        form.appendChild(el);
       };
 
-      appendField('xnQsjsdp', 'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce');
-      appendField('zc_gad', '');
-      appendField('xmIwtLD', '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d');
-      appendField('actionType', 'TGVhZHM=');
-      appendField('returnURL', 'https://the-monomorph.github.io/Avati-Safe-Storage/');
-      
-      appendField('Company', 'Avati Website Lead');
-      
-      // Standard Fields
-      const names = customer.name.trim().split(' ');
-      const firstName = names.length > 1 ? names[0] : '';
-      const lastName = names.length > 1 ? names.slice(1).join(' ') : (names[0] || 'Unknown');
-      
-      appendField('First Name', firstName);
-      appendField('Last Name', lastName);
-      appendField('Mobile', customer.phone);
-      appendField('Email', customer.email);
-      appendField('Lead Source', 'Online Store');
-      
-      // Custom Fields mapped from user request
-      const methodMap: Record<string, string> = { 'inventory': 'Live Quotation', 'upload': 'Upload 360 Video', 'visit': 'Book Survey' };
-      appendField('LEADCF6', methodMap[quoteMethod] || 'Live Quotation'); // Quote Method
-      appendField('LEADCF2', storageType); // Storage Type
+      // ── Zoho authentication tokens (from Avati-Leads webform) ──
+      add('xnQsjsdp', 'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce');
+      add('zc_gad', '');
+      add('xmIwtLD', '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d');
+      add('actionType', 'TGVhZHM=');
+      add('returnURL', 'https://the-monomorph.github.io/Avati-Safe-Storage/');
 
+      // ── Required standard fields ──
+      add('Company', 'Avati Website Lead');
+
+      const nameParts = (customer.name || '').trim().split(' ');
+      const firstName = nameParts.length > 1 ? nameParts[0] : '';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : (nameParts[0] || 'Website Lead');
+
+      add('First Name', firstName);
+      add('Last Name', lastName);
+      add('Email', customer.email || '');
+      add('Mobile', customer.phone || '');
+
+      // ── Custom fields (LEADCF IDs from Zoho HTML) ──
+
+      // Quote Method → LEADCF6
+      const methodMap: Record<string, string> = { 'inventory': 'Live Quotation', 'upload': 'Upload 360 Video', 'visit': 'Book Survey' };
+      add('LEADCF6', methodMap[quoteMethod] || 'Live Quotation');
+
+      // Storage Type → LEADCF2
+      add('LEADCF2', storageType || 'Household');
+
+      // Inventory List → LEADCF1
       let invList = '';
       if (storageType === 'Household') {
         invList = inventory.map(i => {
           const def = BASE_ITEMS.find(b => b.id === i.itemId);
           return def ? `${i.quantity}x ${def.name}` : '';
-        }).join(', ');
+        }).filter(Boolean).join(', ');
       } else if (storageType === 'Business') {
         invList = `${businessSqft} sqft`;
       } else if (storageType === 'Vehicle') {
@@ -580,48 +588,71 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       } else if (storageType === 'Document') {
         invList = `${docBoxes} boxes of ${docType}`;
       }
-      appendField('LEADCF1', invList || 'No specific inventory'); // Inventory List
-      
+      add('LEADCF1', invList || '');
+
+      // Unlisted Items → LEADCF5
       const unlisted = customItems.map(c => `${c.qty}x ${c.name}`).join(', ');
-      appendField('LEADCF5', unlisted || 'None'); // Unlisted Items
-      
-      const planMapping: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Pro' };
-      appendField('LEADCF3', planMapping[selectedPlan] || 'Basic'); // Plan Selected
-      
-      if (logistics.packingRequired) appendField('LEADCF101', 'on'); // Packing needed
-      if (logistics.transportRequired) appendField('LEADCF102', 'on'); // Transport needed
-      
-      appendField('LEADCF67', (Math.round(costs.monthlyStorage) || 0).toString()); // Total Monthly Charges
-      appendField('LEADCF66', (Math.round(costs.packingAndTransport) || 0).toString()); // Packing & Transport charges
-      
-      appendField('Address - Flat &#x2f; House No.&#x2f; Building &#x2f; Apartment Name', logistics.pickupArea);
-      
+      add('LEADCF5', unlisted || '');
+
+      // Plan Selected → LEADCF3
+      const planMap: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Pro' };
+      add('LEADCF3', planMap[selectedPlan] || 'Basic');
+
+      // Packing needed? → LEADCF101 (checkbox: send "on" when checked)
+      if (logistics.packingRequired) add('LEADCF101', 'on');
+
+      // Transportation needed → LEADCF102 (checkbox: send "on" when checked)
+      if (logistics.transportRequired) add('LEADCF102', 'on');
+
+      // Total Monthly Charges → LEADCF67
+      const monthly = Math.round(costs.monthlyStorage) || 0;
+      if (monthly > 0) add('LEADCF67', monthly.toString());
+
+      // Packing & Transportation charges → LEADCF66
+      const ptCharges = Math.round(costs.packingAndTransport) || 0;
+      if (ptCharges > 0) add('LEADCF66', ptCharges.toString());
+
+      // Lead Source (sent only once)
+      add('Lead Source', 'Online Store');
+
+      // Lead Status — progressive based on step
       let currentStatus = 'Contact only';
       if (!isPartial) {
         currentStatus = 'Quotation Generated';
       } else {
-        if (step === 1) currentStatus = 'Quote Method Selected';
-        else if (step === 2) currentStatus = 'Storage Type Selected';
-        else if (step === 3) currentStatus = 'Inventory Provided';
-        else if (step === 4) currentStatus = 'Logistics Provided';
-        else if (step === 5) currentStatus = 'Plan selected';
+        if (step >= 5) currentStatus = 'Plan selected';
+        else if (step >= 4) currentStatus = 'Logistics Provided';
+        else if (step >= 3) currentStatus = 'Inventory Provided';
+        else if (step >= 2) currentStatus = 'Storage Type Selected';
+        else if (step >= 1) currentStatus = 'Contact only';
       }
-      
-      appendField('Lead Status', currentStatus);
-      appendField('Description', `Expected Pickup: ${logistics.pickupDate} | Duration: ${logistics.duration} months | Building: ${logistics.buildingType} | Floors: ${logistics.floors} | Lift: ${logistics.liftAvailable}`);
-      
-      appendField('Lead Source', 'Online Store');
-      appendField('aG9uZXlwb3Q', '');
+      add('Lead Status', currentStatus);
 
+      // Description (logistics detail)
+      add('Description', `Expected Pickup: ${logistics.pickupDate || 'TBD'} | Duration: ${logistics.duration || 1} months | Building: ${logistics.buildingType || 'N/A'} | Floors: ${logistics.floors || 0} | Lift: ${logistics.liftAvailable ? 'Yes' : 'No'}`);
+
+      // Address field (name must use actual "/" not HTML entities)
+      add('Address - Flat / House No./ Building / Apartment Name', logistics.pickupArea || '');
+
+      // Honeypot (anti-spam, must be empty)
+      add('aG9uZXlwb3Q', '');
+
+      // Submit
       document.body.appendChild(form);
+      document.charset = 'UTF-8';
       form.submit();
 
+      console.log('[Zoho] Form submitted — Step:', step, 'Status:', currentStatus);
+
+      // Cleanup after 5 seconds
       setTimeout(() => {
-        document.body.removeChild(form);
-        document.body.removeChild(iframe);
+        try {
+          document.body.removeChild(form);
+          document.body.removeChild(iframe);
+        } catch(_) {}
       }, 5000);
     } catch(err) {
-      console.error("Zoho Sync Error:", err);
+      console.error('[Zoho] Sync Error:', err);
     }
   };
 
