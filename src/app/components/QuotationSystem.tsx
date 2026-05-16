@@ -23,7 +23,8 @@ import {
   Tv, Bed, Utensils, BookOpen, Archive, Sofa, Table, Box, Speaker, BatteryCharging,
   Image as ImageIcon, Sparkles, PanelRight, Wind, Snowflake, Fan, Refrigerator, Microwave,
   Flame, Cylinder, Droplet, Armchair, Monitor, Printer, WashingMachine, ShoppingBag,
-  AlignJustify, PaintBucket, Footprints, Church, Square, BedSingle, Package, Download, ChevronDown, X, Bike, RotateCcw
+  AlignJustify, PaintBucket, Footprints, Church, Square, BedSingle, Package, Download, ChevronDown, X, Bike, RotateCcw,
+  Zap, Camera, Video
 } from "lucide-react";
 
 type OptionConfig = {
@@ -279,25 +280,58 @@ const VEHICLE_TYPES = [
 ];
 
 const BANGALORE_AREAS = [
+  // Central
+  { name: 'MG Road', dist: 12 },
+  { name: 'Ulsoor', dist: 10 },
+  { name: 'Brigade Road', dist: 13 },
+  { name: 'Richmond Town', dist: 14 },
+  { name: 'Vasanth Nagar', dist: 13 },
+  { name: 'Shivajinagar', dist: 12 },
+  { name: 'Cubbon Park', dist: 14 },
+  
+  // South
+  { name: 'Jayanagar', dist: 20 },
+  { name: 'JP Nagar', dist: 22 },
+  { name: 'HSR Layout', dist: 18 },
+  { name: 'BTM Layout', dist: 20 },
+  { name: 'Koramangala', dist: 16 },
+  { name: 'Bannerghatta Road', dist: 25 },
+  { name: 'Electronic City', dist: 28 },
+
+  // East
   { name: 'Whitefield', dist: 15 },
-  { name: 'Indiranagar', dist: 8 },
-  { name: 'Koramangala', dist: 12 },
-  { name: 'Electronic City', dist: 25 },
-  { name: 'HSR Layout', dist: 14 },
-  { name: 'Marathahalli', dist: 10 },
-  { name: 'Bellandur', dist: 12 },
-  { name: 'Jayanagar', dist: 16 },
-  { name: 'JP Nagar', dist: 18 },
-  { name: 'BTM Layout', dist: 15 },
-  { name: 'Hebbal', dist: 10 },
-  { name: 'Malleswaram', dist: 14 },
+  { name: 'Indiranagar', dist: 10 },
+  { name: 'Marathahalli', dist: 14 },
+  { name: 'Bellandur', dist: 18 },
+  { name: 'KR Puram', dist: 5 },
+  { name: 'Sarjapur Road', dist: 20 },
+  { name: 'Varthur', dist: 18 },
+  { name: 'Mahadevapura', dist: 8 },
+
+  // North
+  { name: 'Hebbal', dist: 12 },
   { name: 'Yelahanka', dist: 18 },
-  { name: 'Kalyan Nagar', dist: 3 },
-  { name: 'Kammanahalli', dist: 4 },
-  { name: 'Hennur', dist: 5 },
-  { name: 'KR Puram', dist: 6 },
-  { name: 'Mahadevapura', dist: 8 }
-];
+  { name: 'RT Nagar', dist: 11 },
+  { name: 'Manyata Tech Park', dist: 8 },
+  { name: 'Horamavu', dist: 3 },
+  { name: 'Kalyan Nagar', dist: 5 },
+  { name: 'Hennur', dist: 6 },
+  { name: 'Kammanahalli', dist: 5 },
+
+  // West
+  { name: 'Rajajinagar', dist: 18 },
+  { name: 'Malleshwaram', dist: 16 },
+  { name: 'Vijayanagar', dist: 22 },
+  { name: 'Kengeri', dist: 30 },
+  { name: 'Magadi Road', dist: 25 },
+  { name: 'Nagarbhavi', dist: 25 },
+  
+  // Storage specific (near us)
+  { name: 'NRI Layout (Warehouse)', dist: 0 },
+  { name: 'Kalkere', dist: 1 },
+  { name: 'Ramamurthy Nagar', dist: 2 },
+  { name: 'Banaswadi', dist: 6 },
+].sort((a, b) => a.name.localeCompare(b.name));
 
 const STORAGE_TYPES = [
   { id: 'Household', icon: Home, desc: 'Furniture, appliances & belongings' },
@@ -375,6 +409,8 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
   const [selectedPlan, setSelectedPlan] = useStickyState('basic', 'avati_q_selectedPlan');
   const [hasGstin, setHasGstin] = useStickyState(false, 'avati_q_hasGstin');
   const [gstin, setGstin] = useStickyState('', 'avati_q_gstin');
+
+  const [showAreaSuggest, setShowAreaSuggest] = useState(false);
 
   // Pro-rata: days from pickup to 5th of next month
   const calcProRata = (monthlyRate: number) => {
@@ -698,11 +734,11 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
   );
 
   const stepLabels = isDashboard
-    ? ['Type', 'Inventory', 'Logistics', 'Plans']
-    : ['Details', 'Type', 'Inventory', 'Logistics', 'Plans'];
+    ? ['Type', quoteMethod === 'upload' ? 'Media' : quoteMethod === 'visit' ? 'Visit' : 'Inventory', 'Logistics', 'Plans']
+    : ['Details', 'Type', quoteMethod === 'upload' ? 'Media' : quoteMethod === 'visit' ? 'Visit' : 'Inventory', 'Logistics', 'Plans'];
   const stepLabelsLong = isDashboard
-    ? ['Storage Type', 'Inventory', 'Logistics', 'Plans']
-    : ['Customer Details', 'Storage Type', 'Inventory', 'Logistics', 'Plans'];
+    ? ['Storage Type', quoteMethod === 'upload' ? 'Upload Media' : quoteMethod === 'visit' ? 'Site Visit' : 'Inventory', 'Logistics', 'Plans']
+    : ['Customer Details', 'Storage Type', quoteMethod === 'upload' ? 'Upload Media' : quoteMethod === 'visit' ? 'Site Visit' : 'Inventory', 'Logistics', 'Plans'];
 
   return (
     <section id="quote" className={`py-16 sm:py-24 bg-gradient-to-br from-[#0B1F3A] to-black relative overflow-hidden ${isDashboard ? 'min-h-[80vh] rounded-2xl' : ''}`}>
@@ -752,19 +788,19 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
             <div className="flex-1 min-h-0 relative">
               <AnimatePresence mode="wait">
-                {/* TAB 1: Customer Info */}
+                {/* TAB 1: Customer Info & Method */}
                 {step === 1 && (
                   <motion.div
                     key="step1"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="rounded-2xl p-6 sm:p-8 h-full overflow-y-auto"
+                    className="rounded-2xl p-6 sm:p-8 h-full overflow-y-auto hide-scrollbar"
                     style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-card)' }}
                   >
                     <div>
-                      <h2 className="text-xl sm:text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Customer Details</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>1. Your Details</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                         <div>
                           <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
                           <input type="text" value={customer.name} onChange={e => setCustomer({ ...customer, name: e.target.value })} className="avati-input" placeholder="Your Name" />
@@ -777,6 +813,47 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                           <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
                           <input type="email" value={customer.email} onChange={e => setCustomer({ ...customer, email: e.target.value })} className="avati-input" placeholder="example@gmail.com" />
                         </div>
+                      </div>
+
+                      <h2 className="text-xl sm:text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>2. Choose Quote Method</h2>
+                      <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>How would you like us to generate your quotation?</p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {[
+                          { id: 'inventory', title: 'Live Quotation', desc: 'Select items instantly for a quick estimate.', icon: Zap },
+                          { id: 'upload', title: 'Upload 360°', desc: 'Upload photos/videos of your space for accuracy.', icon: Camera },
+                          { id: 'visit', title: 'Request Site Visit', desc: 'Our experts visit and assess your requirements.', icon: MapPin }
+                        ].map(method => {
+                          const isSelected = quoteMethod === method.id;
+                          return (
+                          <div 
+                            key={method.id}
+                            onClick={() => setQuoteMethod(method.id)}
+                            className="p-5 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden group flex flex-col items-center text-center"
+                            style={{
+                              borderColor: isSelected ? 'var(--gold)' : 'var(--border-color)',
+                              background: isSelected ? 'var(--gold-surface)' : 'var(--bg-secondary)',
+                              boxShadow: isSelected ? '0 0 16px var(--gold-glow)' : 'none'
+                            }}
+                          >
+                             <motion.div 
+                               animate={isSelected ? { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] } : {}} 
+                               transition={{ duration: 0.5 }}
+                               className="mb-3 flex items-center justify-center w-12 h-12 rounded-full"
+                               style={{ background: isSelected ? 'var(--gold)' : 'var(--bg-card)', color: isSelected ? '#000' : 'var(--text-muted)' }}
+                             >
+                               <method.icon className="w-6 h-6" />
+                             </motion.div>
+                             <h3 className="font-bold mb-1" style={{ color: isSelected ? 'var(--gold-dim)' : 'var(--text-primary)' }}>{method.title}</h3>
+                             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{method.desc}</p>
+                             
+                             {isSelected && (
+                                <motion.div layoutId="method-active" className="absolute top-3 right-3 text-[#EAB308]">
+                                  <Check className="w-5 h-5" />
+                                </motion.div>
+                             )}
+                          </div>
+                        )})}
                       </div>
                     </div>
                   </motion.div>
@@ -826,147 +903,179 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                     className="rounded-2xl shadow-xl overflow-hidden flex flex-col h-full"
                     style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
                   >
-                    {/* ── VEHICLE STORAGE ── */}
-                    {storageType === 'Vehicle' && (
-                      <div className="p-5 overflow-y-auto flex-1">
-                        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Vehicle Storage</h3>
-                        <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Select the vehicles you want to store. Monthly rates below.</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
-                          {VEHICLE_TYPES.map(v => (
-                            <button key={v.id} onClick={() => setSelectedVehicles(prev => ({ ...prev, [v.id]: !prev[v.id] }))}
-                              className="p-4 rounded-xl border-2 flex flex-col gap-2 transition-all text-left"
-                              style={{
-                                borderColor: selectedVehicles[v.id] ? 'var(--gold)' : 'var(--border-color)',
-                                background: selectedVehicles[v.id] ? 'var(--gold-surface)' : 'var(--bg-secondary)',
-                              }}>
-                              <Car className="w-6 h-6" style={{ color: selectedVehicles[v.id] ? 'var(--gold)' : 'var(--text-muted)' }} />
-                              <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{v.name}</span>
-                              <span className="text-xs font-semibold" style={{ color: 'var(--gold-dim)' }}>₹{v.price}/mo</span>
-                              {v.insurance && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>Insurance recommended</span>}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="rounded-xl p-4 border space-y-3" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}>
-                          <label className="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" checked={vehicleMaintenance} onChange={e => setVehicleMaintenance(e.target.checked)} className="w-5 h-5 accent-[#D4AF37]" />
-                            <div>
-                              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>15-day Battery Maintenance — ₹250</p>
-                              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>We start your vehicle every 15 days to maintain battery health</p>
+                     {/* ── SITE VISIT FLOW ── */}
+                     {quoteMethod === 'visit' ? (
+                       <div className="p-6 flex-1 overflow-y-auto flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg-secondary)' }}>
+                         <motion.div 
+                           initial={{ scale: 0.9, opacity: 0 }} 
+                           animate={{ scale: 1, opacity: 1 }}
+                           className="max-w-xl w-full rounded-2xl p-8 border-2"
+                           style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+                         >
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: 'var(--gold-surface)', color: 'var(--gold)' }}>
+                               <MapPin className="w-8 h-8" />
                             </div>
-                          </label>
-                        </div>
-                        <p className="text-xs mt-4 p-3 rounded-lg" style={{ background: 'var(--gold-surface)', color: 'var(--text-secondary)' }}>
-                          <strong>Note:</strong> Vehicle insurance is the owner's responsibility. We recommend insuring your vehicle before storage. Avati is not liable for pre-existing damage.
-                        </p>
-                      </div>
-                    )}
-
-                    {/* ── BUSINESS/OFFICE STORAGE ── */}
-                    {storageType === 'Business' && (
-                      <div className="p-5 overflow-y-auto flex-1">
-                        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Business / Office Storage</h3>
-                        <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Priced at ₹34 per sq.ft per month + 18% GST.</p>
-                        <div className="mb-6">
-                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Estimated Storage Area (sq.ft)</label>
-                          <div className="flex items-center gap-4">
-                            <input type="range" min={50} max={5000} step={50} value={businessSqft}
-                              onChange={e => setBusinessSqft(Number(e.target.value))}
-                              className="flex-1 accent-[#D4AF37]" />
-                            <div className="w-24 text-center font-black text-xl" style={{ color: 'var(--gold)' }}>{businessSqft} sqft</div>
-                          </div>
-                          <div className="mt-4 p-4 rounded-xl" style={{ background: 'var(--gold-surface)', border: '1px solid var(--gold-border)' }}>
-                            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Estimated Monthly: <strong style={{ color: 'var(--text-primary)' }}>₹{(businessSqft * 34).toLocaleString()}</strong></p>
-                            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>GST (18%): <strong style={{ color: 'var(--text-primary)' }}>₹{Math.round(businessSqft * 34 * 0.18).toLocaleString()}</strong></p>
-                            <p className="text-base font-black mt-2" style={{ color: 'var(--gold)' }}>Total: ₹{Math.round(businessSqft * 34 * 1.18).toLocaleString()}/mo</p>
-                          </div>
-                        </div>
-                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Minimum booking: 1 month. Rate includes secure bay, CCTV, pest control. Packing & transport quoted separately.</p>
-                      </div>
-                    )}
-
-                    {/* ── DOCUMENT STORAGE ── */}
-                    {storageType === 'Document' && (
-                      <div className="p-5 overflow-y-auto flex-1">
-                        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Document Storage</h3>
-                        <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Secure, indexed, pest-free archival storage for your records.</p>
-                        <div className="space-y-5">
-                          <div>
-                            <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Document Type</label>
-                            <div className="flex gap-3">
-                              {['Standard Files', 'Confidential', 'Legal Records'].map(t => (
-                                <button key={t} onClick={() => setDocType(t)}
-                                  className="px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all"
-                                  style={{
-                                    borderColor: docType === t ? 'var(--gold)' : 'var(--border-color)',
-                                    background: docType === t ? 'var(--gold-surface)' : 'transparent',
-                                    color: docType === t ? 'var(--gold-dim)' : 'var(--text-secondary)',
-                                  }}>
-                                  {t}
-                                </button>
-                              ))}
+                            <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Schedule Site Visit</h3>
+                            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Our supervisor will visit your location to assess the inventory precisely. Service charges may apply (approx ₹500).</p>
+                            
+                            <div className="space-y-4 text-left">
+                               <div>
+                                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Preferred Visit Date</label>
+                                 <input type="date" value={visitNote} onChange={e => setVisitNote(e.target.value)} className="w-full p-4 rounded-xl border outline-none transition-all avati-input" />
+                               </div>
+                               <div>
+                                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Visit Address & Notes</label>
+                                 <textarea placeholder="Enter your full address and any specific instructions..." className="w-full p-4 rounded-xl border outline-none transition-all min-h-[100px] avati-input"></textarea>
+                               </div>
                             </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Number of Boxes / Files</label>
-                            <div className="flex items-center gap-3">
-                              <button onClick={() => setDocBoxes(b => Math.max(1, b - 1))}
-                                className="w-10 h-10 rounded-xl font-bold text-lg border flex items-center justify-center"
-                                style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>−</button>
-                              <span className="text-2xl font-black w-16 text-center" style={{ color: 'var(--text-primary)' }}>{docBoxes}</span>
-                              <button onClick={() => setDocBoxes(b => b + 1)}
-                                className="w-10 h-10 rounded-xl font-bold text-lg flex items-center justify-center"
-                                style={{ background: 'var(--gold-surface)', color: 'var(--gold-dim)' }}>+</button>
+                         </motion.div>
+                       </div>
+                     ) : quoteMethod === 'upload' ? (
+                       <div className="p-6 flex-1 overflow-y-auto flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg-secondary)' }}>
+                         <motion.div 
+                           initial={{ scale: 0.9, opacity: 0 }} 
+                           animate={{ scale: 1, opacity: 1 }}
+                           className="max-w-xl w-full rounded-2xl p-8 border-2 border-dashed"
+                           style={{ background: 'var(--bg-card)', borderColor: 'var(--gold-border)' }}
+                         >
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: 'var(--gold-surface)', color: 'var(--gold)' }}>
+                               <Camera className="w-8 h-8" />
                             </div>
-                            <p className="text-sm mt-3" style={{ color: 'var(--text-muted)' }}>
-                              {docType === 'Confidential' ? '₹120' : '₹80'} per box/month · Total: <strong style={{ color: 'var(--gold)' }}>₹{(docBoxes * (docType === 'Confidential' ? 120 : 80)).toLocaleString()}/mo</strong>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── HOUSEHOLD STORAGE ── */}
-                    {storageType === 'Household' && (
-                      <div className="flex flex-col h-full overflow-hidden">
-                        <div className="p-4 border-b shrink-0 flex gap-2" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}>
-                          {QUOTE_METHODS.map(m => (
-                            <button key={m.id} onClick={() => setQuoteMethod(m.id)}
-                              className="flex-1 py-3 px-2 rounded-xl text-xs sm:text-sm font-bold border-2 transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5"
-                              style={{
-                                borderColor: quoteMethod === m.id ? 'var(--gold)' : 'var(--border-color)',
-                                background: quoteMethod === m.id ? 'var(--gold-surface)' : 'var(--bg-secondary)',
-                                color: quoteMethod === m.id ? 'var(--gold-dim)' : 'var(--text-muted)'
-                              }}>
-                              <span className="text-lg">{m.icon}</span>
-                              <span>{m.label}</span>
-                            </button>
-                          ))}
-                        </div>
-
-                        {quoteMethod === 'upload' && (
-                          <div className="p-6 flex-1 overflow-y-auto" style={{ background: 'var(--bg-secondary)' }}>
-                            <div className="max-w-xl mx-auto bg-white rounded-2xl p-8 text-center border-2 border-dashed border-gray-300">
-                              <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                              <h4 className="text-lg font-bold text-gray-900 mb-2">Upload Room Photos or 360° Video</h4>
-                              <p className="text-sm text-gray-500 mb-6">Our experts will analyze your media to generate a highly accurate quote.</p>
-                              <input type="file" multiple accept="image/*,video/*" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#EAB308]/10 file:text-[#D4AF37] hover:file:bg-[#EAB308]/20 cursor-pointer" />
+                            <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Upload Media</h3>
+                            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Upload photos or a 360° video of your space. Our experts will analyze them and provide a custom quote.</p>
+                            
+                            <div className="relative group cursor-pointer">
+                              <input type="file" multiple accept="image/*,video/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={(e) => setUploadedFiles(Array.from(e.target.files || []))} />
+                              <div className="py-8 px-4 rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-3" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+                                <ImageIcon className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
+                                <span className="font-bold text-sm" style={{ color: 'var(--gold)' }}>Click or drag files here</span>
+                                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Supports JPG, PNG, MP4</span>
+                              </div>
                             </div>
-                          </div>
-                        )}
 
-                        {quoteMethod === 'visit' && (
-                          <div className="p-6 flex-1 overflow-y-auto" style={{ background: 'var(--bg-secondary)' }}>
-                            <div className="max-w-xl mx-auto bg-white rounded-2xl p-8 border border-gray-200 text-center shadow-sm">
-                              <Footprints className="w-12 h-12 text-[#D4AF37] mx-auto mb-4" />
-                              <h4 className="text-lg font-bold text-gray-900 mb-2">Request Supervisor Site Visit</h4>
-                              <p className="text-sm text-gray-500 mb-6">A storage supervisor will visit your location to assess the inventory precisely. Service charges may apply (approx ₹500).</p>
-                              <textarea placeholder="Any specific instructions for the visit?" className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-[#EAB308] min-h-[100px]" />
-                            </div>
-                          </div>
-                        )}
+                            {uploadedFiles.length > 0 && (
+                              <div className="mt-6 text-left">
+                                <h4 className="text-sm font-bold mb-3" style={{ color: 'var(--text-secondary)' }}>Selected Files ({uploadedFiles.length})</h4>
+                                <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+                                  {uploadedFiles.map((f, i) => (
+                                    <div key={i} className="flex-shrink-0 w-16 h-16 rounded-lg border flex items-center justify-center overflow-hidden relative" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+                                      {f.type.startsWith('image') ? (
+                                        <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <Video className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                         </motion.div>
+                       </div>
+                     ) : (
+                       <>
+                         {/* ── VEHICLE STORAGE ── */}
+                         {storageType === 'Vehicle' && (
+                           <div className="p-5 overflow-y-auto flex-1">
+                             <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Vehicle Storage</h3>
+                             <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Select the vehicles you want to store. Monthly rates below.</p>
+                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+                               {VEHICLE_TYPES.map(v => (
+                                 <button key={v.id} onClick={() => setSelectedVehicles(prev => ({ ...prev, [v.id]: !prev[v.id] }))}
+                                   className="p-4 rounded-xl border-2 flex flex-col gap-2 transition-all text-left"
+                                   style={{
+                                     borderColor: selectedVehicles[v.id] ? 'var(--gold)' : 'var(--border-color)',
+                                     background: selectedVehicles[v.id] ? 'var(--gold-surface)' : 'var(--bg-secondary)',
+                                   }}>
+                                   <Car className="w-6 h-6" style={{ color: selectedVehicles[v.id] ? 'var(--gold)' : 'var(--text-muted)' }} />
+                                   <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{v.name}</span>
+                                   <span className="text-xs font-semibold" style={{ color: 'var(--gold-dim)' }}>₹{v.price}/mo</span>
+                                   {v.insurance && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>Insurance recommended</span>}
+                                 </button>
+                               ))}
+                             </div>
+                             <div className="rounded-xl p-4 border space-y-3" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}>
+                               <label className="flex items-center gap-3 cursor-pointer">
+                                 <input type="checkbox" checked={vehicleMaintenance} onChange={e => setVehicleMaintenance(e.target.checked)} className="w-5 h-5 accent-[#D4AF37]" />
+                                 <div>
+                                   <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>15-day Battery Maintenance — ₹250</p>
+                                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>We start your vehicle every 15 days to maintain battery health</p>
+                                 </div>
+                               </label>
+                             </div>
+                             <p className="text-xs mt-4 p-3 rounded-lg" style={{ background: 'var(--gold-surface)', color: 'var(--text-secondary)' }}>
+                               <strong>Note:</strong> Vehicle insurance is the owner's responsibility. We recommend insuring your vehicle before storage. Avati is not liable for pre-existing damage.
+                             </p>
+                           </div>
+                         )}
 
-                        {quoteMethod === 'inventory' && (
-                          <div className="flex flex-col flex-1 overflow-hidden">
+                         {/* ── BUSINESS/OFFICE STORAGE ── */}
+                         {storageType === 'Business' && (
+                           <div className="p-5 overflow-y-auto flex-1">
+                             <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Business / Office Storage</h3>
+                             <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Priced at ₹34 per sq.ft per month + 18% GST.</p>
+                             <div className="mb-6">
+                               <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Estimated Storage Area (sq.ft)</label>
+                               <div className="flex items-center gap-4">
+                                 <input type="range" min={50} max={5000} step={50} value={businessSqft}
+                                   onChange={e => setBusinessSqft(Number(e.target.value))}
+                                   className="flex-1 accent-[#D4AF37]" />
+                                 <div className="w-24 text-center font-black text-xl" style={{ color: 'var(--gold)' }}>{businessSqft} sqft</div>
+                               </div>
+                               <div className="mt-4 p-4 rounded-xl" style={{ background: 'var(--gold-surface)', border: '1px solid var(--gold-border)' }}>
+                                 <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Estimated Monthly: <strong style={{ color: 'var(--text-primary)' }}>₹{(businessSqft * 34).toLocaleString()}</strong></p>
+                                 <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>GST (18%): <strong style={{ color: 'var(--text-primary)' }}>₹{Math.round(businessSqft * 34 * 0.18).toLocaleString()}</strong></p>
+                                 <p className="text-base font-black mt-2" style={{ color: 'var(--gold)' }}>Total: ₹{Math.round(businessSqft * 34 * 1.18).toLocaleString()}/mo</p>
+                               </div>
+                             </div>
+                             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Minimum booking: 1 month. Rate includes secure bay, CCTV, pest control. Packing & transport quoted separately.</p>
+                           </div>
+                         )}
+
+                         {/* ── DOCUMENT STORAGE ── */}
+                         {storageType === 'Document' && (
+                           <div className="p-5 overflow-y-auto flex-1">
+                             <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Document Storage</h3>
+                             <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Secure, indexed, pest-free archival storage for your records.</p>
+                             <div className="space-y-5">
+                               <div>
+                                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Document Type</label>
+                                 <div className="flex gap-3">
+                                   {['Standard Files', 'Confidential', 'Legal Records'].map(t => (
+                                     <button key={t} onClick={() => setDocType(t)}
+                                       className="px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all"
+                                       style={{
+                                         borderColor: docType === t ? 'var(--gold)' : 'var(--border-color)',
+                                         background: docType === t ? 'var(--gold-surface)' : 'transparent',
+                                         color: docType === t ? 'var(--gold-dim)' : 'var(--text-secondary)',
+                                       }}>
+                                       {t}
+                                     </button>
+                                   ))}
+                                 </div>
+                               </div>
+                               <div>
+                                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Number of Boxes / Files</label>
+                                 <div className="flex items-center gap-3">
+                                   <button onClick={() => setDocBoxes(b => Math.max(1, b - 1))}
+                                     className="w-10 h-10 rounded-xl font-bold text-lg border flex items-center justify-center"
+                                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>−</button>
+                                   <span className="text-2xl font-black w-16 text-center" style={{ color: 'var(--text-primary)' }}>{docBoxes}</span>
+                                   <button onClick={() => setDocBoxes(b => b + 1)}
+                                     className="w-10 h-10 rounded-xl font-bold text-lg flex items-center justify-center"
+                                     style={{ background: 'var(--gold-surface)', color: 'var(--gold-dim)' }}>+</button>
+                                 </div>
+                                 <p className="text-sm mt-3" style={{ color: 'var(--text-muted)' }}>
+                                   {docType === 'Confidential' ? '₹120' : '₹80'} per box/month · Total: <strong style={{ color: 'var(--gold)' }}>₹{(docBoxes * (docType === 'Confidential' ? 120 : 80)).toLocaleString()}/mo</strong>
+                                 </p>
+                               </div>
+                             </div>
+                           </div>
+                         )}
+
+                         {/* ── HOUSEHOLD STORAGE ── */}
+                         {storageType === 'Household' && (
+                           <div className="flex flex-col h-full overflow-hidden">
+
                     {/* Room tabs — horizontal scrollable */}
                     <div className="flex overflow-x-auto justify-start p-3 gap-2 hide-scrollbar border-b shrink-0 shadow-sm relative z-10 w-full"
                       style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' }}
@@ -1107,24 +1216,24 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                           );
                         })}
                         
-                        <div className="mt-8 p-6 bg-white rounded-2xl border border-gray-200 shadow-sm w-full">
-                          <label className="block text-sm font-bold text-gray-900 mb-2">Other Unlisted Items</label>
+                        <div className="mt-8 p-6 rounded-2xl border shadow-sm w-full" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                          <label className="block text-sm font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Other Unlisted Items</label>
                           <textarea
                             placeholder="E.g., 1x Treadmill, 2x Bean bags..."
                             value={newCustomItem}
                             onChange={e => setNewCustomItem(e.target.value)}
-                            className="w-full p-4 rounded-xl border border-gray-300 focus:border-[#EAB308] outline-none min-h-[100px] resize-y"
+                            className="avati-input min-h-[100px] resize-y"
                           />
-                          <p className="text-xs text-gray-500 mt-2">These items will be manually verified during pickup and added to your quote.</p>
+                          <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>These items will be manually verified during pickup and added to your quote.</p>
                         </div>
                       </div>
                     </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </motion.div>
+                  </div>
                 )}
+                </>
+              )}
+              </motion.div>
+            )}
 
                 {/* TAB 4: Logistics */}
                 {step === 4 && (
@@ -1141,96 +1250,122 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Duration (Months)</label>
-                          <input type="number" value={logistics.duration} onChange={e => setLogistics({ ...logistics, duration: Number(e.target.value) })} className="w-full p-4 rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none transition-all" min="1" />
+                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Estimated Duration (Months)</label>
+                          <input type="number" value={logistics.duration} onChange={e => setLogistics({ ...logistics, duration: Number(e.target.value) })} className="avati-input" min="1" />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Expected Pickup Date</label>
-                          <input type="date" value={logistics.pickupDate} onChange={e => setLogistics({ ...logistics, pickupDate: e.target.value })} className="w-full p-4 rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none transition-all" />
+                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Expected Pickup Date</label>
+                          <input type="date" value={logistics.pickupDate} onChange={e => setLogistics({ ...logistics, pickupDate: e.target.value })} className="avati-input" />
                         </div>
                       </div>
 
                       <div className="space-y-4">
-                        <div className={`p-5 rounded-xl border-2 transition-colors ${logistics.packingRequired ? 'border-[#EAB308] bg-[#EAB308]/5' : 'border-gray-100 hover:border-[#EAB308]/50'}`}>
+                        <div className={`p-5 rounded-xl border-2 transition-colors`} style={{ borderColor: logistics.packingRequired ? 'var(--gold)' : 'var(--border-color)', background: logistics.packingRequired ? 'var(--gold-surface)' : 'var(--bg-primary)' }}>
                           <label className="flex items-start gap-4 cursor-pointer">
                             <input type="checkbox" checked={logistics.packingRequired} onChange={e => setLogistics({ ...logistics, packingRequired: e.target.checked })} className="mt-1 w-5 h-5 accent-[#EAB308]" />
                             <div>
-                              <div className="font-semibold text-gray-900">Professional Packing Required?</div>
-                              <div className="text-sm text-gray-500 mt-1">Calculated dynamically based on your nested item configurations.</div>
+                              <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>Professional Packing Required?</div>
+                              <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Calculated dynamically based on your nested item configurations.</div>
                             </div>
                           </label>
                         </div>
 
-                        <div className={`p-5 rounded-xl border-2 transition-colors ${logistics.transportRequired ? 'border-[#EAB308] bg-[#EAB308]/5' : 'border-gray-100 hover:border-[#EAB308]/50'}`}>
+                        <div className={`p-5 rounded-xl border-2 transition-colors`} style={{ borderColor: logistics.transportRequired ? 'var(--gold)' : 'var(--border-color)', background: logistics.transportRequired ? 'var(--gold-surface)' : 'var(--bg-primary)' }}>
                           <label className="flex items-start gap-4 cursor-pointer">
                             <input type="checkbox" checked={logistics.transportRequired} onChange={e => setLogistics({ ...logistics, transportRequired: e.target.checked })} className="mt-1 w-5 h-5 accent-[#EAB308]" />
                             <div>
-                              <div className="font-semibold text-gray-900">Transportation?</div>
-                              <div className="text-sm text-gray-500 mt-1">Base fee ₹1500 + API Distance Calculation (₹50/km)</div>
+                              <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>Transportation?</div>
+                              <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Base fee ₹1500 + Distance to Warehouse (₹50/km)</div>
                             </div>
                           </label>
                           {logistics.transportRequired && (
-                            <div className="ml-9 mt-4 pt-4 border-t border-gray-200">
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Pincode (Bangalore)</label>
-                              <div className="relative mb-4 group">
+                            <div className="ml-9 mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Search Pickup Area (Bangalore)</label>
+                              <div className="relative mb-4">
                                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-[#EAB308] w-5 h-5 z-10" />
                                 <input
                                   type="text"
-                                  maxLength={6}
-                                  placeholder="e.g. 560016"
+                                  placeholder="e.g. Indiranagar, HSR Layout..."
                                   value={logistics.pickupArea}
+                                  onFocus={() => setShowAreaSuggest(true)}
                                   onChange={e => {
-                                    const val = e.target.value.replace(/\D/g, '');
-                                    let dist = 0;
-                                    if (val.length === 6) {
-                                      dist = Math.min(Math.abs(parseInt(val) - 560016) * 1.5, 60);
-                                    }
-                                    setLogistics({ ...logistics, pickupArea: val, distance: dist });
+                                    setLogistics({ ...logistics, pickupArea: e.target.value, distance: 0 });
+                                    setShowAreaSuggest(true);
                                   }}
-                                  className="w-full pl-12 pr-4 py-4 bg-white rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none font-bold shadow-sm relative z-0"
+                                  className="avati-input !pl-12"
                                 />
+                                {showAreaSuggest && logistics.pickupArea.length > 0 && (
+                                  <div className="absolute top-full left-0 right-0 mt-2 rounded-xl border shadow-2xl z-50 max-h-60 overflow-y-auto" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                                    {BANGALORE_AREAS.filter(a => a.name.toLowerCase().includes(logistics.pickupArea.toLowerCase())).length > 0 ? (
+                                      BANGALORE_AREAS.filter(a => a.name.toLowerCase().includes(logistics.pickupArea.toLowerCase())).map(area => (
+                                        <div
+                                          key={area.name}
+                                          onClick={() => {
+                                            setLogistics({ ...logistics, pickupArea: area.name, distance: area.dist });
+                                            setShowAreaSuggest(false);
+                                          }}
+                                          className="px-4 py-3 cursor-pointer transition-colors border-b last:border-b-0"
+                                          style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
+                                          onMouseEnter={e => {
+                                            (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--gold-surface)';
+                                            (e.currentTarget as HTMLElement).style.color = 'var(--gold)';
+                                          }}
+                                          onMouseLeave={e => {
+                                            (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                                            (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)';
+                                          }}
+                                        >
+                                          <div className="font-bold">{area.name}</div>
+                                          <div className="text-xs mt-1 opacity-70">{area.dist} km from Warehouse</div>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <div className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>No areas found. Please try another name.</div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Calculated Distance (km)</label>
-                              <input type="number" value={logistics.distance} readOnly className="w-full max-w-[150px] py-4 px-4 bg-gray-100 rounded-xl border border-gray-200 outline-none transition-all text-gray-600 font-bold cursor-not-allowed shadow-inner" />
+                              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Distance to Warehouse (km)</label>
+                              <input type="number" value={logistics.distance} readOnly className="w-full max-w-[150px] py-4 px-4 rounded-xl border outline-none font-bold cursor-not-allowed" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }} />
                             </div>
                           )}
                         </div>
 
-                        <div className="p-6 rounded-2xl border border-gray-100 bg-white shadow-sm">
+                        <div className="p-6 rounded-2xl border shadow-sm" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                             <div>
-                              <label className="block text-sm font-semibold text-gray-900 mb-2">Building Type</label>
+                              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Building Type</label>
                               <div className="relative group">
-                                <select value={logistics.buildingType} onChange={e => setLogistics({ ...logistics, buildingType: e.target.value })} className="w-full px-4 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none transition-all appearance-none text-gray-900 font-bold cursor-pointer shadow-sm hover:shadow-md pr-12 relative z-0">
+                                <select value={logistics.buildingType} onChange={e => setLogistics({ ...logistics, buildingType: e.target.value })} className="avati-input appearance-none pr-12">
                                   <option value="Apartment">Apartment</option>
                                   <option value="Villa">Villa</option>
                                   <option value="Independent Building">Independent Building</option>
                                   <option value="Commercial Space">Commercial Space</option>
                                 </select>
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-white flex items-center justify-center pointer-events-none text-gray-500 group-hover:bg-[#EAB308]/10 group-hover:text-[#EAB308] transition-colors shadow-sm z-10">
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center pointer-events-none z-10 transition-colors" style={{ background: 'var(--bg-card)', color: 'var(--text-muted)' }}>
                                   <ChevronDown className="w-4 h-4" />
                                 </div>
                               </div>
                             </div>
                             <div>
-                              <label className="block text-sm font-semibold text-gray-900 mb-2">Floor Number</label>
-                              <input type="number" value={logistics.floors} onChange={e => setLogistics({ ...logistics, floors: Number(e.target.value) })} className="w-full px-4 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none transition-all text-gray-900 font-bold shadow-sm hover:shadow-md" min="0" />
+                              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Floor Number</label>
+                              <input type="number" value={logistics.floors} onChange={e => setLogistics({ ...logistics, floors: Number(e.target.value) })} className="avati-input" min="0" />
                             </div>
                           </div>
 
-                          <label className="block text-sm font-semibold text-gray-900 mb-2">Service Lift Available?</label>
+                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Service Lift Available?</label>
                           <div className="relative group">
-                            <select value={logistics.liftAvailable} onChange={e => setLogistics({ ...logistics, liftAvailable: e.target.value })} className="w-full px-4 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none transition-all appearance-none text-gray-900 font-bold cursor-pointer shadow-sm hover:shadow-md pr-12 relative z-0">
+                            <select value={logistics.liftAvailable} onChange={e => setLogistics({ ...logistics, liftAvailable: e.target.value })} className="avati-input appearance-none pr-12">
                               <option value="yes">Yes, Lift Available</option>
                               <option value="no">No, Stairs Only</option>
                             </select>
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-white flex items-center justify-center pointer-events-none text-gray-500 group-hover:bg-[#EAB308]/10 group-hover:text-[#EAB308] transition-colors shadow-sm z-10">
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center pointer-events-none z-10 transition-colors" style={{ background: 'var(--bg-card)', color: 'var(--text-muted)' }}>
                               <ChevronDown className="w-4 h-4" />
                             </div>
                           </div>
 
                           {logistics.liftAvailable === 'no' && logistics.floors > 0 && (
-                            <div className="mt-4 text-sm text-red-600 font-bold bg-red-50 p-4 rounded-xl border border-red-200 flex items-center gap-2">
+                            <div className="mt-4 text-sm font-bold p-4 rounded-xl border flex items-center gap-2" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>
                               ₹300 per floor surcharge applied for {logistics.floors} floors.
                             </div>
                           )}
@@ -1249,7 +1384,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full flex flex-col space-y-6 overflow-y-auto pr-2"
                   >
-                    <h3 className="text-2xl font-bold text-white mb-6 shrink-0">Select a Storage Plan</h3>
+                    <h3 className="text-2xl font-bold mb-6 shrink-0" style={{ color: 'var(--text-primary)' }}>Select a Storage Plan</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {PLANS.map(plan => {
                         const isLocked = plan.id === 'professional';
@@ -1258,11 +1393,16 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                           <div
                             key={plan.id}
                             onClick={() => !isLocked && setSelectedPlan(plan.id)}
-                            className={`p-6 rounded-2xl border-2 transition-all relative overflow-hidden flex flex-col group ${isLocked ? 'border-gray-800 bg-gray-900/50 cursor-not-allowed opacity-70' : isSelected ? 'border-[#EAB308] bg-[#EAB308]/10 shadow-[0_0_20px_rgba(234,179,8,0.2)] cursor-pointer' : 'border-gray-700 hover:border-[#EAB308]/50 bg-gray-800/80 backdrop-blur-sm cursor-pointer'}`}
+                            className={`p-6 rounded-2xl border-2 transition-all relative overflow-hidden flex flex-col group ${isLocked ? 'opacity-70 cursor-not-allowed' : isSelected ? 'cursor-pointer' : 'cursor-pointer'}`}
+                            style={{
+                               borderColor: isLocked ? 'var(--border-color)' : isSelected ? 'var(--gold)' : 'var(--border-color)',
+                               background: isLocked ? 'var(--bg-secondary)' : isSelected ? 'var(--gold-surface)' : 'var(--bg-card)',
+                               boxShadow: isSelected ? '0 0 16px var(--gold-glow)' : 'var(--shadow-card)'
+                            }}
                           >
                             {isLocked && (
-                              <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center backdrop-blur-[2px]">
-                                <span className="bg-black text-white px-4 py-2 rounded-full font-bold text-sm border border-gray-700">Currently not available</span>
+                              <div className="absolute inset-0 z-20 flex items-center justify-center backdrop-blur-[2px]" style={{ background: 'var(--bg-overlay)' }}>
+                                <span className="px-4 py-2 rounded-full font-bold text-sm border" style={{ background: 'var(--bg-card)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}>Currently not available</span>
                               </div>
                             )}
 
@@ -1273,17 +1413,17 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                             )}
                             {isSelected && <div className="absolute top-4 right-4 text-[#EAB308] z-30"><Check className="w-5 h-5" /></div>}
 
-                            <h3 className={`text-xl font-bold capitalize mb-2 relative z-10 ${isSelected ? 'text-[#EAB308]' : 'text-white'}`}>{plan.name}</h3>
+                            <h3 className={`text-xl font-bold capitalize mb-2 relative z-10`} style={{ color: isSelected ? 'var(--gold)' : 'var(--text-primary)' }}>{plan.name}</h3>
 
-                            <div className="text-3xl font-bold text-white relative z-10 mb-4 border-b border-gray-600/50 pb-4">
+                            <div className="text-3xl font-bold relative z-10 mb-4 border-b pb-4" style={{ color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}>
                               {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `₹${(costs.baseStorageCost * plan.mult).toFixed(0)}`}
-                              {!(storageType === 'Household' && quoteMethod !== 'inventory') && <span className="text-sm font-normal text-gray-400">/mo</span>}
+                              {!(storageType === 'Household' && quoteMethod !== 'inventory') && <span className="text-sm font-normal" style={{ color: 'var(--text-muted)' }}>/mo</span>}
                             </div>
 
                             <ul className="space-y-3 flex-1 relative z-10">
                               {plan.features.map((feat, i) => (
-                                <li key={i} className={`text-sm flex items-start gap-3 ${isSelected ? 'text-gray-200' : 'text-gray-400'}`}>
-                                  <Check className={`w-4 h-4 mt-0.5 shrink-0 ${isSelected ? 'text-[#EAB308]' : 'text-gray-600'}`} />
+                                <li key={i} className={`text-sm flex items-start gap-3`} style={{ color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                                  <Check className={`w-4 h-4 mt-0.5 shrink-0`} style={{ color: isSelected ? 'var(--gold)' : 'var(--text-muted)' }} />
                                   {feat}
                                 </li>
                               ))}
@@ -1293,29 +1433,29 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                       })}
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-xl p-8 mt-6">
-                      <h3 className="text-xl font-bold text-gray-900 mb-6">GST Compliance</h3>
-                      <div className="p-4 mb-6 rounded-xl border border-[#EAB308]/30 bg-[#EAB308]/5 flex items-start gap-3">
+                    <div className="rounded-2xl shadow-xl p-8 mt-6" style={{ background: 'var(--bg-card)' }}>
+                      <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>GST Compliance</h3>
+                      <div className="p-4 mb-6 rounded-xl border flex items-start gap-3" style={{ background: 'var(--gold-surface)', borderColor: 'var(--gold-border)' }}>
                         <Check className="w-5 h-5 text-[#EAB308] shrink-0 mt-0.5" />
                         <div>
-                          <div className="font-semibold text-gray-900">18% GST Applied</div>
-                          <div className="text-sm text-gray-600 mt-1">Standard Government GST rules apply to all storage bookings.</div>
+                          <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>18% GST Applied</div>
+                          <div className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Standard Government GST rules apply to all storage bookings.</div>
                         </div>
                       </div>
 
-                      <div className="p-5 rounded-xl border border-gray-100 bg-gray-50">
+                      <div className="p-5 rounded-xl border" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
                         <label className="flex items-start gap-4 cursor-pointer">
                           <input type="checkbox" checked={hasGstin} onChange={e => setHasGstin(e.target.checked)} className="mt-1 w-5 h-5 accent-[#EAB308]" />
                           <div>
-                            <div className="font-semibold text-gray-900">B2B: I have a GST Number</div>
-                            <div className="text-sm text-gray-500 mt-1">Avail Input Tax Credit (ITC) for business purposes.</div>
+                            <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>B2B: I have a GST Number</div>
+                            <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Avail Input Tax Credit (ITC) for business purposes.</div>
                           </div>
                         </label>
 
                         {hasGstin && (
                           <div className="ml-9 mt-4 pl-4 border-l-2 border-[#EAB308]">
-                            <label className="text-sm text-gray-600 block mb-2 font-medium">Enter GSTIN</label>
-                            <input type="text" value={gstin} onChange={e => setGstin(e.target.value.toUpperCase())} className="w-full p-4 rounded-xl border border-gray-200 focus:border-[#EAB308] outline-none transition-all text-gray-900 bg-white font-mono uppercase tracking-widest" placeholder="29XXXXXXXXXXXXX" maxLength={15} />
+                            <label className="text-sm block mb-2 font-semibold" style={{ color: 'var(--text-secondary)' }}>Enter GSTIN</label>
+                            <input type="text" value={gstin} onChange={e => setGstin(e.target.value.toUpperCase())} className="avati-input font-mono uppercase tracking-widest" placeholder="29XXXXXXXXXXXXX" maxLength={15} />
                           </div>
                         )}
                       </div>
@@ -1325,11 +1465,12 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
               </AnimatePresence>
             </div>
             {isDashboard && step < 5 && (
-              <div className="mt-6 p-6 bg-white rounded-2xl shadow-xl shrink-0 flex items-center justify-between gap-4 border border-gray-100 relative z-10">
+              <div className="mt-6 p-6 rounded-2xl shadow-xl shrink-0 flex items-center justify-between gap-4 border relative z-10" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                 {step > 2 && (
                   <button
                     onClick={() => setStep(step - 1)}
-                    className="px-8 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all min-w-[150px]"
+                    className="px-8 py-4 font-bold rounded-xl transition-all min-w-[150px]"
+                    style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                   >
                     Go Back
                   </button>
