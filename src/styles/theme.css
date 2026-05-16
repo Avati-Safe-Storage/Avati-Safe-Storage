@@ -5,6 +5,7 @@
    Gold: #D4AF37 | Navy: #0B1F3A | Black: #000
 ════════════════════════════════════════════════════════════ */
 :root {
+  color-scheme: light;
   /* ── Core Surfaces ── */
   --bg-primary:        #ffffff;
   --bg-secondary:      #f8f8f6;
@@ -101,6 +102,7 @@
    DARK MODE — Black + Gold
 ════════════════════════════════════════════════════════════ */
 .dark {
+  color-scheme: dark;
   /* ── Core Surfaces ── */
   --bg-primary:        #000000;
   --bg-secondary:      #090909;
@@ -342,6 +344,9 @@
 .avati-input:focus {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(212,175,55,0.15);
+}
+.dark .avati-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }
 
 /* Section separator */
