@@ -542,9 +542,9 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         form.appendChild(input);
       };
 
-      appendField('xnQsjsdp', '2c9e1341c693dabbfc9b5be22073d905dd8ca73808a277604436fa2809ba9957');
+      appendField('xnQsjsdp', 'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce');
       appendField('zc_gad', '');
-      appendField('xmIwtLD', '1fe9648fd45d3551f9bca134b8d2ca8a63260563bbffeaf89cb463481f1191d969b37c46ffd41476715583bd1276ab8a');
+      appendField('xmIwtLD', '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d');
       appendField('actionType', 'TGVhZHM=');
       appendField('returnURL', 'null');
       
@@ -562,9 +562,9 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       appendField('Lead Source', 'Online Store');
       
       // Custom Fields mapped from user request
-      const methodMap: Record<string, string> = { 'inventory': 'Live Quotation', 'upload': 'Upload 360 video', 'visit': 'Request Site Visit' };
-      appendField('Quote Method', methodMap[quoteMethod] || 'Live Quotation');
-      appendField('Storage Type', storageType);
+      const methodMap: Record<string, string> = { 'inventory': 'Live Quotation', 'upload': 'Upload 360 Video', 'visit': 'Book Survey' };
+      appendField('LEADCF6', methodMap[quoteMethod] || 'Live Quotation'); // Quote Method
+      appendField('LEADCF2', storageType); // Storage Type
 
       let invList = '';
       if (storageType === 'Household') {
@@ -579,20 +579,21 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       } else if (storageType === 'Document') {
         invList = `${docBoxes} boxes of ${docType}`;
       }
-      appendField('Inventory List', invList || 'No specific inventory');
+      appendField('LEADCF1', invList || 'No specific inventory'); // Inventory List
       
       const unlisted = customItems.map(c => `${c.qty}x ${c.name}`).join(', ');
-      appendField('Unlisted Items', unlisted || 'None');
+      appendField('LEADCF5', unlisted || 'None'); // Unlisted Items
       
-      const planMapping: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Professional' };
-      appendField('Plan Selected', planMapping[selectedPlan] || 'Basic');
+      const planMapping: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Pro' };
+      appendField('LEADCF3', planMapping[selectedPlan] || 'Basic'); // Plan Selected
       
-      appendField('Packing needed?', logistics.packingRequired ? 'true' : 'false');
-      appendField('Transportation needed', logistics.transportRequired ? 'true' : 'false');
+      if (logistics.packingRequired) appendField('LEADCF101', 'on'); // Packing needed
+      if (logistics.transportRequired) appendField('LEADCF102', 'on'); // Transport needed
       
-      appendField('Total Monthly Charges', Math.round(costs.monthlyStorage).toString());
-      appendField('Packing & Transportation charges', Math.round(costs.packingAndTransport).toString());
+      appendField('LEADCF67', Math.round(costs.monthlyStorage).toString()); // Total Monthly Charges
+      appendField('LEADCF66', Math.round(costs.packingAndTransport).toString()); // Packing & Transport charges
       
+      appendField('Address - Flat / House No./ Building / Apartment Name', logistics.pickupArea);
       appendField('Zip / Postal Code', logistics.pickupArea);
       appendField('City', 'Bangalore');
       appendField('State / Province', 'Karnataka');
