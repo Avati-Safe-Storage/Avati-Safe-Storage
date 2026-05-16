@@ -1244,7 +1244,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                     exit={{ opacity: 0, x: -20 }}
                     className="h-full flex flex-col"
                   >
-                    <div className="rounded-2xl shadow-xl p-6 h-full overflow-y-auto"
+                    <div className="rounded-2xl shadow-xl p-6 h-full overflow-y-auto pb-32"
                       style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
                       <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Service Requirements</h3>
 

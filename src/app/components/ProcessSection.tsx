@@ -85,9 +85,9 @@ export function ProcessSection() {
         </motion.div>
 
         {/* Steps grid / slider */}
-        <div className="flex md:grid md:grid-cols-4 overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 sm:gap-5 pb-4 px-4 -mx-4 md:px-0 md:mx-0 md:pb-0 relative">
+        <div className="flex md:grid md:grid-cols-4 overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 sm:gap-5 pt-4 pb-4 px-4 -mx-4 md:px-0 md:mx-0 md:py-4 relative">
           {/* Desktop connector line — sits behind cards, centered at icon level */}
-          <div className="hidden lg:block absolute top-[52px] left-[calc(12.5%+28px)] right-[calc(12.5%+28px)] h-px pointer-events-none z-0"
+          <div className="hidden lg:block absolute top-[68px] left-[calc(12.5%+28px)] right-[calc(12.5%+28px)] h-px pointer-events-none z-0"
             style={{ background: 'linear-gradient(90deg, #D4AF37, #D4AF37)', opacity: 0.15 }}
             aria-hidden="true"
           />

@@ -99,7 +99,7 @@ export function PricingPlans() {
         </motion.div>
 
         {/* Cards slider */}
-        <div className="flex md:grid md:grid-cols-3 overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-5 sm:gap-6 pb-6 px-4 -mx-4 md:px-0 md:mx-0 md:pb-0">
+        <div className="flex md:grid md:grid-cols-3 overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-5 sm:gap-6 pt-4 pb-6 px-4 -mx-4 md:px-0 md:mx-0 md:py-4">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
