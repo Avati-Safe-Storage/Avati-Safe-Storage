@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Plus, Filter, Eye, UserPlus, RefreshCw, Loader2,
-  AlertCircle, TrendingUp, Clock, CheckCircle2, XCircle, Phone, Mail,
+  Search, Plus, Eye, UserPlus, Loader2,
+  TrendingUp, Clock, CheckCircle2, Phone, Mail,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useZohoAuth } from '../../hooks/useZohoAuth';

@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Warehouse, Package, ChevronRight, Loader2 } from 'lucide-react';
+import { Warehouse, Package, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { getStorageList } from '../../lib/googleSheets';
 import type { Storage } from '../../lib/googleSheets';
 import { PLANS } from '../../lib/inventoryData';
 
 export default function StorageList() {
-  const navigate = useNavigate();
+
   const [list, setList] = useState<Storage[]>([]);
   const [loading, setLoading] = useState(true);
 

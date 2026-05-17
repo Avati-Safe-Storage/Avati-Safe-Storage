@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Filter, Edit, Trash2, Loader2, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
 import { useCustomers, useSheetsConfig } from '../../hooks/useGoogleSheets';
 import CustomerModal from '../../components/admin/CustomerModal';
@@ -32,7 +32,7 @@ export default function CustomerManagement() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleSave = async (customer: CustomerData) => {
+  const handleSave = async (customer: Omit<Customer, 'id' | 'createdAt'>) => {
     const result = editingCustomer
       ? { success: await update({ ...customer, id: editingCustomer.id }) }
       : await add(customer);
@@ -51,7 +51,7 @@ export default function CustomerManagement() {
   };
 
   const openAdd = () => { setEditingCustomer(null); setModalOpen(true); };
-  const openEdit = (c: CustomerData) => { setEditingCustomer(c); setModalOpen(true); };
+  const openEdit = (c: Customer) => { setEditingCustomer(c); setModalOpen(true); };
 
   return (
     <div className="space-y-6">

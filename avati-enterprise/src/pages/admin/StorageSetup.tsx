@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, CheckCircle2, Loader2, Warehouse, Package, IndianRupee } from 'lucide-react';
 import clsx from 'clsx';

@@ -14,7 +14,7 @@ import {
 import clsx from 'clsx';
 
 export default function PortalLayout() {
-  const { role, signOut } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -59,12 +59,16 @@ export default function PortalLayout() {
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
               )}
             >
-              <item.icon className={clsx("w-5 h-5 flex-shrink-0", isActive ? "text-brand-gold" : "text-gray-400 group-hover:text-gray-600", sidebarOpen && "mr-3")} />
-              {sidebarOpen && <span>{item.name}</span>}
-              {!sidebarOpen && (
-                <div className="absolute left-20 bg-gray-900 text-white px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap shadow-lg">
-                  {item.name}
-                </div>
+              {({ isActive }) => (
+                <>
+                  <item.icon className={clsx("w-5 h-5 flex-shrink-0", isActive ? "text-brand-gold" : "text-gray-400 group-hover:text-gray-600", sidebarOpen && "mr-3")} />
+                  {sidebarOpen && <span>{item.name}</span>}
+                  {!sidebarOpen && (
+                    <div className="absolute left-20 bg-gray-900 text-white px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap shadow-lg">
+                      {item.name}
+                    </div>
+                  )}
+                </>
               )}
             </NavLink>
           ))}

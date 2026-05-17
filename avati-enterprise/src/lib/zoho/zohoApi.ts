@@ -1,5 +1,5 @@
 import { ZOHO_CONFIG } from './zohoConfig';
-import type { Lead, Customer, Pickup, StoredItem, Storage, Payment } from './zohoTypes';
+import type { Lead, Customer } from './zohoTypes';
 
 export class ZohoApi {
   private getToken: () => Promise<string | null>;
@@ -154,7 +154,7 @@ export class ZohoApi {
 
   async createBillingSubscription(customerId: string, monthlyRate: number, pickupDate: string) {
     // Mapped to Zoho Billing (pro-rata rent to 5th of month)
-    console.log(`Creating Zoho Billing Subscription for ${customerId} starting ${pickupDate}`);
+    console.log(`Creating Zoho Billing Subscription for ${customerId} starting ${pickupDate} at rate ₹${monthlyRate}`);
     return { success: true, subscriptionId: 'ZOHO-SUB-001' };
   }
 }

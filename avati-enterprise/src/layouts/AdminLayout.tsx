@@ -6,7 +6,6 @@ import {
   Users, 
   Package, 
   Map, 
-  Truck, 
   CreditCard, 
   Settings, 
   LogOut,
@@ -22,7 +21,7 @@ import {
 import clsx from 'clsx';
 
 export default function AdminLayout() {
-  const { user, role, signOut } = useAuth();
+  const { role, signOut } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 

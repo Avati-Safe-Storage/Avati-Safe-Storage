@@ -97,6 +97,15 @@ export interface Customer {
   storageId?: string;
   notes?: string;
   createdAt: string;
+  storageUnit?: string;
+  monthlyRate?: number;
+  items?: number;
+  onboardingDate?: string;
+  alternateNumber?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
 }
 
 // ── Pickup ─────────────────────────────────────────────────────────────────
@@ -168,6 +177,12 @@ export interface StoredItem {
   status: ItemStatus;
   notes?: string;
   addedAt: string;
+  isFragile?: boolean;
+  requiresClimate?: boolean;
+  customerName?: string;
+  zone?: string;
+  rack?: string;
+  dateAdded?: string;
 }
 
 // ── Payment ────────────────────────────────────────────────────────────────

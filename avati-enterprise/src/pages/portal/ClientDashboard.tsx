@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, User, Truck, Warehouse, Package, CreditCard, CheckCircle2, Clock, Loader2, ChevronRight } from 'lucide-react';
+import { Calendar, Warehouse, Package, CreditCard, CheckCircle2, Loader2, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../../contexts/AuthContext';
 import { getPickups, getStorageList, getStoredItems, getPayments } from '../../lib/googleSheets';

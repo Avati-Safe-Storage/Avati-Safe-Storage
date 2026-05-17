@@ -20,6 +20,7 @@ export interface Lead {
   status: 'New' | 'Contacted' | 'Quotation Sent' | 'Booking Confirmed' | 'Converted' | 'Lost';
   notes?: string;
   createdAt: string;
+  convertedCustomerId?: string;
 }
 
 export interface Customer {

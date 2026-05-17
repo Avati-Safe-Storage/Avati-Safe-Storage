@@ -75,7 +75,13 @@ export function useStoredItems(storageId?: string) {
     return ok;
   };
 
-  return { items, loading, error, refresh, updateStatus };
+  const add = async (item: Omit<StoredItem, 'id' | 'addedAt'>) => {
+    const result = await addStoredItems([item]);
+    if (result.success) await refresh();
+    return result;
+  };
+
+  return { items, loading, error, refresh, updateStatus, add };
 }
 
 // ─── Dashboard Stats Hook ────────────────────────────────────

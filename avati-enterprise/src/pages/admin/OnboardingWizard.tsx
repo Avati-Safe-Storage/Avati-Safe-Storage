@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  User, Phone, Shield, Building2, Truck, KeyRound,
+  User, Truck, KeyRound,
   CheckCircle2, ChevronLeft, ChevronRight, Loader2, Copy, Eye, EyeOff,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { addPickup, addPayment, getStaff } from '../../lib/googleSheets';
-import type { Pickup, PreferredTime, Staff } from '../../lib/googleSheets';
+import type { PreferredTime, Staff } from '../../lib/googleSheets';
 import { useZohoAuth } from '../../hooks/useZohoAuth';
 import { ZohoApi } from '../../lib/zoho/zohoApi';
-import type { Lead, Customer } from '../../lib/zoho/zohoTypes';
+import type { Lead } from '../../lib/zoho/zohoTypes';
 
 type KycType = 'Aadhaar' | 'PAN' | 'Passport' | 'Driving License' | 'GSTIN';
 
@@ -148,7 +148,7 @@ export default function OnboardingWizard() {
       }
 
       // Phase B Action: Generate Digital Form & Zoho Sign
-      const zohoSignResponse = await zohoApi.sendRentalAgreement({
+      await zohoApi.sendRentalAgreement({
         id: customerId, name: cust.name, phone: cust.phone, email: cust.email,
         status: 'Identity Verification Pending',
         kycType: cust.kycType, kycId: cust.kycId, gstin: cust.gstin, createdAt: new Date().toISOString()

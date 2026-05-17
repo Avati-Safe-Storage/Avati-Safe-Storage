@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Search, Filter, Box, MapPin, Download, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Search, Box, MapPin, Download, Loader2, AlertCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { useStoredItems, useCustomers, useSheetsConfig } from '../../hooks/useGoogleSheets';
 import InventoryModal from '../../components/admin/InventoryModal';
-import type { ItemStatus } from '../../lib/googleSheets';
+import type { ItemStatus, StoredItem } from '../../lib/googleSheets';
 
 const STATUS_COLORS: Record<string, string> = {
   'In Storage':          'bg-blue-100 text-blue-800',
@@ -12,9 +12,33 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function InventoryManagement() {
-  const { items, loading, error, updateStatus } = useStoredItems();
+  const { items, loading, error, updateStatus, add } = useStoredItems();
   const { customers } = useCustomers();
   const { configured } = useSheetsConfig();
+
+  const handleSave = async (item: any) => {
+    const storedItem: Omit<StoredItem, 'id' | 'addedAt'> = {
+      customerId: item.customerId,
+      storageId: '',
+      name: item.itemName,
+      category: item.category,
+      description: item.description,
+      quantity: item.quantity,
+      unit: item.unit,
+      condition: 'Good',
+      notes: item.notes,
+      isExtra: true,
+      status: 'In Storage',
+      isFragile: item.isFragile,
+      requiresClimate: item.requiresClimate,
+      customerName: item.customerName,
+      zone: item.zone,
+      rack: item.rack,
+      dateAdded: item.dateAdded,
+    };
+    const res = await add(storedItem);
+    return { success: res.success };
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [zoneFilter, setZoneFilter] = useState('All');
@@ -158,7 +182,7 @@ export default function InventoryManagement() {
                   <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                        {item.itemName}
+                        {item.name}
                         {item.isFragile && <span title="Fragile" className="text-orange-500 text-xs">⚠️</span>}
                         {item.requiresClimate && <span title="Climate Controlled" className="text-blue-500 text-xs">🌡️</span>}
                       </div>
@@ -183,7 +207,7 @@ export default function InventoryManagement() {
                     <td className="px-6 py-4">
                       <select
                         value={item.status}
-                        onChange={e => handleStatusChange(item.id!, e.target.value as InventoryStatus)}
+                        onChange={e => handleStatusChange(item.id!, e.target.value as ItemStatus)}
                         className={clsx(
                           'text-xs font-semibold px-2.5 py-1 rounded-full border-0 outline-none cursor-pointer',
                           STATUS_COLORS[item.status || 'Stored']

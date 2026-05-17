@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import clsx from 'clsx';
 import { BASE_ITEMS, ITEM_ROOMS } from '../../lib/inventoryData';
 import type { ItemCondition } from '../../lib/googleSheets';
@@ -39,11 +39,11 @@ function defaultOpts(def: typeof BASE_ITEMS[0]): Record<string, string> {
 }
 
 export default function ItemCatalogue({ items, onChange }: Props) {
-  const [activeRoom, setActiveRoom] = useState(ITEM_ROOMS[0]);
+  const [activeRoom, setActiveRoom] = useState<typeof ITEM_ROOMS[number]>(ITEM_ROOMS[0]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [extraName, setExtraName] = useState('');
   const [extraPrice, setExtraPrice] = useState(0);
-  const [extraCategory, setExtraCategory] = useState('Extra Items');
+  const [extraCategory] = useState('Extra Items');
 
   const addFromCatalogue = (defId: string) => {
     const def = BASE_ITEMS.find(d => d.id === defId)!;
