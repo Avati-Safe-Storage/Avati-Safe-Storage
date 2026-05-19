@@ -2,6 +2,22 @@
   <!DOCTYPE html>
   <html lang="en">
     <head>
+      <!-- Dark mode flash prevention: must run synchronously before any render -->
+      <script>
+        (function() {
+          try {
+            // Default is dark mode. If user previously set light, respect that.
+            var saved = localStorage.getItem('avati_theme');
+            if (saved === 'light') {
+              document.documentElement.classList.remove('dark');
+            } else {
+              document.documentElement.classList.add('dark');
+            }
+          } catch(e) {
+            document.documentElement.classList.add('dark');
+          }
+        })();
+      </script>
       <!-- Google tag (gtag.js) -->
       <script async src="https://www.googletagmanager.com/gtag/js?id=G-B24YGTMFNZ"></script>
       <script>
@@ -17,6 +33,8 @@
       <link rel="canonical" href="https://www.avatisafestorage.com/" />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <meta name="google-site-verification" content="Jy34zDKaP5aPswgnm4HZ_uh4Aq3CB0sgzvgBHVv3eGw" />
+      <meta name="theme-color" content="#000000" />
+      <meta name="color-scheme" content="dark light" />
       <title>Best Storage Space in Bangalore | Avati Safe Storage</title>
       <meta name="title" content="Best Storage Space in Bangalore | Avati Safe Storage" />
       <meta name="description" content="#1 self storage facility in Bangalore. Pest-free, 24/7 CCTV household &amp; office storage from ₹999/mo. Free doorstep pickup across 50+ areas. Get instant quote!" />
@@ -28,9 +46,15 @@
       <meta name="ICBM" content="13.0247, 77.6601" />
       <link rel="alternate" hreflang="en-in" href="https://www.avatisafestorage.com/" />
       <link rel="publisher" href="https://www.avatisafestorage.com" />
+      <!-- DNS prefetch for 3rd party domains -->
+      <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+      <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+      <link rel="dns-prefetch" href="https://crm.zoho.in" />
+      <!-- Preconnect for performance -->
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&display=swap" rel="stylesheet">
+      <!-- Google Fonts: Inter (body) + Caveat (accents) with display=swap for no FOIT -->
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Caveat:wght@400..700&display=swap" rel="stylesheet">
       
       <!-- Open Graph / Facebook / LinkedIn / WhatsApp -->
       <meta property="og:type" content="website" />
@@ -194,7 +218,15 @@
       }
       </script>
 
-      <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
+      <style>
+        html, body { height: 100%; margin: 0; }
+        #root { height: 100%; }
+        /* Prevent flash of unstyled content in dark mode */
+        html { background-color: #000000; color: #f5f5f0; }
+        html.dark { background-color: #000000; }
+        /* Critical font-face for Inter fallback */
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+      </style>
     </head>
 
     <body>

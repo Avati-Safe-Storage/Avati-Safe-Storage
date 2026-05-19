@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useTheme } from "../App";
 
 function useStickyState<T>(defaultValue: T | (() => T), key: string): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [value, setValue] = useState<T>(() => {
@@ -362,6 +363,7 @@ interface InventoryInstance {
 }
 
 export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolean, onClose?: () => void }) {
+  const { dark } = useTheme();
   const [step, setStep] = useStickyState(isDashboard ? 2 : 1, 'avati_q_step');
 
   // Step 1: State
@@ -795,47 +797,74 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     : ['Customer Details', 'Storage Type', quoteMethod === 'upload' ? 'Upload Media' : quoteMethod === 'visit' ? 'Site Visit' : 'Inventory', 'Logistics', 'Plans'];
 
   return (
-    <section id="quote" className={`py-16 sm:py-24 bg-gradient-to-br from-[#0B1F3A] to-black relative overflow-hidden ${isDashboard ? 'min-h-[80vh] rounded-2xl' : ''}`}>
+    <section id="quote" className={`py-16 sm:py-24 relative overflow-hidden ${isDashboard ? 'min-h-[80vh] rounded-2xl' : ''}`}
+      style={{ background: dark ? 'linear-gradient(135deg, #0B1F3A 0%, #000000 100%)' : 'linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%)' }}
+    >
       {isDashboard && (
-        <button onClick={onClose} className="absolute top-6 right-6 text-white hover:text-[#EAB308] z-50">
+        <button onClick={onClose} className="absolute top-6 right-6 z-50" style={{ color: 'var(--text-primary)' }}>
           <X className="w-8 h-8" />
         </button>
       )}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-[#EAB308]/5 blur-[120px]" />
-        <div className="absolute bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-[120px]" />
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full blur-[120px]"
+          style={{ background: 'rgba(212,175,55,0.07)' }} />
+        <div className="absolute bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full blur-[120px]"
+          style={{ background: dark ? 'rgba(59,130,246,0.05)' : 'rgba(11,31,58,0.06)' }} />
       </div>
 
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-10 sm:mb-14">
-          <span className="inline-block px-4 py-1.5 bg-[#D4AF37]/10 text-[#D4AF37] text-[11px] font-bold uppercase tracking-[0.15em] rounded-full mb-4 border border-[#D4AF37]/20">Instant Quote Engine</span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 tracking-tight">High-Precision Quote Generator</h2>
-          <p className="text-base text-gray-400">Detailed item-specific calculation — get your price in seconds</p>
+          <span className="inline-block px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] rounded-full mb-4 border"
+            style={{ background: 'var(--gold-surface)', color: 'var(--gold)', border: '1px solid var(--gold-border)' }}>
+            Instant Quote Engine
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-3 tracking-tight"
+            style={{ color: 'var(--text-primary)' }}>
+            High-Precision Quote Generator
+          </h2>
+          <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
+            Detailed item-specific calculation — get your price in seconds
+          </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 items-stretch lg:h-[750px] justify-center">
           <div className="flex-1 w-full flex flex-col min-h-0">
 
             {/* Progress Bar — short labels on mobile */}
-            <div className="mb-5 sm:mb-8 bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-4 sm:p-6 rounded-2xl shadow-xl shrink-0">
+            <div className="mb-5 sm:mb-8 backdrop-blur-sm px-4 py-4 sm:p-6 rounded-2xl shadow-xl shrink-0"
+              style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)' }}>
               <div className="flex items-center justify-between relative z-10">
                 {stepLabels.map((label, i) => {
                   const currentStep = isDashboard ? i + 2 : i + 1;
+                  const isActive = step >= currentStep;
+                  const isDone = step > currentStep;
                   return (
                   <div key={i} className="flex flex-col items-center gap-2 flex-1 relative cursor-pointer" onClick={() => step > currentStep && setStep(currentStep)}>
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300 z-10 ${step > currentStep ? 'bg-[#EAB308] text-black shadow-[0_0_12px_rgba(234,179,8,0.4)]' : step === currentStep ? 'bg-[#EAB308] text-black ring-4 ring-[#EAB308]/25' : 'bg-gray-800 text-gray-400 border-2 border-gray-700'}`}>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300 z-10"
+                      style={{
+                        background: isActive ? '#D4AF37' : 'var(--bg-card)',
+                        color: isActive ? '#000' : 'var(--text-muted)',
+                        border: isActive ? 'none' : '2px solid var(--border-color)',
+                        boxShadow: isDone ? '0 0 12px rgba(212,175,55,0.4)' : isActive ? '0 0 0 4px rgba(212,175,55,0.2)' : 'none',
+                      }}>
                       {step > currentStep ? <Check className="w-4 h-4" /> : (i + 1)}
                     </div>
-                    <span className={`text-[9px] sm:text-xs font-medium text-center leading-tight ${step >= currentStep ? 'text-[#EAB308]' : 'text-gray-500'}`}>
+                    <span className="text-[9px] sm:text-xs font-medium text-center leading-tight"
+                      style={{ color: isActive ? 'var(--gold)' : 'var(--text-muted)' }}>
                       <span className="sm:hidden">{label}</span>
                       <span className="hidden sm:block">{stepLabelsLong[i]}</span>
                     </span>
                   </div>
                 )})}
-                <div className="absolute top-4 sm:top-5 left-[10%] w-[80%] h-[2px] bg-gray-700 -z-0" />
+                <div className="absolute top-4 sm:top-5 left-[10%] w-[80%] h-[2px] -z-0"
+                  style={{ background: 'var(--border-color)' }} />
                 <div
-                  className="absolute top-4 sm:top-5 left-[10%] h-[2px] bg-[#EAB308] transition-all duration-500 -z-0 shadow-[0_0_8px_rgba(234,179,8,0.4)]"
-                  style={{ width: `${((step - 1) / (stepLabels.length - 1)) * 80}%` }}
+                  className="absolute top-4 sm:top-5 left-[10%] h-[2px] transition-all duration-500 -z-0"
+                  style={{
+                    width: `${((step - 1) / (stepLabels.length - 1)) * 80}%`,
+                    background: '#D4AF37',
+                    boxShadow: '0 0 8px rgba(212,175,55,0.4)',
+                  }}
                 />
               </div>
             </div>

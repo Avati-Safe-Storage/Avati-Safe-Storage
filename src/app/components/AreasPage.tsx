@@ -1,48 +1,16 @@
 import { motion } from "motion/react";
-import { MapPin, ChevronRight, ArrowRight, Home, Building2, Car, FileText, Thermometer, Package } from "lucide-react";
+import { MapPin, ChevronRight, ArrowRight, Home, Building2, Car, FileText, Package, Truck } from "lucide-react";
 import { Link } from "react-router";
 import { useTheme } from "../App";
+import { ZONES, SERVICE_TYPES, buildZoneUrl, buildPageUrl, buildAreaUrl } from "../../lib/pseo/locationData";
 
 const serviceTypes = [
-  { icon: Home,        label: "Household Storage",    href: "/household-storage",   desc: "Furniture, appliances & personal belongings" },
-  { icon: Building2,   label: "Business Storage",     href: "/business-storage",    desc: "Office inventory & commercial goods" },
-  { icon: Car,         label: "Vehicle Storage",      href: "/vehicle-storage",     desc: "Cars, bikes & specialty vehicles" },
-  { icon: Thermometer, label: "Climate Controlled",   href: "/climate-controlled",  desc: "Precision storage for art, wine & electronics" },
-  { icon: FileText,    label: "Document Storage",     href: "/document-storage",    desc: "Secure archival & record management" },
-  { icon: Package,     label: "E-Commerce Storage",   href: "/ecommerce-storage",   desc: "Pick, pack & ship support" },
-];
-
-const regions = [
-  {
-    id: "central-bangalore",
-    name: "Central Bangalore",
-    icon: "🏛️",
-    areas: ["MG Road", "Ulsoor", "Brigade Road", "Richmond Town", "Vasanth Nagar", "Shivajinagar", "Cubbon Park"],
-  },
-  {
-    id: "south-bangalore",
-    name: "South Bangalore",
-    icon: "🌳",
-    areas: ["Jayanagar", "JP Nagar", "HSR Layout", "BTM Layout", "Koramangala", "Bannerghatta Road", "Electronic City"],
-  },
-  {
-    id: "east-bangalore",
-    name: "East Bangalore",
-    icon: "🏗️",
-    areas: ["Whitefield", "Indiranagar", "Marathahalli", "Bellandur", "KR Puram", "Sarjapur Road", "Varthur"],
-  },
-  {
-    id: "north-bangalore",
-    name: "North Bangalore",
-    icon: "🏭",
-    areas: ["Hebbal", "Yelahanka", "RT Nagar", "Manyata Tech Park", "Horamavu", "Kalyan Nagar", "Hennur"],
-  },
-  {
-    id: "west-bangalore",
-    name: "West Bangalore",
-    icon: "🌆",
-    areas: ["Rajajinagar", "Malleshwaram", "Vijayanagar", "Kengeri", "Magadi Road", "Nagarbhavi"],
-  },
+  { icon: Home,      label: "Household Storage",    href: "/household-storage",   desc: "Furniture, appliances & personal belongings" },
+  { icon: Building2, label: "Business Storage",     href: "/business-storage",    desc: "Office inventory & commercial goods" },
+  { icon: Car,       label: "Vehicle Storage",      href: "/vehicle-storage",     desc: "Cars, bikes & specialty vehicles" },
+  { icon: FileText,  label: "Document Storage",     href: "/document-storage",    desc: "Secure archival & record management" },
+  { icon: Truck,     label: "Moving & Relocation",  href: "/relocation-storage",  desc: "Short-term storage during transition" },
+  { icon: Package,   label: "E-Commerce Storage",   href: "/ecommerce-storage",   desc: "Pick, pack & ship support" },
 ];
 
 export function AreasPage() {
@@ -156,7 +124,7 @@ export function AreasPage() {
                   {region.areas.map(area => (
                     <div key={area}>
                       <Link
-                        to={`/areas/${region.id}/${area.toLowerCase().replace(/\s+/g, '-')}`}
+                        to={buildAreaUrl(region.id, area.toLowerCase().replace(/\s+/g, '-'))}
                         className="flex items-center justify-between px-3 py-2 rounded-lg text-sm group transition-all"
                         style={{ color: 'var(--text-secondary)' }}
                         onMouseEnter={e => {

@@ -1,21 +1,34 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext, lazy, Suspense } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router";
 import { Navigation } from "./components/Navigation";
 import { Hero } from "./components/Hero";
 import { Services } from "./components/Services";
 import { PricingPlans } from "./components/PricingPlans";
-import { QuotationSystem } from "./components/QuotationSystem";
 import { TrustSection } from "./components/TrustSection";
 import { ProcessSection } from "./components/ProcessSection";
 import { Testimonials } from "./components/Testimonials";
 import { AreasSection } from "./components/AreasSection";
 import { Footer } from "./components/Footer";
-import { LoginPage } from "./components/LoginPage";
-import { Dashboard } from "./components/Dashboard";
-import { QuotePage } from "./components/QuotePage";
-import { FAQPage } from "./components/FAQPage";
-import { AreasPage } from "./components/AreasPage";
-import { ServiceLocationPage } from "./components/ServiceLocationPage";
+
+// Lazy-loaded heavy pages (code split for performance)
+const QuotationSystem = lazy(() => import("./components/QuotationSystem").then(m => ({ default: m.QuotationSystem })));
+const LoginPage = lazy(() => import("./components/LoginPage").then(m => ({ default: m.LoginPage })));
+const Dashboard = lazy(() => import("./components/Dashboard").then(m => ({ default: m.Dashboard })));
+const QuotePage = lazy(() => import("./components/QuotePage").then(m => ({ default: m.QuotePage })));
+const FAQPage = lazy(() => import("./components/FAQPage").then(m => ({ default: m.FAQPage })));
+const AreasPage = lazy(() => import("./components/AreasPage").then(m => ({ default: m.AreasPage })));
+const ServiceLocationPage = lazy(() => import("./components/ServiceLocationPage").then(m => ({ default: m.ServiceLocationPage })));
+const LocationLandingPage = lazy(() => import("./components/LocationLandingPage").then(m => ({ default: m.LocationLandingPage })));
+
+// Loading fallback
+function PageSpinner() {
+  return (
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-primary)' }}>
+      <div style={{ width: 40, height: 40, border: '3px solid rgba(212,175,55,0.2)', borderTopColor: '#D4AF37', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
 
 // ── Theme context ───────────────────────────────────────────────────────────
 export const ThemeContext = createContext<{ dark: boolean; toggle: () => void }>({
@@ -73,6 +86,7 @@ function AppRoutes() {
   return (
     <>
     <ScrollToTop />
+    <Suspense fallback={<PageSpinner />}>
     <Routes>
       <Route path="/" element={<LandingPage onLoginClick={() => navigate('/login')} />} />
       <Route path="/get-quote" element={<QuotePage />} />
@@ -107,11 +121,7 @@ function AppRoutes() {
           <ServiceLocationPage />
         </PageLayout>
       } />
-      <Route path="/climate-controlled" element={
-        <PageLayout onLoginClick={() => navigate('/login')}>
-          <ServiceLocationPage />
-        </PageLayout>
-      } />
+      {/* climate-controlled removed — no longer offered */}
       <Route path="/document-storage" element={
         <PageLayout onLoginClick={() => navigate('/login')}>
           <ServiceLocationPage />
@@ -128,10 +138,10 @@ function AppRoutes() {
         </PageLayout>
       } />
 
-      {/* Service + region + area pages */}
+      {/* pSEO: service + zone + area pages (200+ landing pages) */}
       <Route path="/:serviceType/:regionId/:area" element={
         <PageLayout onLoginClick={() => navigate('/login')}>
-          <ServiceLocationPage />
+          <LocationLandingPage />
         </PageLayout>
       } />
 
@@ -159,18 +169,32 @@ function AppRoutes() {
       {/* Fallback */}
       <Route path="*" element={<LandingPage onLoginClick={() => navigate('/login')} />} />
     </Routes>
+    </Suspense>
     </>
   );
 }
 
 // ── Theme wrapper ────────────────────────────────────────────────────────────
 export default function App() {
-  const [dark, setDark] = useState(true);
+  // Initialize from the class applied by the flash-prevention inline script
+  const [dark, setDark] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avati_theme');
+      if (saved === 'light') return false;
+      return true; // default: dark
+    } catch {
+      return true;
+    }
+  });
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
     // Smooth theme transition
     document.documentElement.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+    // Persist preference
+    try {
+      localStorage.setItem('avati_theme', dark ? 'dark' : 'light');
+    } catch {}
   }, [dark]);
 
   return (

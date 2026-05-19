@@ -206,6 +206,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
+  const [showLightTooltip, setShowLightTooltip] = useState(false);
   const { dark, toggle } = useTheme();
   const location = useLocation();
   const isQuotePage = location.pathname === "/get-quote";
@@ -332,22 +333,50 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
           {/* Desktop actions */}
           <div className="hidden md:flex items-center gap-2.5">
             {/* Theme toggle switch */}
-            <button
-              onClick={toggle}
-              aria-label="Toggle theme"
-              className="relative flex items-center w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0"
-              style={{
-                background: dark ? 'rgba(212,175,55,0.2)' : 'rgba(0,0,0,0.12)',
-                border: '1px solid var(--gold-border)',
-              }}
-            >
-              <span
-                className="absolute w-4 h-4 rounded-full transition-all duration-300 flex items-center justify-center text-[9px]"
-                style={{ left: dark ? '26px' : '2px', background: dark ? '#D4AF37' : '#1A1A1A' }}
+            <div className="relative" onMouseEnter={() => dark && setShowLightTooltip(true)} onMouseLeave={() => setShowLightTooltip(false)}>
+              <button
+                onClick={toggle}
+                aria-label="Toggle theme"
+                className="relative flex items-center w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0"
+                style={{
+                  background: dark ? 'rgba(212,175,55,0.2)' : 'rgba(0,0,0,0.12)',
+                  border: '1px solid var(--gold-border)',
+                }}
               >
-                {dark ? '☀' : '☾'}
-              </span>
-            </button>
+                <span
+                  className="absolute w-4 h-4 rounded-full transition-all duration-300 flex items-center justify-center text-[9px]"
+                  style={{ left: dark ? '26px' : '2px', background: dark ? '#D4AF37' : '#1A1A1A' }}
+                >
+                  {dark ? '☀' : '☾'}
+                </span>
+              </button>
+              {/* Light tooltip */}
+              <AnimatePresence>
+                {showLightTooltip && dark && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.9 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-[9999] pointer-events-none whitespace-nowrap"
+                  >
+                    <div className="px-3 py-2 rounded-xl text-xs font-bold shadow-2xl text-center"
+                      style={{ background: '#D4AF37', color: '#000', boxShadow: '0 8px 24px rgba(212,175,55,0.5)' }}>
+                      🌙 Too dark? Turn on the lights!
+                      <motion.div
+                        animate={{ y: [0, 4, 0] }}
+                        transition={{ duration: 0.8, repeat: Infinity }}
+                        className="text-center mt-0.5 text-base leading-none"
+                      >
+                        👇
+                      </motion.div>
+                    </div>
+                    <div className="w-2.5 h-2.5 mx-auto rotate-45 -mt-1.5"
+                      style={{ background: '#D4AF37' }} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Customer Portal */}
             <button
@@ -389,19 +418,45 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
 
           {/* Mobile bar */}
           <div className="flex md:hidden items-center gap-2">
-            <button
-              onClick={toggle}
-              aria-label="Toggle theme"
-              className="relative flex items-center w-10 h-5 rounded-full transition-all duration-300"
-              style={{ background: dark ? 'rgba(212,175,55,0.2)' : 'rgba(0,0,0,0.12)', border: '1px solid var(--gold-border)' }}
-            >
-              <span
-                className="absolute w-3.5 h-3.5 rounded-full transition-all duration-300 text-[8px] flex items-center justify-center"
-                style={{ left: dark ? '22px' : '1px', background: dark ? '#D4AF37' : '#1A1A1A' }}
+            <div className="relative" onMouseEnter={() => dark && setShowLightTooltip(true)} onMouseLeave={() => setShowLightTooltip(false)}>
+              <button
+                onClick={toggle}
+                aria-label="Toggle theme"
+                className="relative flex items-center w-10 h-5 rounded-full transition-all duration-300"
+                style={{ background: dark ? 'rgba(212,175,55,0.2)' : 'rgba(0,0,0,0.12)', border: '1px solid var(--gold-border)' }}
               >
-                {dark ? '☀' : '☾'}
-              </span>
-            </button>
+                <span
+                  className="absolute w-3.5 h-3.5 rounded-full transition-all duration-300 text-[8px] flex items-center justify-center"
+                  style={{ left: dark ? '22px' : '1px', background: dark ? '#D4AF37' : '#1A1A1A' }}
+                >
+                  {dark ? '☀' : '☾'}
+                </span>
+              </button>
+              <AnimatePresence>
+                {showLightTooltip && dark && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.9 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-[9999] pointer-events-none whitespace-nowrap"
+                  >
+                    <div className="px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-2xl text-center"
+                      style={{ background: '#D4AF37', color: '#000' }}>
+                      🌙 Turn on the lights!
+                      <motion.div
+                        animate={{ y: [0, 3, 0] }}
+                        transition={{ duration: 0.8, repeat: Infinity }}
+                        className="text-center text-sm leading-none"
+                      >
+                        👇
+                      </motion.div>
+                    </div>
+                    <div className="w-2 h-2 mx-auto rotate-45 -mt-1" style={{ background: '#D4AF37' }} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             {!isQuotePage ? (
               <Link to="/get-quote"
                 className="px-3.5 py-2 text-[11px] font-bold text-black rounded-lg flex items-center gap-1"

@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "sitemap": "node scripts/generate-sitemap.mjs",
+    "build:all": "npm run sitemap && vite build"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

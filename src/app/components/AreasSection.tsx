@@ -108,7 +108,7 @@ export function AreasSection() {
         </motion.div>
 
         {/* Accordion Regions */}
-        <div className="space-y-3 max-w-4xl mx-auto">
+        <div className="space-y-3 max-w-4xl mx-auto" style={{ isolation: 'isolate' }}>
           {regions.map((region, ri) => (
             <motion.div
               key={region.id}
@@ -116,8 +116,11 @@ export function AreasSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: ri * 0.07 }}
-              style={cardBase}
-              className={`relative ${openRegion === region.id ? 'z-50' : 'z-10'}`}
+              style={{
+                ...cardBase,
+                position: 'relative',
+                zIndex: openRegion === region.id ? 100 : 1,
+              }}
             >
               {/* Region header button */}
               <button
@@ -155,12 +158,12 @@ export function AreasSection() {
                   >
                     <div className="px-5 pb-5 pt-1">
                       <div className="h-px mb-4" style={{ background: 'var(--border-color)' }} />
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2" style={{ position: 'relative', zIndex: 200 }}>
                         {region.areas.map(area => {
                           const key = `${region.id}-${area}`;
                           const isOpen = openArea === key;
                           return (
-                            <div key={area} className="relative z-30">
+                            <div key={area} style={{ position: 'relative', zIndex: isOpen ? 999 : 'auto' }}>
                               <button
                                 onClick={() => toggleArea(region.id, area)}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border"
@@ -168,6 +171,8 @@ export function AreasSection() {
                                   borderColor: isOpen ? 'var(--gold)' : 'var(--border-color)',
                                   backgroundColor: isOpen ? 'var(--gold-surface)' : 'transparent',
                                   color: 'var(--text-secondary)',
+                                  position: 'relative',
+                                  zIndex: 1,
                                 }}
                               >
                                 <MapPin className="w-3 h-3" style={{ color: 'var(--gold)' }} />
@@ -181,7 +186,7 @@ export function AreasSection() {
                                 />
                               </button>
 
-                              {/* Service dropdown popup */}
+                              {/* Service dropdown popup — always on top */}
                               <AnimatePresence>
                                 {isOpen && (
                                   <motion.div
@@ -190,10 +195,19 @@ export function AreasSection() {
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: -6, scale: 0.97 }}
                                     transition={{ duration: 0.15 }}
-                                    className="absolute top-full left-0 mt-2 z-50 rounded-xl overflow-hidden w-56 shadow-2xl"
                                     style={{
+                                      position: 'absolute',
+                                      top: '100%',
+                                      left: 0,
+                                      marginTop: '8px',
+                                      zIndex: 9999,
+                                      borderRadius: '12px',
+                                      overflow: 'hidden',
+                                      width: '224px',
+                                      boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
                                       background: dark ? 'rgba(10,10,10,0.99)' : 'rgba(255,255,255,0.99)',
                                       backdropFilter: 'blur(20px)',
+                                      WebkitBackdropFilter: 'blur(20px)',
                                       border: '1px solid var(--gold-border)',
                                     }}
                                   >
