@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { ArrowRight, Shield, Users, PackageCheck, Clock } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { Link } from "react-router";
 import { useTheme } from "../App";
 
 const stats = [
@@ -13,19 +12,7 @@ const stats = [
 
 export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
   const { dark } = useTheme();
-  const location = useLocation();
-  const isHomePage = location.pathname === "/";
   const videoUrl = import.meta.env.BASE_URL + 'homepage-video.webm';
-
-  // Show "too dark" greeting — text only, auto-hides after 1s
-  const [showDarkGreeting, setShowDarkGreeting] = useState(false);
-  useEffect(() => {
-    if (!dark || !isHomePage) { setShowDarkGreeting(false); return; }
-    // Show after 700ms, auto-hide after 1s of visibility
-    const showTimer = setTimeout(() => setShowDarkGreeting(true), 700);
-    const hideTimer = setTimeout(() => setShowDarkGreeting(false), 1700); // 700 + 1000
-    return () => { clearTimeout(showTimer); clearTimeout(hideTimer); };
-  }, [dark, isHomePage]);
 
   return (
     <section
@@ -33,7 +20,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
       style={{ backgroundColor: 'var(--bg-primary)' }}
       aria-label="Avati Safe Storage – Secure Storage in Bangalore"
     >
-      {/* Background video — shown on all devices; muted+playsInline allows mobile autoplay */}
+      {/* Background video — muted+playsInline allows autoplay on mobile */}
       <video
         autoPlay
         loop
@@ -66,7 +53,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
         />
       </div>
 
-      {/* Dot grid */}
+      {/* Dot grid texture */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
         style={{
           backgroundImage: 'radial-gradient(circle at 1px 1px, var(--gold) 1px, transparent 0)',
@@ -74,33 +61,6 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
           opacity: dark ? 0.04 : 0.03,
         }}
       />
-
-      {/* "Too dark?" 1-second popup \u2014 plain text, no icons */}
-      <AnimatePresence>
-        {showDarkGreeting && (
-          <motion.div
-            initial={{ opacity: 0, y: -14, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -14, scale: 0.96 }}
-            transition={{ duration: 0.25 }}
-            className="fixed top-20 left-1/2 z-[9000] pointer-events-none"
-            style={{ transform: 'translateX(-50%)' }}
-            aria-live="polite"
-          >
-            <div
-              className="px-5 py-2.5 rounded-xl shadow-2xl text-sm font-bold tracking-wide"
-              style={{
-                background: 'linear-gradient(135deg, #D4AF37, #FFD700)',
-                color: '#000',
-                boxShadow: '0 8px 28px rgba(212,175,55,0.5)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Too dark? Turn on the lights
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-8 pt-28 pb-24 sm:pt-40 sm:pb-32 flex flex-col items-center text-center gap-6 sm:gap-8">

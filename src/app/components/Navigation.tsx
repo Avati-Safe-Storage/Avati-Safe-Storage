@@ -242,10 +242,21 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [showLightTooltip, setShowLightTooltip] = useState(false);
+  // Auto-greeting: shows under the switch for 2s when landing in dark mode
+  const [showGreeting, setShowGreeting] = useState(false);
   const { dark, toggle } = useTheme();
   const location = useLocation();
+  const isHomePage = location.pathname === '/';
   const isQuotePage = location.pathname === "/get-quote";
   const servicesRef = useRef<HTMLDivElement>(null);
+
+  // Show greeting 800ms after landing on homepage in dark mode, hide after 2s
+  useEffect(() => {
+    if (!dark || !isHomePage) { setShowGreeting(false); return; }
+    const show = setTimeout(() => setShowGreeting(true), 800);
+    const hide = setTimeout(() => setShowGreeting(false), 2800); // 800 + 2000
+    return () => { clearTimeout(show); clearTimeout(hide); };
+  }, [dark, isHomePage]);
 
   useEffect(() => {
     const fn = () => setIsScrolled(window.scrollY > 50);
@@ -381,7 +392,6 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                   border: '1.5px solid var(--gold-border)',
                 }}
               >
-                {/* Track label */}
                 <span
                   className="absolute text-[8px] font-bold select-none"
                   style={{
@@ -392,7 +402,6 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                 >
                   {dark ? 'OFF' : 'ON'}
                 </span>
-                {/* Knob — always gold so it's visible on both themes */}
                 <span
                   className="absolute w-4 h-4 rounded-full transition-all duration-300 shadow-md"
                   style={{
@@ -402,20 +411,23 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                   }}
                 />
               </button>
-              {/* Hover tooltip — opens DOWNWARD, text only */}
+
+              {/* Auto greeting + hover tooltip — both open downward below the switch */}
               <AnimatePresence>
-                {showLightTooltip && dark && (
+                {(showGreeting || showLightTooltip) && dark && (
                   <motion.div
                     initial={{ opacity: 0, y: -6, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 z-[9999] pointer-events-none whitespace-nowrap"
+                    transition={{ duration: 0.18 }}
+                    className="absolute top-full left-1/2 mt-2.5 z-[9999] pointer-events-none"
+                    style={{ transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}
                   >
+                    {/* Caret pointing UP at the switch */}
                     <div className="w-2.5 h-2.5 mx-auto rotate-45 -mb-1.5 relative z-10"
                       style={{ background: '#D4AF37' }} />
                     <div className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl"
-                      style={{ background: '#D4AF37', color: '#000' }}>
+                      style={{ background: '#D4AF37', color: '#000', fontSize: '0.72rem' }}>
                       Too dark? Turn on the lights
                     </div>
                   </motion.div>
@@ -481,7 +493,6 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                 >
                   {dark ? 'OFF' : 'ON'}
                 </span>
-                {/* Knob always gold */}
                 <span
                   className="absolute w-3.5 h-3.5 rounded-full transition-all duration-300 shadow-md"
                   style={{
@@ -491,20 +502,22 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                   }}
                 />
               </button>
-              {/* Mobile tooltip — opens DOWNWARD, text only */}
+
+              {/* Mobile: auto greeting + hover tooltip below switch */}
               <AnimatePresence>
-                {showLightTooltip && dark && (
+                {(showGreeting || showLightTooltip) && dark && (
                   <motion.div
                     initial={{ opacity: 0, y: -6, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 z-[9999] pointer-events-none whitespace-nowrap"
+                    transition={{ duration: 0.18 }}
+                    className="absolute top-full left-1/2 mt-2.5 z-[9999] pointer-events-none"
+                    style={{ transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}
                   >
                     <div className="w-2 h-2 mx-auto rotate-45 -mb-1 relative z-10"
                       style={{ background: '#D4AF37' }} />
-                    <div className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-xl"
-                      style={{ background: '#D4AF37', color: '#000' }}>
+                    <div className="px-2.5 py-1.5 rounded-lg font-bold shadow-xl"
+                      style={{ background: '#D4AF37', color: '#000', fontSize: '0.65rem' }}>
                       Too dark? Turn on the lights
                     </div>
                   </motion.div>

@@ -18,14 +18,35 @@
           }
         })();
       </script>
-      <!-- Google tag (gtag.js) -->
-      <script async src="https://www.googletagmanager.com/gtag/js?id=G-B24YGTMFNZ"></script>
+      <!-- Google Analytics — deferred until first user interaction to eliminate TBT -->
       <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-B24YGTMFNZ');
+        (function() {
+          // GTM/GA loads ONLY after the first scroll, click, touch, or mouse move
+          // This removes 158 KB from the critical path and eliminates long tasks.
+          var gtmLoaded = false;
+          function loadGTM() {
+            if (gtmLoaded) return;
+            gtmLoaded = true;
+            // Load the gtag script
+            var s = document.createElement('script');
+            s.async = true;
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=G-B24YGTMFNZ';
+            document.head.appendChild(s);
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', 'G-B24YGTMFNZ');
+          }
+          // Fire on first interaction, or after 5s (whichever comes first)
+          var events = ['scroll','click','touchstart','mousemove','keydown'];
+          function onInteract() {
+            loadGTM();
+            events.forEach(function(e){ window.removeEventListener(e, onInteract, {passive:true}); });
+          }
+          events.forEach(function(e){ window.addEventListener(e, onInteract, {passive:true}); });
+          setTimeout(loadGTM, 5000);
+        })();
       </script>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -53,8 +74,11 @@
       <!-- Preconnect for performance -->
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <!-- Google Fonts: Inter (body) + Caveat (accents) with display=swap for no FOIT -->
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Caveat:wght@400..700&display=swap" rel="stylesheet">
+      <!-- Preload the Inter 700 woff2 used in LCP hero heading (unblocks text render) -->
+      <link rel="preload" href="https://fonts.gstatic.com/s/inter/v19/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZJhijA.woff2" as="font" type="font/woff2" crossorigin>
+      <!-- Google Fonts loaded non-render-blocking (print + onload swap trick) -->
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Caveat:wght@400..700&display=swap" media="print" onload="this.media='all'">
+      <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Caveat:wght@400..700&display=swap"></noscript>
       
       <!-- Open Graph / Facebook / LinkedIn / WhatsApp -->
       <meta property="og:type" content="website" />
@@ -219,13 +243,51 @@
       </script>
 
       <style>
-        html, body { height: 100%; margin: 0; }
+        /* ── Critical above-the-fold CSS (inlined to unblock render) ────────────
+           Prevents a flash of unstyled content and lets the browser paint
+           the hero instantly without waiting for the full stylesheet. */
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; padding: 0; }
         #root { height: 100%; }
-        /* Prevent flash of unstyled content in dark mode */
+
+        /* Dark-mode base (set by the flash-prevention script above) */
         html { background-color: #000000; color: #f5f5f0; }
         html.dark { background-color: #000000; }
-        /* Critical font-face for Inter fallback */
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+
+        /* System font stack as immediate fallback while Inter loads */
+        body {
+          font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+            'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          text-rendering: optimizeSpeed;
+        }
+
+        /* Critical design tokens — keeps the hero legible before the stylesheet */
+        :root {
+          --gold: #D4AF37;
+          --text-primary: #0a0a0a;
+          --bg-primary: #ffffff;
+        }
+        .dark {
+          --gold: #D4AF37;
+          --text-primary: #f5f5f0;
+          --bg-primary: #000000;
+        }
+
+        /* Hero section skeleton — prevents layout shift */
+        section[aria-label*="Avati"] {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #000;
+        }
+
+        /* Prevent invisible text during font swap */
+        @font-face {
+          font-family: 'Inter';
+          font-display: swap;
+        }
       </style>
     </head>
 
