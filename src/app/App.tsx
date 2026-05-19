@@ -41,8 +41,32 @@ export const useTheme = () => useContext(ThemeContext);
 function PageLayout({ children, onLoginClick }: { children: React.ReactNode; onLoginClick: () => void }) {
   return (
     <div style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+      {/* Skip-to-content for keyboard/screen-reader users — improves accessibility score */}
+      <a
+        href="#main-content"
+        style={{
+          position: 'absolute', top: 8, left: 8, zIndex: 9999,
+          padding: '0.5rem 1rem',
+          background: '#D4AF37', color: '#000',
+          fontWeight: 700, borderRadius: '0.5rem', textDecoration: 'none',
+          // Visually hidden until focused
+          clip: 'rect(0,0,0,0)', overflow: 'hidden', whiteSpace: 'nowrap', height: '1px', width: '1px',
+        }}
+        onFocus={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.clip = 'auto'; el.style.overflow = 'visible';
+          el.style.height = 'auto'; el.style.width = 'auto';
+        }}
+        onBlur={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.clip = 'rect(0,0,0,0)'; el.style.overflow = 'hidden';
+          el.style.height = '1px'; el.style.width = '1px';
+        }}
+      >
+        Skip to main content
+      </a>
       <Navigation onLoginClick={onLoginClick} />
-      {children}
+      <main id="main-content">{children}</main>
       <Footer />
     </div>
   );
