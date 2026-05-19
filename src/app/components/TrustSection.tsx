@@ -165,33 +165,50 @@ export function TrustSection() {
           </div>
 
           {/* Desktop controls */}
-          <div className="flex items-center justify-center gap-4 mt-8">
+          <div className="flex items-center justify-center gap-4 mt-8" role="group" aria-label="Slide controls">
             <button onClick={prev} disabled={currentIndex === 0}
+              aria-label="Previous slide"
               className="w-10 h-10 rounded-full flex items-center justify-center border transition-all disabled:opacity-30"
               style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}
               onMouseEnter={e => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--gold-surface)')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" aria-hidden="true" />
             </button>
-            <div className="flex gap-2">
+            <div className="flex gap-1" role="tablist" aria-label="Slides">
               {Array.from({ length: total - DESKTOP_VISIBLE + 1 }).map((_, i) => (
-                <button key={i} onClick={() => setCurrentIndex(i)}
-                  className="h-1.5 rounded-full transition-all duration-300"
+                <button
+                  key={i}
+                  role="tab"
+                  aria-selected={i === currentIndex}
+                  aria-label={`Go to slide ${i + 1}`}
+                  onClick={() => setCurrentIndex(i)}
+                  className="flex items-center justify-center"
                   style={{
-                    width: i === currentIndex ? '24px' : '6px',
-                    backgroundColor: i === currentIndex ? 'var(--gold)' : 'var(--border-color)',
+                    // 24x24 minimum touch target with transparent padding
+                    width: '24px', height: '24px',
+                    background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
                   }}
-                />
+                >
+                  <span
+                    className="block rounded-full transition-all duration-300"
+                    style={{
+                      width: i === currentIndex ? '24px' : '6px',
+                      height: '6px',
+                      backgroundColor: i === currentIndex ? 'var(--gold)' : 'var(--border-color)',
+                    }}
+                  />
+                </button>
               ))}
             </div>
             <button onClick={next} disabled={currentIndex >= total - DESKTOP_VISIBLE}
+              aria-label="Next slide"
               className="w-10 h-10 rounded-full flex items-center justify-center border transition-all disabled:opacity-30"
               style={{ borderColor: 'var(--gold-border)', color: 'var(--gold)' }}
               onMouseEnter={e => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--gold-surface)')}
               onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         </div>

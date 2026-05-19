@@ -129,7 +129,7 @@ export function Footer() {
             <h2 className="text-xl sm:text-2xl font-black text-black tracking-tight">
               Ready to Store Smarter?
             </h2>
-            <p className="text-black/60 mt-0.5 text-sm">No callbacks. Get your instant quote now.</p>
+            <p className="text-black font-medium mt-0.5 text-sm" style={{ opacity: 0.75 }}>No callbacks. Get your instant quote now.</p>
           </div>
           <Link to="/get-quote"
             className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-bold rounded-xl text-sm transition-all hover:-translate-y-0.5"
@@ -327,7 +327,7 @@ export function Footer() {
             <Link to="/sitemap" className="text-xs hover:text-[#D4AF37] transition-colors" style={{ color: 'var(--text-muted)' }}>Sitemap</Link>
             <Link to="/faq" className="text-xs hover:text-[#D4AF37] transition-colors" style={{ color: 'var(--text-muted)' }}>FAQ</Link>
           </div>
-          <p className="text-[10px] opacity-50" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
             Built by MonoMorph Minds
           </p>
         </div>

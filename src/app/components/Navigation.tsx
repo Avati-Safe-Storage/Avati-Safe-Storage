@@ -378,11 +378,13 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
 
           {/* Desktop actions */}
           <div className="hidden md:flex items-center gap-2.5">
-            {/* Theme toggle switch
-                Dark mode (default) = switch OFF = knob on LEFT (☾)
-                Light mode          = switch ON  = knob on RIGHT (☀)
-            */}
-            <div className="relative" onMouseEnter={() => dark && setShowLightTooltip(true)} onMouseLeave={() => setShowLightTooltip(false)}>
+            {/* Theme toggle — wrapper uses position:relative so tooltip anchors to THIS button */}
+            <div
+              className="relative"
+              onMouseEnter={() => dark && setShowLightTooltip(true)}
+              onMouseLeave={() => setShowLightTooltip(false)}
+              style={{ isolation: 'isolate' }}
+            >
               <button
                 onClick={toggle}
                 aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -412,7 +414,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                 />
               </button>
 
-              {/* Auto greeting + hover tooltip — both open downward below the switch */}
+              {/* Tooltip anchored to toggle: left:0 + translateX(50%) centers it under the 48px wide button */}
               <AnimatePresence>
                 {(showGreeting || showLightTooltip) && dark && (
                   <motion.div
@@ -420,14 +422,13 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.95 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute top-full left-1/2 mt-2.5 z-[9999] pointer-events-none"
-                    style={{ transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}
+                    className="absolute top-full z-[9999] pointer-events-none"
+                    style={{ left: '50%', transform: 'translateX(-50%)', marginTop: '10px', whiteSpace: 'nowrap' }}
                   >
-                    {/* Caret pointing UP at the switch */}
                     <div className="w-2.5 h-2.5 mx-auto rotate-45 -mb-1.5 relative z-10"
                       style={{ background: '#D4AF37' }} />
                     <div className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl"
-                      style={{ background: '#D4AF37', color: '#000', fontSize: '0.72rem' }}>
+                      style={{ background: '#D4AF37', color: '#000' }}>
                       Too dark? Turn on the lights
                     </div>
                   </motion.div>
@@ -475,8 +476,12 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
 
           {/* Mobile bar */}
           <div className="flex md:hidden items-center gap-2">
-            {/* Mobile toggle — same OFF=LEFT logic */}
-            <div className="relative" onMouseEnter={() => dark && setShowLightTooltip(true)} onMouseLeave={() => setShowLightTooltip(false)}>
+            {/* Mobile toggle wrapper */}
+            <div
+              className="relative"
+              onMouseEnter={() => dark && setShowLightTooltip(true)}
+              onMouseLeave={() => setShowLightTooltip(false)}
+            >
               <button
                 onClick={toggle}
                 aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -503,7 +508,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                 />
               </button>
 
-              {/* Mobile: auto greeting + hover tooltip below switch */}
+              {/* Mobile tooltip — anchored under the toggle switch */}
               <AnimatePresence>
                 {(showGreeting || showLightTooltip) && dark && (
                   <motion.div
@@ -511,8 +516,8 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.95 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute top-full left-1/2 mt-2.5 z-[9999] pointer-events-none"
-                    style={{ transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}
+                    className="absolute top-full z-[9999] pointer-events-none"
+                    style={{ left: '50%', transform: 'translateX(-50%)', marginTop: '10px', whiteSpace: 'nowrap' }}
                   >
                     <div className="w-2 h-2 mx-auto rotate-45 -mb-1 relative z-10"
                       style={{ background: '#D4AF37' }} />
