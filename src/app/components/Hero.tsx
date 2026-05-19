@@ -17,15 +17,14 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
   const isHomePage = location.pathname === "/";
   const videoUrl = import.meta.env.BASE_URL + 'homepage-video.webm';
 
-  // Show "too dark" greeting banner on landing page when in dark mode
+  // Show "too dark" greeting — text only, auto-hides after 1s
   const [showDarkGreeting, setShowDarkGreeting] = useState(false);
   useEffect(() => {
-    if (dark && isHomePage) {
-      const t = setTimeout(() => setShowDarkGreeting(true), 1200);
-      return () => clearTimeout(t);
-    } else {
-      setShowDarkGreeting(false);
-    }
+    if (!dark || !isHomePage) { setShowDarkGreeting(false); return; }
+    // Show after 700ms, auto-hide after 1s of visibility
+    const showTimer = setTimeout(() => setShowDarkGreeting(true), 700);
+    const hideTimer = setTimeout(() => setShowDarkGreeting(false), 1700); // 700 + 1000
+    return () => { clearTimeout(showTimer); clearTimeout(hideTimer); };
   }, [dark, isHomePage]);
 
   return (
@@ -48,7 +47,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
         <source src={videoUrl} type="video/webm" />
       </video>
 
-      {/* Gradient overlay — keeps text legible over the video */}
+      {/* Gradient overlay */}
       <div className="absolute inset-0"
         style={{
           background: dark
@@ -67,7 +66,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
         />
       </div>
 
-      {/* Dot grid — very subtle depth texture */}
+      {/* Dot grid */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
         style={{
           backgroundImage: 'radial-gradient(circle at 1px 1px, var(--gold) 1px, transparent 0)',
@@ -76,50 +75,29 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
         }}
       />
 
-      {/* ── "Too dark?" landing-page greeting ── */}
+      {/* "Too dark?" 1-second popup \u2014 plain text, no icons */}
       <AnimatePresence>
-        {showDarkGreeting && dark && isHomePage && (
+        {showDarkGreeting && (
           <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            initial={{ opacity: 0, y: -14, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 18, stiffness: 200 }}
+            exit={{ opacity: 0, y: -14, scale: 0.96 }}
+            transition={{ duration: 0.25 }}
             className="fixed top-20 left-1/2 z-[9000] pointer-events-none"
             style={{ transform: 'translateX(-50%)' }}
             aria-live="polite"
           >
             <div
-              className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl"
+              className="px-5 py-2.5 rounded-xl shadow-2xl text-sm font-bold tracking-wide"
               style={{
                 background: 'linear-gradient(135deg, #D4AF37, #FFD700)',
                 color: '#000',
-                boxShadow: '0 8px 32px rgba(212,175,55,0.55)',
-                fontWeight: 700,
-                fontSize: '0.85rem',
+                boxShadow: '0 8px 28px rgba(212,175,55,0.5)',
                 whiteSpace: 'nowrap',
               }}
             >
-              <motion.span
-                animate={{ rotate: [0, -15, 15, -10, 0] }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                style={{ display: 'inline-block', fontSize: '1.1rem' }}
-              >
-                🌙
-              </motion.span>
-              Too dark? Turn on the lights!
-              <motion.span
-                animate={{ x: [0, 6, 0] }}
-                transition={{ duration: 0.7, repeat: 3, delay: 0.6 }}
-                style={{ display: 'inline-block', fontSize: '1rem' }}
-              >
-                👉
-              </motion.span>
+              Too dark? Turn on the lights
             </div>
-            {/* Tail pointing right toward nav toggle */}
-            <div
-              className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-3 h-3 rotate-45"
-              style={{ background: '#FFD700' }}
-            />
           </motion.div>
         )}
       </AnimatePresence>
