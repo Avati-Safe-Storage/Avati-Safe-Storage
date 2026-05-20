@@ -619,7 +619,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     params.append('Last Name',  lastName);
     const cleanPhone = (customer.phone || '').trim();
     params.append('Email',      customer.email || '');
-    params.append('Mobile',     cleanPhone);
+    params.append('Phone',      cleanPhone);
     // ── Lead data ──
     params.append('Lead Source', 'Online Store');
     params.append('Lead Status', currentStatus);
@@ -639,42 +639,15 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     params.append('aG9uZXlwb3Q', ''); // honeypot
 
     try {
-      const iframeName = 'zoho_iframe_' + Date.now();
-      const iframe = document.createElement('iframe');
-      iframe.name = iframeName;
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-
-      const form = document.createElement('form');
-      form.action = 'https://crm.zoho.in/crm/WebToLeadForm';
-      form.method = 'POST';
-      form.target = iframeName;
-      form.acceptCharset = 'UTF-8';
-
-      const add = (name: string, value: string) => {
-        const i = document.createElement('input');
-        i.type = 'hidden'; i.name = name; i.value = value;
-        form.appendChild(i);
-      };
-
-      for (const [key, val] of params.entries()) {
-        add(key, val);
-      }
-
-      document.body.appendChild(form);
-      document.charset = 'UTF-8';
-      form.submit();
-
-      console.log('[ZohoCRM] POST sent via iframe →', Object.fromEntries(params));
-
-      setTimeout(() => {
-        try {
-          document.body.removeChild(form);
-          document.body.removeChild(iframe);
-        } catch (_) {}
-      }, 5000);
+      await fetch('https://crm.zoho.in/crm/WebToLeadForm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+        mode: 'no-cors',
+      });
+      console.log('[ZohoCRM] POST sent →', Object.fromEntries(params));
     } catch (err) {
-      console.error('[ZohoCRM] form submit error:', err);
+      console.error('[ZohoCRM] fetch error:', err);
     }
   };
 
