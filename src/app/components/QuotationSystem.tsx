@@ -608,8 +608,8 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
     const params = new URLSearchParams();
     // ── Auth tokens ──
-    params.append('xnQsjsdp',  'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce');
-    params.append('xmIwtLD',   '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d');
+    params.append('xnQsjsdp',  'ae8e2cd6aa09c0b65a7a3f3313042e0e09f3fb0eadd1ad72f4b38bf9b0ed8031');
+    params.append('xmIwtLD',   '8c3627253c1180df262be71c1c65d4b9ede0e12f0609dd77ab63cf7c833e831037aba9a89491092b363e69deac59e7b0');
     params.append('actionType','TGVhZHM=');
     params.append('zc_gad',    '');
     params.append('returnURL', 'https://www.avatisafestorage.com/');
@@ -623,10 +623,8 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     // ── Lead data ──
     params.append('Lead Source', 'Online Store');
     params.append('Lead Status', currentStatus);
-    params.append('LEADCF6',    methodMap[quoteMethod] || 'Live Quotation');
     params.append('LEADCF2',    storageType || 'Household');
     params.append('LEADCF1',    invList || '');
-    params.append('LEADCF5',    customItems.map(c => `${c.qty}x ${c.name}`).join(', ') || '');
     params.append('LEADCF3',    planMap[selectedPlan] || 'Basic');
     if (logistics.packingRequired)   params.append('LEADCF101', 'on');
     if (logistics.transportRequired) params.append('LEADCF102', 'on');
@@ -635,7 +633,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     if (monthly  > 0) params.append('LEADCF67', monthly.toString());
     if (ptCharge > 0) params.append('LEADCF66', ptCharge.toString());
     params.append('Description', `Pickup: ${logistics.pickupDate || 'TBD'} | ${logistics.duration || 1} months | ${logistics.buildingType || 'N/A'} | Floor ${logistics.floors || 0} | Lift: ${logistics.liftAvailable}`);
-    params.append('Address - Flat / House No./ Building / Apartment Name', logistics.pickupArea || '');
+    params.append('Address - Zip / Postal Code', logistics.pickupArea || '');
     params.append('aG9uZXlwb3Q', ''); // honeypot
 
     try {
