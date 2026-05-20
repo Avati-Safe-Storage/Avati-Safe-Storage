@@ -620,7 +620,6 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     const cleanPhone = (customer.phone || '').trim();
     params.append('Email',      customer.email || '');
     params.append('Mobile',     cleanPhone);
-    params.append('Phone',      cleanPhone);
     // ── Lead data ──
     params.append('Lead Source', 'Online Store');
     params.append('Lead Status', currentStatus);
