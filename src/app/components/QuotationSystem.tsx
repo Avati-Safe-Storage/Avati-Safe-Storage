@@ -375,6 +375,10 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [visitNote, setVisitNote] = useStickyState('', 'avati_q_visitNote');
 
+  // Submission states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
   // Step 2: Inventory (Household)
   const [activeRoom, setActiveRoom] = useStickyState(ROOM_TABS[0].id, 'avati_q_activeRoom');
   const [inventory, setInventory] = useStickyState<InventoryInstance[]>([], 'avati_q_inventory');
@@ -522,147 +526,153 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   const costs = calculateCosts();
 
-  const pushToZoho = async (isPartial: boolean) => {
+  // ── Zoho Forms submission ──
+  // Fires on step 1 Continue to capture contact + quote method immediately.
+  // Uses fetch + no-cors: a "simple" cross-origin POST that bypasses CORS preflight
+  // and is visible in the browser DevTools Network tab for easy debugging.
+  const submitToZohoForms = async () => {
+    const FORM_PERMA = '1d2Scw-4Eanc9NE1BnuHC0VwRFl8nlDx-362SOYaalI';
+    const FORM_URL = `https://forms.zohopublic.in/avatisafestorage1/form/Contactdetails/formperma/${FORM_PERMA}/htmlRecords/submit`;
+
+    const radioValue =
+      quoteMethod === 'inventory' ? 'Live Quotation'
+      : quoteMethod === 'upload'  ? 'Upload 360 Video'
+      : 'Book Survey';
+
+    const params = new URLSearchParams();
+    // ── Zoho Forms system fields (from form HTML) ──
+    params.append('formName',       'Contactdetails');
+    params.append('formPerma',      FORM_PERMA);
+    params.append('isPaymentForm',  'false');
+    params.append('formType',       '0');
+    params.append('zf_referrer_name', window.location.href);
+    params.append('zf_redirect_url', '');
+    params.append('zc_gad',         '');
+
+    // ── Exact field names from live form HTML ──
+    params.append('SingleLine',  'Avati Safe Storage');         // Company Name (required)
+    params.append('SingleLine1', customer.name  || '');         // Name (required)
+    params.append('PhoneNumber', customer.phone || '');         // Phone
+    params.append('SingleLine2', customer.email || '');         // Email
+    params.append('Radio',       radioValue);                   // Quote Method
+
     try {
-      // Create hidden iframe to receive form response
-      const iframeName = 'zoho_iframe_' + Date.now();
-      const iframe = document.createElement('iframe');
-      iframe.name = iframeName;
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
+      await fetch(FORM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+        mode: 'no-cors', // opaque response — fire-and-forget, no CORS preflight
+      });
+      console.log('[ZohoForms] POST sent →', FORM_URL, Object.fromEntries(params));
+    } catch (err) {
+      console.error('[ZohoForms] fetch error:', err);
+    }
+  };
 
-      // Build the form exactly as Zoho's Web-to-Lead HTML specifies
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = 'https://crm.zoho.in/crm/WebToLeadForm';
-      form.target = iframeName;
-      form.style.display = 'none';
-      form.acceptCharset = 'UTF-8';
 
-      // Helper to add hidden fields
-      const add = (name: string, value: string) => {
-        const el = document.createElement('input');
-        el.type = 'hidden';
-        el.name = name;
-        el.value = value;
-        form.appendChild(el);
-      };
 
-      // ── Zoho authentication tokens (from Avati-Leads webform) ──
-      add('xnQsjsdp', 'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce');
-      add('zc_gad', '');
-      add('xmIwtLD', '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d');
-      add('actionType', 'TGVhZHM=');
-      add('returnURL', 'https://the-monomorph.github.io/Avati-Safe-Storage/');
+  const pushToZoho = async (isPartial: boolean) => {
+    // Lead status based on how far through the form the user is
+    let currentStatus = 'Contact only';
+    if (!isPartial) {
+      currentStatus = 'Quotation Generated';
+    } else {
+      if (step >= 5) currentStatus = 'Plan selected';
+      else if (step >= 4) currentStatus = 'Logistics Provided';
+      else if (step >= 3) currentStatus = 'Inventory Provided';
+      else if (step >= 2) currentStatus = 'Storage Type Selected';
+      else currentStatus = 'Contact only';
+    }
 
-      // ── Required standard fields ──
-      add('Company', 'Avati Website Lead');
+    // Put the full name in Last Name — Zoho CRM displays leads by Last Name,
+    // so splitting "test 123" → firstName="test", lastName="123" made the lead appear as "123".
+    const firstName = '';
+    const lastName  = (customer.name || '').trim() || 'Website Lead';
 
-      const nameParts = (customer.name || '').trim().split(' ');
-      const firstName = nameParts.length > 1 ? nameParts[0] : '';
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : (nameParts[0] || 'Website Lead');
+    let invList = '';
+    if (storageType === 'Household') {
+      invList = inventory.map(i => {
+        const def = BASE_ITEMS.find(b => b.id === i.itemId);
+        return def ? `${i.quantity}x ${def.name}` : '';
+      }).filter(Boolean).join(', ');
+    } else if (storageType === 'Business') {
+      invList = `${businessSqft} sqft`;
+    } else if (storageType === 'Vehicle') {
+      invList = Object.keys(selectedVehicles).filter(k => selectedVehicles[k]).join(', ');
+    } else if (storageType === 'Document') {
+      invList = `${docBoxes} boxes of ${docType}`;
+    }
 
-      add('First Name', firstName);
-      add('Last Name', lastName);
-      add('Email', customer.email || '');
-      add('Mobile', customer.phone || '');
+    const methodMap: Record<string, string> = { inventory: 'Live Quotation', upload: 'Upload 360 Video', visit: 'Book Survey' };
+    const planMap:   Record<string, string> = { basic: 'Basic', premium: 'Premium', professional: 'Pro' };
 
-      // ── Custom fields (LEADCF IDs from Zoho HTML) ──
+    const params = new URLSearchParams();
+    // ── Auth tokens ──
+    params.append('xnQsjsdp',  'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce');
+    params.append('xmIwtLD',   '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d');
+    params.append('actionType','TGVhZHM=');
+    params.append('zc_gad',    '');
+    params.append('returnURL', 'https://www.avatisafestorage.com/');
+    // ── Contact ──
+    params.append('Company',    'Avati Website Lead');
+    params.append('First Name', firstName);
+    params.append('Last Name',  lastName);
+    params.append('Email',      customer.email || '');
+    params.append('Mobile',     customer.phone || '');
+    // ── Lead data ──
+    params.append('Lead Source', 'Online Store');
+    params.append('Lead Status', currentStatus);
+    params.append('LEADCF6',    methodMap[quoteMethod] || 'Live Quotation');
+    params.append('LEADCF2',    storageType || 'Household');
+    params.append('LEADCF1',    invList || '');
+    params.append('LEADCF5',    customItems.map(c => `${c.qty}x ${c.name}`).join(', ') || '');
+    params.append('LEADCF3',    planMap[selectedPlan] || 'Basic');
+    if (logistics.packingRequired)   params.append('LEADCF101', 'on');
+    if (logistics.transportRequired) params.append('LEADCF102', 'on');
+    const monthly  = Math.round(costs.monthlyStorage);
+    const ptCharge = Math.round(costs.packingAndTransport);
+    if (monthly  > 0) params.append('LEADCF67', monthly.toString());
+    if (ptCharge > 0) params.append('LEADCF66', ptCharge.toString());
+    params.append('Description', `Pickup: ${logistics.pickupDate || 'TBD'} | ${logistics.duration || 1} months | ${logistics.buildingType || 'N/A'} | Floor ${logistics.floors || 0} | Lift: ${logistics.liftAvailable}`);
+    params.append('Address - Flat / House No./ Building / Apartment Name', logistics.pickupArea || '');
+    params.append('aG9uZXlwb3Q', ''); // honeypot
 
-      // Quote Method → LEADCF6
-      const methodMap: Record<string, string> = { 'inventory': 'Live Quotation', 'upload': 'Upload 360 Video', 'visit': 'Book Survey' };
-      add('LEADCF6', methodMap[quoteMethod] || 'Live Quotation');
-
-      // Storage Type → LEADCF2
-      add('LEADCF2', storageType || 'Household');
-
-      // Inventory List → LEADCF1
-      let invList = '';
-      if (storageType === 'Household') {
-        invList = inventory.map(i => {
-          const def = BASE_ITEMS.find(b => b.id === i.itemId);
-          return def ? `${i.quantity}x ${def.name}` : '';
-        }).filter(Boolean).join(', ');
-      } else if (storageType === 'Business') {
-        invList = `${businessSqft} sqft`;
-      } else if (storageType === 'Vehicle') {
-        invList = Object.keys(selectedVehicles).filter(k => selectedVehicles[k]).join(', ');
-      } else if (storageType === 'Document') {
-        invList = `${docBoxes} boxes of ${docType}`;
-      }
-      add('LEADCF1', invList || '');
-
-      // Unlisted Items → LEADCF5
-      const unlisted = customItems.map(c => `${c.qty}x ${c.name}`).join(', ');
-      add('LEADCF5', unlisted || '');
-
-      // Plan Selected → LEADCF3
-      const planMap: Record<string, string> = { 'basic': 'Basic', 'premium': 'Premium', 'professional': 'Pro' };
-      add('LEADCF3', planMap[selectedPlan] || 'Basic');
-
-      // Packing needed? → LEADCF101 (checkbox: send "on" when checked)
-      if (logistics.packingRequired) add('LEADCF101', 'on');
-
-      // Transportation needed → LEADCF102 (checkbox: send "on" when checked)
-      if (logistics.transportRequired) add('LEADCF102', 'on');
-
-      // Total Monthly Charges → LEADCF67
-      const monthly = Math.round(costs.monthlyStorage) || 0;
-      if (monthly > 0) add('LEADCF67', monthly.toString());
-
-      // Packing & Transportation charges → LEADCF66
-      const ptCharges = Math.round(costs.packingAndTransport) || 0;
-      if (ptCharges > 0) add('LEADCF66', ptCharges.toString());
-
-      // Lead Source (sent only once)
-      add('Lead Source', 'Online Store');
-
-      // Lead Status — progressive based on step
-      let currentStatus = 'Contact only';
-      if (!isPartial) {
-        currentStatus = 'Quotation Generated';
-      } else {
-        if (step >= 5) currentStatus = 'Plan selected';
-        else if (step >= 4) currentStatus = 'Logistics Provided';
-        else if (step >= 3) currentStatus = 'Inventory Provided';
-        else if (step >= 2) currentStatus = 'Storage Type Selected';
-        else if (step >= 1) currentStatus = 'Contact only';
-      }
-      add('Lead Status', currentStatus);
-
-      // Description (logistics detail)
-      add('Description', `Expected Pickup: ${logistics.pickupDate || 'TBD'} | Duration: ${logistics.duration || 1} months | Building: ${logistics.buildingType || 'N/A'} | Floors: ${logistics.floors || 0} | Lift: ${logistics.liftAvailable ? 'Yes' : 'No'}`);
-
-      // Address field (name must use actual "/" not HTML entities)
-      add('Address - Flat / House No./ Building / Apartment Name', logistics.pickupArea || '');
-
-      // Honeypot (anti-spam, must be empty)
-      add('aG9uZXlwb3Q', '');
-
-      // Submit
-      document.body.appendChild(form);
-      document.charset = 'UTF-8';
-      form.submit();
-
-      console.log('[Zoho] Form submitted — Step:', step, 'Status:', currentStatus);
-
-      // Cleanup after 5 seconds
-      setTimeout(() => {
-        try {
-          document.body.removeChild(form);
-          document.body.removeChild(iframe);
-        } catch(_) {}
-      }, 5000);
-    } catch(err) {
-      console.error('[Zoho] Sync Error:', err);
+    try {
+      await fetch('https://crm.zoho.in/crm/WebToLeadForm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+        mode: 'no-cors',
+      });
+      console.log('[ZohoCRM] POST sent → Step:', step, 'Status:', currentStatus);
+    } catch (err) {
+      console.error('[ZohoCRM] fetch error:', err);
     }
   };
 
   const handleConfirmBooking = async () => {
-    await pushToZoho(false);
-    alert(`Booking Request Sent!\nYour Lead has been successfully registered in our system.\n\nOur team will contact you within 24 hours.`);
-    if (isDashboard && onClose) {
-      onClose();
+    setIsSubmitting(true);
+    try {
+      // Submit to both Zoho CRM and Zoho Forms in parallel
+      await Promise.allSettled([
+        pushToZoho(false),
+        submitToZohoForms(),
+      ]);
+      setIsSuccess(true);
+      // Clear localStorage quote data after 3s
+      setTimeout(() => {
+        const keys = Object.keys(localStorage);
+        for (const key of keys) {
+          if (key.startsWith('avati_q_')) localStorage.removeItem(key);
+        }
+      }, 3000);
+      if (isDashboard && onClose) {
+        setTimeout(() => onClose?.(), 4000);
+      }
+    } catch (err) {
+      console.error('[Booking] Error:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -753,10 +763,14 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         </div>
 
         <button
-          disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@')))}
+          disabled={isSubmitting || (step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@')))}
           onClick={async () => {
-            await pushToZoho(true);
-            if (step < 5) {
+            if (step === 1) {
+              // Capture contact + method in both CRM and Zoho Forms on first continue
+              await Promise.allSettled([pushToZoho(true), submitToZohoForms()]);
+              setStep(2);
+            } else if (step < 5) {
+              await pushToZoho(true);
               setStep(step + 1);
             } else {
               await handleConfirmBooking();
@@ -765,7 +779,17 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
           className="w-full py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ background: 'linear-gradient(135deg, #D4AF37, #FFD700)', color: '#000', boxShadow: '0 0 20px rgba(212,175,55,0.3)' }}
         >
-          {step < 5 ? 'Continue' : (isDashboard ? 'Add Items' : 'Confirm Booking')} <ChevronRight className="w-4 h-4" />
+          {isSubmitting ? (
+            <>
+              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              </svg>
+              Submitting...
+            </>
+          ) : (
+            <>{step < 5 ? 'Continue' : (isDashboard ? 'Add Items' : 'Confirm Booking')} <ChevronRight className="w-4 h-4" /></>
+          )}
         </button>
 
         {step > (isDashboard ? 2 : 1) && (
@@ -795,6 +819,77 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
   const stepLabelsLong = isDashboard
     ? ['Storage Type', quoteMethod === 'upload' ? 'Upload Media' : quoteMethod === 'visit' ? 'Site Visit' : 'Inventory', 'Logistics', 'Plans']
     : ['Customer Details', 'Storage Type', quoteMethod === 'upload' ? 'Upload Media' : quoteMethod === 'visit' ? 'Site Visit' : 'Inventory', 'Logistics', 'Plans'];
+
+  // ── Success Overlay ──
+  if (isSuccess) {
+    return (
+      <section id="quote" className={`py-16 sm:py-24 relative overflow-hidden ${isDashboard ? 'min-h-[80vh] rounded-2xl' : ''}`}
+        style={{ background: dark ? 'linear-gradient(135deg, #0B1F3A 0%, #000000 100%)' : 'linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%)' }}
+      >
+        <div className="max-w-[700px] mx-auto px-4 sm:px-6 flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', damping: 14 }}
+            className="w-24 h-24 rounded-full flex items-center justify-center mb-8 mx-auto"
+            style={{ background: 'linear-gradient(135deg, #D4AF37, #FFD700)', boxShadow: '0 0 48px rgba(212,175,55,0.45)' }}
+          >
+            <Check className="w-12 h-12" style={{ color: '#000' }} />
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-3xl sm:text-4xl font-black mb-4"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Booking Request Sent!
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="text-base mb-3"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Your quote has been received by our team. We'll reach out to <strong style={{ color: 'var(--gold)' }}>{customer.phone}</strong> within 24 hours.
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-sm mb-10"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            A confirmation has also been logged in our Zoho CRM system.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="flex flex-col sm:flex-row gap-3 w-full max-w-sm"
+          >
+            <a
+              href={`https://wa.me/918095589888?text=${encodeURIComponent(`Hi Avati! I just submitted a storage quote on your website.\n\n*Name:* ${customer.name}\n*Phone:* ${customer.phone}\n*Storage Type:* ${storageType}\n*Plan:* ${selectedPlan?.toUpperCase()}\n*Monthly:* ₹${Math.round(costs.monthlyStorage)} + GST`)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex-1 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all"
+              style={{ background: 'rgba(37,211,102,0.15)', color: '#128C7E', border: '1px solid rgba(37,211,102,0.3)' }}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+              Chat on WhatsApp
+            </a>
+            <button
+              onClick={() => { setIsSuccess(false); setStep(1); }}
+              className="flex-1 py-3.5 rounded-xl font-bold text-sm transition-all border"
+              style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', background: 'var(--bg-card)' }}
+            >
+              Start New Quote
+            </button>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="quote" className={`py-16 sm:py-24 relative overflow-hidden ${isDashboard ? 'min-h-[80vh] rounded-2xl' : ''}`}
@@ -1597,15 +1692,29 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             </div>
 
             <button
-              disabled={(step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0)}
+              disabled={isSubmitting || (step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0)}
               onClick={async () => {
-                await pushToZoho(true);
-                if (step < 5) setStep(step + 1);
-                else await handleConfirmBooking();
+                if (step === 1) {
+                  // Capture contact + method in both CRM and Zoho Forms on first continue
+                  await Promise.allSettled([pushToZoho(true), submitToZohoForms()]);
+                  setStep(2);
+                } else if (step < 5) {
+                  await pushToZoho(true);
+                  setStep(step + 1);
+                } else {
+                  await handleConfirmBooking();
+                }
               }}
               className="px-5 py-3.5 bg-[#EAB308] hover:bg-[#D9A006] text-black font-bold rounded-xl transition-all flex items-center justify-center gap-1 disabled:opacity-40 text-sm shrink-0"
             >
-              {step < 5 ? 'Next' : 'Confirm'} <ChevronRight className="w-4 h-4" />
+              {isSubmitting ? (
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              ) : (
+                <>{step < 5 ? 'Next' : 'Confirm'} <ChevronRight className="w-4 h-4" /></>
+              )}
             </button>
           </div>
         </div>

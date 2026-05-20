@@ -394,15 +394,31 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                   border: '1.5px solid var(--gold-border)',
                 }}
               >
+                {/* Moon icon (dark mode) or Sun icon (light mode) — replaces OFF/ON text */}
                 <span
-                  className="absolute text-[8px] font-bold select-none"
+                  className="absolute flex items-center justify-center select-none"
                   style={{
-                    left: dark ? 'auto' : '5px',
-                    right: dark ? '5px' : 'auto',
-                    color: dark ? 'rgba(212,175,55,0.5)' : 'rgba(0,0,0,0.4)',
+                    left: dark ? 'auto' : '4px',
+                    right: dark ? '4px' : 'auto',
+                    width: '12px',
+                    height: '12px',
                   }}
                 >
-                  {dark ? 'OFF' : 'ON'}
+                  {dark ? (
+                    /* Crescent moon */
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="rgba(212,175,55,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+                    </svg>
+                  ) : (
+                    /* Sun */
+                    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="5" />
+                      <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                      <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                  )}
                 </span>
                 <span
                   className="absolute w-4 h-4 rounded-full transition-all duration-300 shadow-md"
@@ -414,7 +430,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                 />
               </button>
 
-              {/* Tooltip anchored to toggle: left:0 + translateX(50%) centers it under the 48px wide button */}
+              {/* Tooltip: positioned UNDER the switch, arrow points UP at the toggle */}
               <AnimatePresence>
                 {(showGreeting || showLightTooltip) && dark && (
                   <motion.div
@@ -425,9 +441,10 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                     className="absolute top-full z-[9999] pointer-events-none"
                     style={{ left: '50%', transform: 'translateX(-50%)', marginTop: '10px', whiteSpace: 'nowrap' }}
                   >
+                    {/* Arrow points UP at the switch */}
                     <div className="w-2.5 h-2.5 mx-auto rotate-45 -mb-1.5 relative z-10"
                       style={{ background: '#D4AF37' }} />
-                    <div className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl"
+                    <div className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl relative z-20"
                       style={{ background: '#D4AF37', color: '#000' }}>
                       Too dark? Turn on the lights
                     </div>
@@ -488,15 +505,29 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                 className="relative flex items-center w-10 h-5 rounded-full transition-all duration-300"
                 style={{ background: dark ? 'rgba(30,30,30,0.9)' : 'rgba(212,175,55,0.18)', border: '1.5px solid var(--gold-border)' }}
               >
+                {/* Moon/Sun icon replacing OFF/ON text */}
                 <span
-                  className="absolute text-[7px] font-bold select-none"
+                  className="absolute flex items-center justify-center select-none"
                   style={{
-                    left: dark ? 'auto' : '4px',
-                    right: dark ? '4px' : 'auto',
-                    color: dark ? 'rgba(212,175,55,0.5)' : 'rgba(0,0,0,0.4)',
+                    left: dark ? 'auto' : '3px',
+                    right: dark ? '3px' : 'auto',
+                    width: '10px',
+                    height: '10px',
                   }}
                 >
-                  {dark ? 'OFF' : 'ON'}
+                  {dark ? (
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="rgba(212,175,55,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="5" />
+                      <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                      <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                  )}
                 </span>
                 <span
                   className="absolute w-3.5 h-3.5 rounded-full transition-all duration-300 shadow-md"
@@ -508,7 +539,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                 />
               </button>
 
-              {/* Mobile tooltip — anchored under the toggle switch */}
+              {/* Mobile tooltip — UNDER the switch, arrow points UP */}
               <AnimatePresence>
                 {(showGreeting || showLightTooltip) && dark && (
                   <motion.div
@@ -519,9 +550,10 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
                     className="absolute top-full z-[9999] pointer-events-none"
                     style={{ left: '50%', transform: 'translateX(-50%)', marginTop: '10px', whiteSpace: 'nowrap' }}
                   >
+                    {/* Arrow pointing up at the switch */}
                     <div className="w-2 h-2 mx-auto rotate-45 -mb-1 relative z-10"
                       style={{ background: '#D4AF37' }} />
-                    <div className="px-2.5 py-1.5 rounded-lg font-bold shadow-xl"
+                    <div className="px-2.5 py-1.5 rounded-lg font-bold shadow-xl relative z-20"
                       style={{ background: '#D4AF37', color: '#000', fontSize: '0.65rem' }}>
                       Too dark? Turn on the lights
                     </div>
