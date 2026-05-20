@@ -762,11 +762,9 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         </div>
 
         <button
-          disabled={isSubmitting || (step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@')))}
+          disabled={isSubmitting}
           onClick={async () => {
             if (step === 1) {
-              // Capture contact + method in both CRM and Zoho Forms on first continue
-              await Promise.allSettled([pushToZoho(true), submitToZohoForms()]);
               setStep(2);
             } else if (step < 5) {
               await pushToZoho(true);
@@ -977,19 +975,13 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                   >
                     <div>
                       <h2 className="text-xl sm:text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>1. Your Details</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-                        <div>
-                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
-                          <input type="text" value={customer.name} onChange={e => setCustomer({ ...customer, name: e.target.value })} className="avati-input" placeholder="Your Name" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Phone Number</label>
-                          <input type="tel" value={customer.phone} onChange={e => setCustomer({ ...customer, phone: e.target.value })} className="avati-input" placeholder="000-000-0000" />
-                        </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
-                          <input type="email" value={customer.email} onChange={e => setCustomer({ ...customer, email: e.target.value })} className="avati-input" placeholder="example@gmail.com" />
-                        </div>
+                      <div className="w-full mb-8 relative">
+                        <iframe 
+                          src="https://forms.zohopublic.in/avatisafestorage1/form/Contactdetails/formperma/1d2Scw-4Eanc9NE1BnuHC0VwRFl8nlDx-362SOYaalI?zf_rszfm=1"
+                          style={{ border: "none", height: "707px", width: "100%", transition: "all 0.5s ease" }}
+                          aria-label="Contact details"
+                          title="Zoho Form"
+                        />
                       </div>
 
                       <h2 className="text-xl sm:text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>2. Choose Quote Method</h2>
@@ -1691,11 +1683,9 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             </div>
 
             <button
-              disabled={isSubmitting || (step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0)}
+              disabled={isSubmitting || (step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0)}
               onClick={async () => {
                 if (step === 1) {
-                  // Capture contact + method in both CRM and Zoho Forms on first continue
-                  await Promise.allSettled([pushToZoho(true), submitToZohoForms()]);
                   setStep(2);
                 } else if (step < 5) {
                   await pushToZoho(true);
