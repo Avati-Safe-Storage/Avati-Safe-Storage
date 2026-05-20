@@ -380,7 +380,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
           <div className="hidden md:flex items-center gap-2.5">
             {/* Theme toggle — wrapper uses position:relative so tooltip anchors to THIS button */}
             <div
-              className="relative"
+              className="relative w-12 h-6 flex items-center justify-center flex-shrink-0"
               onMouseEnter={() => dark && setShowLightTooltip(true)}
               onMouseLeave={() => setShowLightTooltip(false)}
               style={{ isolation: 'isolate' }}
@@ -388,7 +388,7 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
               <button
                 onClick={toggle}
                 aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-                className="relative flex items-center w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0"
+                className="relative flex items-center w-full h-full rounded-full transition-all duration-300"
                 style={{
                   background: dark ? 'rgba(30,30,30,0.9)' : 'rgba(212,175,55,0.18)',
                   border: '1.5px solid var(--gold-border)',
@@ -495,14 +495,14 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
           <div className="flex md:hidden items-center gap-2">
             {/* Mobile toggle wrapper */}
             <div
-              className="relative"
+              className="relative w-10 h-5 flex items-center justify-center flex-shrink-0"
               onMouseEnter={() => dark && setShowLightTooltip(true)}
               onMouseLeave={() => setShowLightTooltip(false)}
             >
               <button
                 onClick={toggle}
                 aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-                className="relative flex items-center w-10 h-5 rounded-full transition-all duration-300"
+                className="relative flex items-center w-full h-full rounded-full transition-all duration-300"
                 style={{ background: dark ? 'rgba(30,30,30,0.9)' : 'rgba(212,175,55,0.18)', border: '1.5px solid var(--gold-border)' }}
               >
                 {/* Moon/Sun icon replacing OFF/ON text */}
