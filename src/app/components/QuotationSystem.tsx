@@ -619,6 +619,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     params.append('Last Name',  lastName);
     params.append('Email',      customer.email || '');
     params.append('Mobile',     customer.phone || '');
+    params.append('Phone',      customer.phone || '');
     // ── Lead data ──
     params.append('Lead Source', 'Online Store');
     params.append('Lead Status', currentStatus);
