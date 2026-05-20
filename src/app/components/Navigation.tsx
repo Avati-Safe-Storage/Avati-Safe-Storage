@@ -434,15 +434,15 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
               <AnimatePresence>
                 {(showGreeting || showLightTooltip) && dark && (
                   <motion.div
-                    initial={{ opacity: 0, y: -6, x: "-50%", scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
-                    exit={{ opacity: 0, y: -6, x: "-50%", scale: 0.95 }}
+                    initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute top-full z-[9999] pointer-events-none"
-                    style={{ left: '50%', marginTop: '10px', whiteSpace: 'nowrap' }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 z-[9999] pointer-events-none flex flex-col items-center"
+                    style={{ marginTop: '10px', whiteSpace: 'nowrap' }}
                   >
                     {/* Arrow points UP at the switch */}
-                    <div className="w-2.5 h-2.5 mx-auto rotate-45 -mb-1.5 relative z-10"
+                    <div className="w-2.5 h-2.5 rotate-45 -mb-1.5 relative z-10"
                       style={{ background: '#D4AF37' }} />
                     <div className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl relative z-20"
                       style={{ background: '#D4AF37', color: '#000' }}>
@@ -543,15 +543,15 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
               <AnimatePresence>
                 {(showGreeting || showLightTooltip) && dark && (
                   <motion.div
-                    initial={{ opacity: 0, y: -6, x: "-50%", scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
-                    exit={{ opacity: 0, y: -6, x: "-50%", scale: 0.95 }}
+                    initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.95 }}
                     transition={{ duration: 0.18 }}
-                    className="absolute top-full z-[9999] pointer-events-none"
-                    style={{ left: '50%', marginTop: '10px', whiteSpace: 'nowrap' }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 z-[9999] pointer-events-none flex flex-col items-center"
+                    style={{ marginTop: '10px', whiteSpace: 'nowrap' }}
                   >
                     {/* Arrow pointing up at the switch */}
-                    <div className="w-2 h-2 mx-auto rotate-45 -mb-1 relative z-10"
+                    <div className="w-2 h-2 rotate-45 -mb-1 relative z-10"
                       style={{ background: '#D4AF37' }} />
                     <div className="px-2.5 py-1.5 rounded-lg font-bold shadow-xl relative z-20"
                       style={{ background: '#D4AF37', color: '#000', fontSize: '0.65rem' }}>

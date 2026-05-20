@@ -272,12 +272,12 @@ const ROOM_TABS = [
 
 // Vehicle types for dedicated Vehicle Storage tab
 const VEHICLE_TYPES = [
-  { id: 'kids_cycle', name: 'Kids Cycle', price: 100, icon: '­ƒÜ▓', insurance: false },
-  { id: 'cycle', name: 'Cycle', price: 150, icon: '­ƒÜ┤', insurance: false },
-  { id: 'two_wheeler', name: 'Two Wheeler / Bike', price: 500, icon: '­ƒÅì´©Å', insurance: true },
-  { id: 'hatchback', name: 'Hatchback Car', price: 2500, icon: '­ƒÜù', insurance: true },
-  { id: 'sedan', name: 'Sedan Car', price: 3000, icon: '­ƒÜÿ', insurance: true },
-  { id: 'suv', name: 'SUV / MUV', price: 3300, icon: '­ƒÜÖ', insurance: true },
+  { id: 'kids_cycle', name: 'Kids Cycle', price: 100, icon: '🚲', insurance: false },
+  { id: 'cycle', name: 'Cycle', price: 150, icon: '🚴', insurance: false },
+  { id: 'two_wheeler', name: 'Two Wheeler / Bike', price: 500, icon: '🏍️', insurance: true },
+  { id: 'hatchback', name: 'Hatchback Car', price: 2500, icon: '🚗', insurance: true },
+  { id: 'sedan', name: 'Sedan Car', price: 3000, icon: '🚘', insurance: true },
+  { id: 'suv', name: 'SUV / MUV', price: 3300, icon: '🚙', insurance: true },
 ];
 
 const BANGALORE_AREAS = [
@@ -342,9 +342,9 @@ const STORAGE_TYPES = [
 ];
 
 const QUOTE_METHODS = [
-  { id: 'inventory', label: 'List Items', icon: '­ƒôï', desc: 'Add items from our catalog' },
-  { id: 'upload', label: 'Upload Photos', icon: '­ƒô©', desc: 'Upload pics or 360┬░ of your space' },
-  { id: 'visit', label: 'Request Site Visit', icon: '­ƒÅá', desc: 'We come and assess for free' },
+  { id: 'inventory', label: 'List Items', icon: '📋', desc: 'Add items from our catalog' },
+  { id: 'upload', label: 'Upload Photos', icon: '📸', desc: 'Upload pics or 360° of your space' },
+  { id: 'visit', label: 'Request Site Visit', icon: '🏠', desc: 'We come and assess for free' },
 ];
 
 const MIN_STORAGE_PRICE = 300;
@@ -488,7 +488,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         });
       }
     } else if (storageType === 'Business') {
-      rawStorageCost = businessSqft * 34; // Ôé╣34/sqft base
+      rawStorageCost = businessSqft * 34; // ₹34/sqft base
     } else if (storageType === 'Vehicle') {
       VEHICLE_TYPES.forEach(v => {
         if (selectedVehicles[v.id]) rawStorageCost += v.price;
@@ -526,7 +526,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   const costs = calculateCosts();
 
-  // ÔöÇÔöÇ Zoho Forms submission ÔöÇÔöÇ
+  // ── Zoho Forms submission ──
   // Fires on step 1 Continue to capture contact + quote method immediately.
   // Uses fetch + no-cors: a "simple" cross-origin POST that bypasses CORS preflight
   // and is visible in the browser DevTools Network tab for easy debugging.
@@ -540,7 +540,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       : 'Book Survey';
 
     const params = new URLSearchParams();
-    // ÔöÇÔöÇ Zoho Forms system fields (from form HTML) ÔöÇÔöÇ
+    // ── Zoho Forms system fields (from form HTML) ──
     params.append('formName',       'Contactdetails');
     params.append('formPerma',      FORM_PERMA);
     params.append('isPaymentForm',  'false');
@@ -549,51 +549,23 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     params.append('zf_redirect_url', '');
     params.append('zc_gad',         '');
 
-    // ÔöÇÔöÇ Exact field names from live form HTML ÔöÇÔöÇ
+    // ── Exact field names from live form HTML ──
     params.append('SingleLine',  'Avati Safe Storage');         // Company Name (required)
     params.append('SingleLine1', customer.name  || '');         // Name (required)
-    params.append('PhoneNumber_countrycode', customer.phone || ''); // Phone
-    params.append('PhoneNumber', customer.phone || '');         // Phone fallback
+    params.append('PhoneNumber', customer.phone || '');         // Phone
     params.append('SingleLine2', customer.email || '');         // Email
     params.append('Radio',       radioValue);                   // Quote Method
 
     try {
-      const iframeName = 'zoho_forms_iframe_' + Date.now();
-      const iframe = document.createElement('iframe');
-      iframe.name = iframeName;
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-
-      const form = document.createElement('form');
-      form.action = FORM_URL;
-      form.method = 'POST';
-      form.target = iframeName;
-      form.acceptCharset = 'UTF-8';
-
-      const add = (name: string, value: string) => {
-        const i = document.createElement('input');
-        i.type = 'hidden'; i.name = name; i.value = value;
-        form.appendChild(i);
-      };
-
-      for (const [key, val] of params.entries()) {
-        add(key, val);
-      }
-
-      document.body.appendChild(form);
-      document.charset = 'UTF-8';
-      form.submit();
-
-      console.log('[ZohoForms] POST sent via iframe →', FORM_URL, Object.fromEntries(params));
-
-      setTimeout(() => {
-        try {
-          document.body.removeChild(form);
-          document.body.removeChild(iframe);
-        } catch (_) {}
-      }, 5000);
+      await fetch(FORM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+        mode: 'no-cors', // opaque response — fire-and-forget, no CORS preflight
+      });
+      console.log('[ZohoForms] POST sent →', FORM_URL, Object.fromEntries(params));
     } catch (err) {
-      console.error('[ZohoForms] form submit error:', err);
+      console.error('[ZohoForms] fetch error:', err);
     }
   };
 
@@ -612,8 +584,8 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
       else currentStatus = 'Contact only';
     }
 
-    // Put the full name in Last Name ÔÇö Zoho CRM displays leads by Last Name,
-    // so splitting "test 123" ÔåÆ firstName="test", lastName="123" made the lead appear as "123".
+    // Put the full name in Last Name — Zoho CRM displays leads by Last Name,
+    // so splitting "test 123" → firstName="test", lastName="123" made the lead appear as "123".
     const firstName = '';
     const lastName  = (customer.name || '').trim() || 'Website Lead';
 
@@ -635,24 +607,25 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     const planMap:   Record<string, string> = { basic: 'Basic', premium: 'Premium', professional: 'Pro' };
 
     const params = new URLSearchParams();
-    // ÔöÇÔöÇ Auth tokens ÔöÇÔöÇ
-    params.append('xnQsjsdp',  'ae8e2cd6aa09c0b65a7a3f3313042e0e09f3fb0eadd1ad72f4b38bf9b0ed8031');
-    params.append('xmIwtLD',   '8c3627253c1180df262be71c1c65d4b9ede0e12f0609dd77ab63cf7c833e831037aba9a89491092b363e69deac59e7b0');
+    // ── Auth tokens ──
+    params.append('xnQsjsdp',  'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce');
+    params.append('xmIwtLD',   '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d');
     params.append('actionType','TGVhZHM=');
     params.append('zc_gad',    '');
     params.append('returnURL', 'https://www.avatisafestorage.com/');
-    // ÔöÇÔöÇ Contact ÔöÇÔöÇ
+    // ── Contact ──
     params.append('Company',    'Avati Website Lead');
     params.append('First Name', firstName);
     params.append('Last Name',  lastName);
-    const cleanPhone = (customer.phone || '').trim();
     params.append('Email',      customer.email || '');
-    params.append('Phone',      cleanPhone);
-    // ÔöÇÔöÇ Lead data ÔöÇÔöÇ
+    params.append('Mobile',     customer.phone || '');
+    // ── Lead data ──
     params.append('Lead Source', 'Online Store');
     params.append('Lead Status', currentStatus);
+    params.append('LEADCF6',    methodMap[quoteMethod] || 'Live Quotation');
     params.append('LEADCF2',    storageType || 'Household');
     params.append('LEADCF1',    invList || '');
+    params.append('LEADCF5',    customItems.map(c => `${c.qty}x ${c.name}`).join(', ') || '');
     params.append('LEADCF3',    planMap[selectedPlan] || 'Basic');
     if (logistics.packingRequired)   params.append('LEADCF101', 'on');
     if (logistics.transportRequired) params.append('LEADCF102', 'on');
@@ -661,7 +634,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     if (monthly  > 0) params.append('LEADCF67', monthly.toString());
     if (ptCharge > 0) params.append('LEADCF66', ptCharge.toString());
     params.append('Description', `Pickup: ${logistics.pickupDate || 'TBD'} | ${logistics.duration || 1} months | ${logistics.buildingType || 'N/A'} | Floor ${logistics.floors || 0} | Lift: ${logistics.liftAvailable}`);
-    params.append('Address - Zip / Postal Code', logistics.pickupArea || '');
+    params.append('Address - Flat / House No./ Building / Apartment Name', logistics.pickupArea || '');
     params.append('aG9uZXlwb3Q', ''); // honeypot
 
     try {
@@ -671,7 +644,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         body: params.toString(),
         mode: 'no-cors',
       });
-      console.log('[ZohoCRM] POST sent ÔåÆ', Object.fromEntries(params));
+      console.log('[ZohoCRM] POST sent → Step:', step, 'Status:', currentStatus);
     } catch (err) {
       console.error('[ZohoCRM] fetch error:', err);
     }
@@ -731,7 +704,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Monthly Storage</span>
           <span className="font-bold" style={{ color: 'var(--text-primary)' }}>
-            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'To be quoted' : `Ôé╣${costs.monthlyStorage.toFixed(0)}`}
+            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'To be quoted' : `₹${costs.monthlyStorage.toFixed(0)}`}
           </span>
         </div>
 
@@ -739,7 +712,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         <div className="flex justify-between items-center text-sm">
           <span style={{ color: 'var(--text-muted)' }}>GST (18%)</span>
           <span style={{ color: 'var(--text-secondary)' }}>
-            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `Ôé╣${costs.storageGst.toFixed(0)}`}
+            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `₹${costs.storageGst.toFixed(0)}`}
           </span>
         </div>
 
@@ -747,7 +720,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         {step >= 4 && costs.packingAndTransport > 0 && (
           <div className="flex justify-between items-center text-sm border-t pt-3" style={{ borderColor: 'var(--border-color)' }}>
             <span style={{ color: 'var(--text-muted)' }}>Packing & Transport</span>
-            <span style={{ color: 'var(--text-secondary)' }}>Ôé╣{costs.packingAndTransport.toFixed(0)}</span>
+            <span style={{ color: 'var(--text-secondary)' }}>₹{costs.packingAndTransport.toFixed(0)}</span>
           </div>
         )}
 
@@ -756,9 +729,9 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
           <div className="rounded-lg p-3 text-xs" style={{ background: 'var(--gold-surface)', border: '1px solid var(--gold-border)' }}>
             <p className="font-bold mb-1" style={{ color: 'var(--gold-dim)' }}>First Month (Pro-rata)</p>
             <p style={{ color: 'var(--text-secondary)' }}>
-              Pickup date ÔåÆ 5th of next month
+              Pickup date → 5th of next month
             </p>
-            <p className="font-bold mt-1" style={{ color: 'var(--text-primary)' }}>Ôé╣{costs.proRataFirst.toFixed(0)}</p>
+            <p className="font-bold mt-1" style={{ color: 'var(--text-primary)' }}>₹{costs.proRataFirst.toFixed(0)}</p>
           </div>
         )}
       </div>
@@ -767,11 +740,11 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         <div className="flex flex-col mb-5">
           <span className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Total Monthly Charges</span>
           <span className="text-4xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>
-            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `Ôé╣${costs.monthlyStorage.toFixed(0)}`}
+            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `₹${costs.monthlyStorage.toFixed(0)}`}
             {!(storageType === 'Household' && quoteMethod !== 'inventory') && <span className="text-base font-semibold ml-1" style={{ color: 'var(--text-muted)' }}>/mo</span>}
           </span>
           <span className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'Quotation pending analysis' : `+Ôé╣${costs.storageGst.toFixed(0)} GST ┬À Packing/transport billed separately`}
+            {storageType === 'Household' && quoteMethod !== 'inventory' ? 'Quotation pending analysis' : `+₹${costs.storageGst.toFixed(0)} GST · Packing/transport billed separately`}
           </span>
         </div>
 
@@ -780,7 +753,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
             <Download className="w-3.5 h-3.5" /> PDF
           </button>
-          <a href={`https://wa.me/918095589888?text=${encodeURIComponent(`Hi Avati Team, I have generated a quote on your website.\n\n*Name:* ${customer.name || 'Not provided'}\n*Storage Type:* ${storageType}\n*Plan:* ${selectedPlan.toUpperCase()}\n*Monthly Cost:* Ôé╣${costs.monthlyStorage.toFixed(0)} + GST\n\nPlease contact me at ${customer.phone} to proceed!`)}`}
+          <a href={`https://wa.me/918095589888?text=${encodeURIComponent(`Hi Avati Team, I have generated a quote on your website.\n\n*Name:* ${customer.name || 'Not provided'}\n*Storage Type:* ${storageType}\n*Plan:* ${selectedPlan.toUpperCase()}\n*Monthly Cost:* ₹${costs.monthlyStorage.toFixed(0)} + GST\n\nPlease contact me at ${customer.phone} to proceed!`)}`}
             target="_blank" rel="noopener noreferrer"
             className="py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all"
             style={{ background: 'rgba(37,211,102,0.12)', color: '#128C7E', border: '1px solid rgba(37,211,102,0.25)' }}>
@@ -793,8 +766,8 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
           disabled={isSubmitting || (step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@')))}
           onClick={async () => {
             if (step === 1) {
-              // Capture contact + method in Zoho Forms ONLY via flow method
-              await submitToZohoForms();
+              // Capture contact + method in both CRM and Zoho Forms on first continue
+              await Promise.allSettled([pushToZoho(true), submitToZohoForms()]);
               setStep(2);
             } else if (step < 5) {
               await pushToZoho(true);
@@ -825,7 +798,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             className="w-full py-2.5 mt-2 font-medium transition-colors text-sm"
             style={{ color: 'var(--text-muted)' }}
           >
-            ÔåÉ Go Back
+            ← Go Back
           </button>
         )}
         
@@ -847,7 +820,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     ? ['Storage Type', quoteMethod === 'upload' ? 'Upload Media' : quoteMethod === 'visit' ? 'Site Visit' : 'Inventory', 'Logistics', 'Plans']
     : ['Customer Details', 'Storage Type', quoteMethod === 'upload' ? 'Upload Media' : quoteMethod === 'visit' ? 'Site Visit' : 'Inventory', 'Logistics', 'Plans'];
 
-  // ÔöÇÔöÇ Success Overlay ÔöÇÔöÇ
+  // ── Success Overlay ──
   if (isSuccess) {
     return (
       <section id="quote" className={`py-16 sm:py-24 relative overflow-hidden ${isDashboard ? 'min-h-[80vh] rounded-2xl' : ''}`}
@@ -897,7 +870,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             className="flex flex-col sm:flex-row gap-3 w-full max-w-sm"
           >
             <a
-              href={`https://wa.me/918095589888?text=${encodeURIComponent(`Hi Avati! I just submitted a storage quote on your website.\n\n*Name:* ${customer.name}\n*Phone:* ${customer.phone}\n*Storage Type:* ${storageType}\n*Plan:* ${selectedPlan?.toUpperCase()}\n*Monthly:* Ôé╣${Math.round(costs.monthlyStorage)} + GST`)}`}
+              href={`https://wa.me/918095589888?text=${encodeURIComponent(`Hi Avati! I just submitted a storage quote on your website.\n\n*Name:* ${customer.name}\n*Phone:* ${customer.phone}\n*Storage Type:* ${storageType}\n*Plan:* ${selectedPlan?.toUpperCase()}\n*Monthly:* ₹${Math.round(costs.monthlyStorage)} + GST`)}`}
               target="_blank" rel="noopener noreferrer"
               className="flex-1 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all"
               style={{ background: 'rgba(37,211,102,0.15)', color: '#128C7E', border: '1px solid rgba(37,211,102,0.3)' }}
@@ -945,14 +918,14 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             High-Precision Quote Generator
           </h2>
           <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
-            Detailed item-specific calculation ÔÇö get your price in seconds
+            Detailed item-specific calculation — get your price in seconds
           </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 items-stretch lg:h-[750px] justify-center">
           <div className="flex-1 w-full flex flex-col min-h-0">
 
-            {/* Progress Bar ÔÇö short labels on mobile */}
+            {/* Progress Bar — short labels on mobile */}
             <div className="mb-5 sm:mb-8 backdrop-blur-sm px-4 py-4 sm:p-6 rounded-2xl shadow-xl shrink-0"
               style={{ background: 'var(--bg-glass)', border: '1px solid var(--border-color)' }}>
               <div className="flex items-center justify-between relative z-10">
@@ -1026,7 +999,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {[
                           { id: 'inventory', title: 'Live Quotation', desc: 'Select items instantly for a quick estimate.', icon: Zap },
-                          { id: 'upload', title: 'Upload 360┬░', desc: 'Upload photos/videos of your space for accuracy.', icon: Camera },
+                          { id: 'upload', title: 'Upload 360°', desc: 'Upload photos/videos of your space for accuracy.', icon: Camera },
                           { id: 'visit', title: 'Request Site Visit', desc: 'Our experts visit and assess your requirements.', icon: MapPin }
                         ].map(method => {
                           const isSelected = quoteMethod === method.id;
@@ -1108,7 +1081,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                     className="rounded-2xl shadow-xl overflow-hidden flex flex-col h-full"
                     style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
                   >
-                     {/* ÔöÇÔöÇ SITE VISIT FLOW ÔöÇÔöÇ */}
+                     {/* ── SITE VISIT FLOW ── */}
                      {quoteMethod === 'visit' ? (
                        <div className="p-6 flex-1 overflow-y-auto flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg-secondary)' }}>
                          <motion.div 
@@ -1121,7 +1094,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                                <MapPin className="w-8 h-8" />
                             </div>
                             <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Schedule Site Visit</h3>
-                            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Our supervisor will visit your location to assess the inventory precisely. Service charges may apply (approx Ôé╣500).</p>
+                            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Our supervisor will visit your location to assess the inventory precisely. Service charges may apply (approx ₹500).</p>
                             
                             <div className="space-y-4 text-left">
                                <div>
@@ -1147,7 +1120,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                                <Camera className="w-8 h-8" />
                             </div>
                             <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Upload Media</h3>
-                            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Upload photos or a 360┬░ video of your space. Our experts will analyze them and provide a custom quote.</p>
+                            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Upload photos or a 360° video of your space. Our experts will analyze them and provide a custom quote.</p>
                             
                             <div className="relative group cursor-pointer">
                               <input type="file" multiple accept="image/*,video/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={(e) => setUploadedFiles(Array.from(e.target.files || []))} />
@@ -1178,7 +1151,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                        </div>
                      ) : (
                        <>
-                         {/* ÔöÇÔöÇ VEHICLE STORAGE ÔöÇÔöÇ */}
+                         {/* ── VEHICLE STORAGE ── */}
                          {storageType === 'Vehicle' && (
                            <div className="p-5 overflow-y-auto flex-1">
                              <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Vehicle Storage</h3>
@@ -1193,7 +1166,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                                    }}>
                                    <Car className="w-6 h-6" style={{ color: selectedVehicles[v.id] ? 'var(--gold)' : 'var(--text-muted)' }} />
                                    <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{v.name}</span>
-                                   <span className="text-xs font-semibold" style={{ color: 'var(--gold-dim)' }}>Ôé╣{v.price}/mo</span>
+                                   <span className="text-xs font-semibold" style={{ color: 'var(--gold-dim)' }}>₹{v.price}/mo</span>
                                    {v.insurance && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>Insurance recommended</span>}
                                  </button>
                                ))}
@@ -1202,7 +1175,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                                <label className="flex items-center gap-3 cursor-pointer">
                                  <input type="checkbox" checked={vehicleMaintenance} onChange={e => setVehicleMaintenance(e.target.checked)} className="w-5 h-5 accent-[#D4AF37]" />
                                  <div>
-                                   <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>15-day Battery Maintenance ÔÇö Ôé╣250</p>
+                                   <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>15-day Battery Maintenance — ₹250</p>
                                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>We start your vehicle every 15 days to maintain battery health</p>
                                  </div>
                                </label>
@@ -1213,11 +1186,11 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                            </div>
                          )}
 
-                         {/* ÔöÇÔöÇ BUSINESS/OFFICE STORAGE ÔöÇÔöÇ */}
+                         {/* ── BUSINESS/OFFICE STORAGE ── */}
                          {storageType === 'Business' && (
                            <div className="p-5 overflow-y-auto flex-1">
                              <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Business / Office Storage</h3>
-                             <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Priced at Ôé╣34 per sq.ft per month + 18% GST.</p>
+                             <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>Priced at ₹34 per sq.ft per month + 18% GST.</p>
                              <div className="mb-6">
                                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Estimated Storage Area (sq.ft)</label>
                                <div className="flex items-center gap-4">
@@ -1227,16 +1200,16 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                                  <div className="w-24 text-center font-black text-xl" style={{ color: 'var(--gold)' }}>{businessSqft} sqft</div>
                                </div>
                                <div className="mt-4 p-4 rounded-xl" style={{ background: 'var(--gold-surface)', border: '1px solid var(--gold-border)' }}>
-                                 <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Estimated Monthly: <strong style={{ color: 'var(--text-primary)' }}>Ôé╣{(businessSqft * 34).toLocaleString()}</strong></p>
-                                 <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>GST (18%): <strong style={{ color: 'var(--text-primary)' }}>Ôé╣{Math.round(businessSqft * 34 * 0.18).toLocaleString()}</strong></p>
-                                 <p className="text-base font-black mt-2" style={{ color: 'var(--gold)' }}>Total: Ôé╣{Math.round(businessSqft * 34 * 1.18).toLocaleString()}/mo</p>
+                                 <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Estimated Monthly: <strong style={{ color: 'var(--text-primary)' }}>₹{(businessSqft * 34).toLocaleString()}</strong></p>
+                                 <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>GST (18%): <strong style={{ color: 'var(--text-primary)' }}>₹{Math.round(businessSqft * 34 * 0.18).toLocaleString()}</strong></p>
+                                 <p className="text-base font-black mt-2" style={{ color: 'var(--gold)' }}>Total: ₹{Math.round(businessSqft * 34 * 1.18).toLocaleString()}/mo</p>
                                </div>
                              </div>
                              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Minimum booking: 1 month. Rate includes secure bay, CCTV, pest control. Packing & transport quoted separately.</p>
                            </div>
                          )}
 
-                         {/* ÔöÇÔöÇ DOCUMENT STORAGE ÔöÇÔöÇ */}
+                         {/* ── DOCUMENT STORAGE ── */}
                          {storageType === 'Document' && (
                            <div className="p-5 overflow-y-auto flex-1">
                              <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Document Storage</h3>
@@ -1263,25 +1236,25 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                                  <div className="flex items-center gap-3">
                                    <button onClick={() => setDocBoxes(b => Math.max(1, b - 1))}
                                      className="w-10 h-10 rounded-xl font-bold text-lg border flex items-center justify-center"
-                                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>ÔêÆ</button>
+                                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>−</button>
                                    <span className="text-2xl font-black w-16 text-center" style={{ color: 'var(--text-primary)' }}>{docBoxes}</span>
                                    <button onClick={() => setDocBoxes(b => b + 1)}
                                      className="w-10 h-10 rounded-xl font-bold text-lg flex items-center justify-center"
                                      style={{ background: 'var(--gold-surface)', color: 'var(--gold-dim)' }}>+</button>
                                  </div>
                                  <p className="text-sm mt-3" style={{ color: 'var(--text-muted)' }}>
-                                   {docType === 'Confidential' ? 'Ôé╣120' : 'Ôé╣80'} per box/month ┬À Total: <strong style={{ color: 'var(--gold)' }}>Ôé╣{(docBoxes * (docType === 'Confidential' ? 120 : 80)).toLocaleString()}/mo</strong>
+                                   {docType === 'Confidential' ? '₹120' : '₹80'} per box/month · Total: <strong style={{ color: 'var(--gold)' }}>₹{(docBoxes * (docType === 'Confidential' ? 120 : 80)).toLocaleString()}/mo</strong>
                                  </p>
                                </div>
                              </div>
                            </div>
                          )}
 
-                         {/* ÔöÇÔöÇ HOUSEHOLD STORAGE ÔöÇÔöÇ */}
+                         {/* ── HOUSEHOLD STORAGE ── */}
                          {storageType === 'Household' && (
                            <div className="flex flex-col h-full overflow-hidden">
 
-                    {/* Room tabs ÔÇö horizontal scrollable */}
+                    {/* Room tabs — horizontal scrollable */}
                     <div className="flex overflow-x-auto justify-start p-3 gap-2 hide-scrollbar border-b shrink-0 shadow-sm relative z-10 w-full"
                       style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' }}
                     >
@@ -1480,7 +1453,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                             <input type="checkbox" checked={logistics.transportRequired} onChange={e => setLogistics({ ...logistics, transportRequired: e.target.checked })} className="mt-1 w-5 h-5 accent-[#EAB308]" />
                             <div>
                               <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>Transportation?</div>
-                              <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Base fee Ôé╣1500 + Distance to Warehouse (Ôé╣50/km)</div>
+                              <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Base fee ₹1500 + Distance to Warehouse (₹50/km)</div>
                             </div>
                           </label>
                           {logistics.transportRequired && (
@@ -1571,7 +1544,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
                           {logistics.liftAvailable === 'no' && logistics.floors > 0 && (
                             <div className="mt-4 text-sm font-bold p-4 rounded-xl border flex items-center gap-2" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}>
-                              Ôé╣300 per floor surcharge applied for {logistics.floors} floors.
+                              ₹300 per floor surcharge applied for {logistics.floors} floors.
                             </div>
                           )}
                         </div>
@@ -1621,7 +1594,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                             <h3 className={`text-xl font-bold capitalize mb-2 relative z-10`} style={{ color: isSelected ? 'var(--gold)' : 'var(--text-primary)' }}>{plan.name}</h3>
 
                             <div className="text-3xl font-bold relative z-10 mb-4 border-b pb-4" style={{ color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}>
-                              {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `Ôé╣${(costs.baseStorageCost * plan.mult).toFixed(0)}`}
+                              {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `₹${(costs.baseStorageCost * plan.mult).toFixed(0)}`}
                               {!(storageType === 'Household' && quoteMethod !== 'inventory') && <span className="text-sm font-normal" style={{ color: 'var(--text-muted)' }}>/mo</span>}
                             </div>
 
@@ -1699,7 +1672,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         </div>
       </div>
 
-      {/* Mobile sticky cost bar ÔÇö shows on small screens */}
+      {/* Mobile sticky cost bar — shows on small screens */}
       {!isDashboard && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-3 border-t border-white/10"
           style={{ background: 'rgba(11,31,58,0.97)', backdropFilter: 'blur(12px)' }}
@@ -1714,7 +1687,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
             <div className="flex-1 flex flex-col justify-center px-1">
               <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Monthly</p>
               <p className="text-xl font-black text-[#EAB308] leading-none truncate">
-                {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `Ôé╣${costs.totalEstimate.toFixed(0)}`}
+                {storageType === 'Household' && quoteMethod !== 'inventory' ? 'TBD' : `₹${costs.totalEstimate.toFixed(0)}`}
               </p>
             </div>
 
@@ -1722,8 +1695,8 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
               disabled={isSubmitting || (step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0)}
               onClick={async () => {
                 if (step === 1) {
-                  // Capture contact + method in Zoho Forms ONLY via flow method
-                  await submitToZohoForms();
+                  // Capture contact + method in both CRM and Zoho Forms on first continue
+                  await Promise.allSettled([pushToZoho(true), submitToZohoForms()]);
                   setStep(2);
                 } else if (step < 5) {
                   await pushToZoho(true);
