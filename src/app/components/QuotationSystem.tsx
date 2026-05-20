@@ -617,9 +617,10 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
     params.append('Company',    'Avati Website Lead');
     params.append('First Name', firstName);
     params.append('Last Name',  lastName);
+    const cleanPhone = (customer.phone || '').trim();
     params.append('Email',      customer.email || '');
-    params.append('Mobile',     customer.phone || '');
-    params.append('Phone',      customer.phone || '');
+    params.append('Mobile',     cleanPhone);
+    params.append('Phone',      cleanPhone);
     // ── Lead data ──
     params.append('Lead Source', 'Online Store');
     params.append('Lead Status', currentStatus);
