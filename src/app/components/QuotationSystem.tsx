@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "../App";
+import { submitZohoContactForm, type QuoteMethodId } from "../../lib/zoho/zohoFormService";
 
 function useStickyState<T>(defaultValue: T | (() => T), key: string): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [value, setValue] = useState<T>(() => {
@@ -378,6 +379,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
   // Submission states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [zohoFormError, setZohoFormError] = useState<string | null>(null);
 
   // Step 2: Inventory (Household)
   const [activeRoom, setActiveRoom] = useStickyState(ROOM_TABS[0].id, 'avati_q_activeRoom');
@@ -526,50 +528,34 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   const costs = calculateCosts();
 
-  // ── Zoho Forms submission ──
-  // Fires on step 1 Continue to capture contact + quote method immediately.
-  // Uses fetch + no-cors: a "simple" cross-origin POST that bypasses CORS preflight
-  // and is visible in the browser DevTools Network tab for easy debugging.
-  const submitToZohoForms = async () => {
-    const FORM_PERMA = '1d2Scw-4Eanc9NE1BnuHC0VwRFl8nlDx-362SOYaalI';
-    const FORM_URL = `https://forms.zohopublic.in/avatisafestorage1/form/Contactdetails/formperma/${FORM_PERMA}/htmlRecords/submit`;
-
-    const radioValue =
-      quoteMethod === 'inventory' ? 'Live Quotation'
-      : quoteMethod === 'upload'  ? 'Upload 360 Video'
-      : 'Book Survey';
-
-    const params = new URLSearchParams();
-    // ── Zoho Forms system fields (from form HTML) ──
-    params.append('formName',       'Contactdetails');
-    params.append('formPerma',      FORM_PERMA);
-    params.append('isPaymentForm',  'false');
-    params.append('formType',       '0');
-    params.append('zf_referrer_name', window.location.href);
-    params.append('zf_redirect_url', '');
-    params.append('zc_gad',         '');
-
-    // ── Exact field names from live form HTML ──
-    params.append('SingleLine',  'Avati Safe Storage');         // Company Name (required)
-    params.append('SingleLine1', customer.name  || '');         // Name (required)
-    params.append('PhoneNumber', customer.phone || '');         // Phone
-    params.append('SingleLine2', customer.email || '');         // Email
-    params.append('Radio',       radioValue);                   // Quote Method
-
+  /** Step 1 Continue: hidden iframe → Zoho Form, then CRM WebToLead backup. */
+  const handleStep1Continue = async (): Promise<boolean> => {
+    setZohoFormError(null);
+    setIsSubmitting(true);
     try {
-      await fetch(FORM_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString(),
-        mode: 'no-cors', // opaque response — fire-and-forget, no CORS preflight
+      const zohoResult = await submitZohoContactForm({
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email,
+        quoteMethod: quoteMethod as QuoteMethodId,
       });
-      console.log('[ZohoForms] POST sent →', FORM_URL, Object.fromEntries(params));
+
+      if (!zohoResult.success) {
+        setZohoFormError(zohoResult.error ?? 'Could not submit your details. Please try again.');
+        return false;
+      }
+
+      await pushToZoho(true);
+      setStep(2);
+      return true;
     } catch (err) {
-      console.error('[ZohoForms] fetch error:', err);
+      console.error('[Quote] Step 1 continue error:', err);
+      setZohoFormError('Something went wrong. Please check your connection and try again.');
+      return false;
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-
 
   const pushToZoho = async (isPartial: boolean) => {
     // Lead status based on how far through the form the user is
@@ -653,10 +639,14 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
   const handleConfirmBooking = async () => {
     setIsSubmitting(true);
     try {
-      // Submit to both Zoho CRM and Zoho Forms in parallel
       await Promise.allSettled([
         pushToZoho(false),
-        submitToZohoForms(),
+        submitZohoContactForm({
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+          quoteMethod: quoteMethod as QuoteMethodId,
+        }),
       ]);
       setIsSuccess(true);
       // Clear localStorage quote data after 3s
@@ -762,16 +752,24 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
           </a>
         </div>
 
+        {zohoFormError && step === 1 && (
+          <p className="text-xs text-red-400 font-medium text-center mb-2" role="alert">
+            {zohoFormError}
+          </p>
+        )}
         <button
           disabled={isSubmitting || (step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@')))}
           onClick={async () => {
             if (step === 1) {
-              // Capture contact + method in both CRM and Zoho Forms on first continue
-              await Promise.allSettled([pushToZoho(true), submitToZohoForms()]);
-              setStep(2);
+              await handleStep1Continue();
             } else if (step < 5) {
-              await pushToZoho(true);
-              setStep(step + 1);
+              setIsSubmitting(true);
+              try {
+                await pushToZoho(true);
+                setStep(step + 1);
+              } finally {
+                setIsSubmitting(false);
+              }
             } else {
               await handleConfirmBooking();
             }
@@ -981,15 +979,15 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                         <div>
                           <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
-                          <input type="text" value={customer.name} onChange={e => setCustomer({ ...customer, name: e.target.value })} className="avati-input" placeholder="Your Name" />
+                          <input type="text" value={customer.name} onChange={e => { setCustomer({ ...customer, name: e.target.value }); setZohoFormError(null); }} className="avati-input" placeholder="Your Name" />
                         </div>
                         <div>
                           <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Phone Number</label>
-                          <input type="tel" value={customer.phone} onChange={e => setCustomer({ ...customer, phone: e.target.value })} className="avati-input" placeholder="000-000-0000" />
+                          <input type="tel" value={customer.phone} onChange={e => { setCustomer({ ...customer, phone: e.target.value }); setZohoFormError(null); }} className="avati-input" placeholder="000-000-0000" />
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
-                          <input type="email" value={customer.email} onChange={e => setCustomer({ ...customer, email: e.target.value })} className="avati-input" placeholder="example@gmail.com" />
+                          <input type="email" value={customer.email} onChange={e => { setCustomer({ ...customer, email: e.target.value }); setZohoFormError(null); }} className="avati-input" placeholder="example@gmail.com" />
                         </div>
                       </div>
 
@@ -1006,7 +1004,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                           return (
                           <div 
                             key={method.id}
-                            onClick={() => setQuoteMethod(method.id)}
+                            onClick={() => { setQuoteMethod(method.id); setZohoFormError(null); }}
                             className="p-5 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden group flex flex-col items-center text-center"
                             style={{
                               borderColor: isSelected ? 'var(--gold)' : 'var(--border-color)',
@@ -1695,12 +1693,15 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
               disabled={isSubmitting || (step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@'))) || (step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0)}
               onClick={async () => {
                 if (step === 1) {
-                  // Capture contact + method in both CRM and Zoho Forms on first continue
-                  await Promise.allSettled([pushToZoho(true), submitToZohoForms()]);
-                  setStep(2);
+                  await handleStep1Continue();
                 } else if (step < 5) {
-                  await pushToZoho(true);
-                  setStep(step + 1);
+                  setIsSubmitting(true);
+                  try {
+                    await pushToZoho(true);
+                    setStep(step + 1);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
                 } else {
                   await handleConfirmBooking();
                 }

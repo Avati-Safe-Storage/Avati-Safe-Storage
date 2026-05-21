@@ -20,6 +20,16 @@ const AreasPage = lazy(() => import("./components/AreasPage").then(m => ({ defau
 const ServiceLocationPage = lazy(() => import("./components/ServiceLocationPage").then(m => ({ default: m.ServiceLocationPage })));
 const LocationLandingPage = lazy(() => import("./components/LocationLandingPage").then(m => ({ default: m.LocationLandingPage })));
 
+// Lazy-loaded new pages (Phase 1 routing expansion)
+const AboutPage = lazy(() => import("./pages/AboutPage").then(m => ({ default: m.AboutPage })));
+const ServicesPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.ServicesPage })));
+const PricingPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.PricingPage })));
+const ContactPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.ContactPage })));
+const LegalPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.LegalPage })));
+const NotFoundPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.NotFoundPage })));
+const BlogListPage = lazy(() => import("./pages/BlogPages").then(m => ({ default: m.BlogListPage })));
+const BlogPostPage = lazy(() => import("./pages/BlogPages").then(m => ({ default: m.BlogPostPage })));
+
 // Loading fallback
 function PageSpinner() {
   return (
@@ -102,6 +112,18 @@ function ScrollToTop() {
   return null;
 }
 
+// ── Analytics page view tracking (Phase 9) ──────────────────────────────────
+function AnalyticsTracker() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    // analytics is already statically loaded via main.tsx — import directly
+    import('../lib/analytics/analytics').then(({ trackPageView }) => {
+      trackPageView(pathname);
+    });
+  }, [pathname]);
+  return null;
+}
+
 // ── Root with router ────────────────────────────────────────────────────────
 function AppRoutes() {
   const [customerData, setCustomerData] = useState<any>(null);
@@ -110,26 +132,74 @@ function AppRoutes() {
   return (
     <>
     <ScrollToTop />
+    <AnalyticsTracker />
     <Suspense fallback={<PageSpinner />}>
     <Routes>
+      {/* ── Home ── */}
       <Route path="/" element={<LandingPage onLoginClick={() => navigate('/login')} />} />
+
+      {/* ── Quote ── */}
       <Route path="/get-quote" element={<QuotePage />} />
-      
-      {/* FAQ */}
+
+      {/* ── Phase 1: New static pages ── */}
+      <Route path="/about" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <AboutPage />
+        </PageLayout>
+      } />
+      <Route path="/services" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <ServicesPage />
+        </PageLayout>
+      } />
+      <Route path="/pricing" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <PricingPage />
+        </PageLayout>
+      } />
+      <Route path="/contact" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <ContactPage />
+        </PageLayout>
+      } />
+      <Route path="/privacy-policy" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <LegalPage type="privacy" />
+        </PageLayout>
+      } />
+      <Route path="/terms" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <LegalPage type="terms" />
+        </PageLayout>
+      } />
+
+      {/* ── Blog (Phase 2 CMS-driven) ── */}
+      <Route path="/blog" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <BlogListPage />
+        </PageLayout>
+      } />
+      <Route path="/blog/:slug" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <BlogPostPage />
+        </PageLayout>
+      } />
+
+      {/* ── FAQ ── */}
       <Route path="/faq" element={
         <PageLayout onLoginClick={() => navigate('/login')}>
           <FAQPage />
         </PageLayout>
       } />
 
-      {/* Areas */}
+      {/* ── Areas ── */}
       <Route path="/areas" element={
         <PageLayout onLoginClick={() => navigate('/login')}>
           <AreasPage />
         </PageLayout>
       } />
 
-      {/* Service pages (standalone) */}
+      {/* ── Service pages (standalone) ── */}
       <Route path="/household-storage" element={
         <PageLayout onLoginClick={() => navigate('/login')}>
           <ServiceLocationPage />
@@ -145,7 +215,6 @@ function AppRoutes() {
           <ServiceLocationPage />
         </PageLayout>
       } />
-      {/* climate-controlled removed — no longer offered */}
       <Route path="/document-storage" element={
         <PageLayout onLoginClick={() => navigate('/login')}>
           <ServiceLocationPage />
@@ -162,21 +231,21 @@ function AppRoutes() {
         </PageLayout>
       } />
 
-      {/* pSEO: service + zone + area pages (200+ landing pages) */}
+      {/* ── pSEO: service + zone + area pages (200+ landing pages) ── */}
       <Route path="/:serviceType/:regionId/:area" element={
         <PageLayout onLoginClick={() => navigate('/login')}>
           <LocationLandingPage />
         </PageLayout>
       } />
 
-      {/* Area pages */}
+      {/* ── Area pages ── */}
       <Route path="/areas/:regionId/:area" element={
         <PageLayout onLoginClick={() => navigate('/login')}>
           <AreasPage />
         </PageLayout>
       } />
 
-      {/* Auth/Portal */}
+      {/* ── Auth / Customer Portal ── */}
       <Route path="/login" element={
         <LoginPage
           onLogin={(data) => { setCustomerData(data); navigate('/dashboard'); }}
@@ -190,8 +259,12 @@ function AppRoutes() {
         />
       } />
 
-      {/* Fallback */}
-      <Route path="*" element={<LandingPage onLoginClick={() => navigate('/login')} />} />
+      {/* ── 404 Fallback (branded, not landing page) ── */}
+      <Route path="*" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <NotFoundPage />
+        </PageLayout>
+      } />
     </Routes>
     </Suspense>
     </>

@@ -2,7 +2,45 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { Mail, Phone, ArrowLeft, MessageCircle } from "lucide-react";
 import logoImg from "../../imports/image.webp";
-import { fetchCustomerData } from "../../lib/googleSheets";
+
+// ── OTP Service — calls Cloudflare Pages Functions ─────────────────────────
+// /api/otp-send  → generates OTP in KV, triggers Zoho Flow for delivery
+// /api/otp-verify → validates OTP, returns customer data from Zoho CRM / Sheets
+// Falls back to dev alert() mode when Functions are not yet deployed.
+
+async function sendOTP(phone: string, channel: 'sms' | 'whatsapp'): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch('/api/otp-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, channel, purpose: 'login' }),
+    });
+    if (res.status === 404) return { success: true, error: '__DEV__' };
+    return await res.json();
+  } catch {
+    return { success: true, error: '__DEV__' };
+  }
+}
+
+async function verifyOTPWithServer(phone: string, otp: string): Promise<{ success: boolean; customer?: any; error?: string; attemptsRemaining?: number }> {
+  try {
+    const res = await fetch('/api/otp-verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, otp }),
+    });
+    if (res.status === 404) return { success: false, error: '__DEV_FALLBACK__' };
+    return await res.json();
+  } catch {
+    return { success: false, error: 'Connection error. Please try again.' };
+  }
+}
+
+// Legacy Google Sheets fallback (preserves existing behaviour when Functions not deployed)
+async function legacySheetLookup(phone: string): Promise<any | null> {
+  const { fetchCustomerData } = await import('../../lib/googleSheets');
+  return fetchCustomerData(phone.replace(/\D/g, '').slice(-10));
+}
 
 export function LoginPage({ onLogin, onBack }: { onLogin: (data: any) => void, onBack?: () => void }) {
   const [loginMethod, setLoginMethod] = useState<"phone" | "email">("phone");
@@ -10,60 +48,80 @@ export function LoginPage({ onLogin, onBack }: { onLogin: (data: any) => void, o
   const [otpMedium, setOtpMedium] = useState<"whatsapp" | "mail">("whatsapp");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
+  // Dev mode only — holds locally generated OTP when Cloudflare Functions not deployed
+  const [devOtp, setDevOtp] = useState("");
 
-  const handleSendOTP = (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loginMethod === "phone" && phoneNumber.length < 10) {
-      setErrorMsg("Please enter a valid phone number.");
+      setErrorMsg("Please enter a valid 10-digit phone number.");
       return;
     }
     setErrorMsg("");
-    
-    const newOtp = Math.floor(1000 + Math.random() * 9000).toString();
-    setGeneratedOtp(newOtp);
+    setIsLoading(true);
 
-    if (loginMethod === "phone" && otpMedium === "whatsapp") {
-      // MOCK WHATSAPP API CALL
-      // In a production environment, this triggers a backend endpoint connected to the Meta WhatsApp Business API 
-      // which is linked to the number +91 8892679226.
-      console.log(`[WHATSAPP API] Sending from: +91 8892679226`);
-      console.log(`[WHATSAPP API] Sending to: ${phoneNumber}`);
-      console.log(`[WHATSAPP API] Message: Your Avati Safe Storage login code is ${newOtp}`);
-      
-      // For testing purposes, alert the user with the OTP
-      alert(`[Dev Mode] WhatsApp Message from Avati (+91 8892679226):\n\nYour login code is: ${newOtp}\n\n(Note: You will need a WhatsApp API Provider like Interakt, Wati, or Twilio to automate this)`);
-    } else {
-      alert(`[Dev Mode] SMS/Email sent. Your login code is: ${newOtp}`);
+    const channel: 'sms' | 'whatsapp' = otpMedium === 'whatsapp' ? 'whatsapp' : 'sms';
+    const result = await sendOTP(phoneNumber, channel);
+    setIsLoading(false);
+
+    if (result.error === '__DEV__') {
+      // Dev fallback: generate local OTP
+      const generated = String(Math.floor(100000 + Math.random() * 900000));
+      setDevOtp(generated);
+      alert(`[Dev Mode] Your OTP: ${generated}\n\nDeploy Cloudflare Functions + configure Zoho Flow for real SMS/WhatsApp delivery.`);
+      setOtpSent(true);
+      return;
     }
 
+    if (!result.success) {
+      setErrorMsg(result.error ?? "Failed to send OTP. Please try again.");
+      return;
+    }
     setOtpSent(true);
   };
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp !== generatedOtp) {
-      setErrorMsg("Invalid OTP. Please try again.");
-      return;
-    }
-    
     setIsLoading(true);
     setErrorMsg("");
-    
-    // Using the real phone number typed to find it in the sheets
-    // Removing extra spaces/chars to match the sheet format if necessary
-    const formattedPhone = phoneNumber.replace(/\D/g, '').slice(-10);
-    
-    const data = await fetchCustomerData(formattedPhone);
-    setIsLoading(false);
-    
-    if (data) {
-      onLogin(data);
-    } else {
-      setErrorMsg("No account found with this number. Please check your credentials.");
+
+    const normalised = phoneNumber.replace(/\D/g, '').slice(-10);
+
+    // Dev mode: verify against locally generated OTP
+    if (devOtp) {
+      if (otp === devOtp) {
+        const data = await legacySheetLookup(normalised);
+        setIsLoading(false);
+        if (data) { onLogin(data); }
+        else setErrorMsg("No account found with this number. Please check your credentials.");
+      } else {
+        setIsLoading(false);
+        setErrorMsg("Invalid OTP. Please try again.");
+      }
+      return;
     }
+
+    // Production: verify via Cloudflare Function
+    const result = await verifyOTPWithServer(normalised, otp);
+    setIsLoading(false);
+
+    if (result.error === '__DEV_FALLBACK__') {
+      const data = await legacySheetLookup(normalised);
+      if (data) { onLogin(data); }
+      else setErrorMsg("No account found with this number.");
+      return;
+    }
+
+    if (!result.success) {
+      setErrorMsg(result.error ?? "Invalid OTP. Please try again.");
+      if (result.attemptsRemaining !== undefined) setAttemptsLeft(result.attemptsRemaining);
+      return;
+    }
+
+    if (result.customer) onLogin(result.customer);
   };
 
   return (
@@ -174,11 +232,16 @@ export function LoginPage({ onLogin, onBack }: { onLogin: (data: any) => void, o
                   </div>
                 )}
 
+                {errorMsg && (
+                  <p className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-lg p-3">{errorMsg}</p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full py-3 bg-[#0B1F3A] text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+                  disabled={isLoading}
+                  className="w-full py-3 bg-[#0B1F3A] text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Send OTP
+                  {isLoading ? "Sending OTP..." : "Send OTP"}
                 </button>
               </form>
             </>
@@ -195,8 +258,9 @@ export function LoginPage({ onLogin, onBack }: { onLogin: (data: any) => void, o
                 </div>
                 <h3 className="text-xl font-semibold">Enter OTP</h3>
                 <p className="text-sm text-gray-500 mt-2">
-                  We've sent a code to your {loginMethod === "phone" ? (otpMedium === "whatsapp" ? "WhatsApp" : "Phone") : "Email"}
+                  We've sent a 6-digit code to your {loginMethod === "phone" ? (otpMedium === "whatsapp" ? "WhatsApp" : "Phone") : "Email"}
                 </p>
+                <p className="text-xs text-gray-400 mt-1">Valid for 10 minutes</p>
               </div>
 
               <div>
@@ -204,25 +268,36 @@ export function LoginPage({ onLogin, onBack }: { onLogin: (data: any) => void, o
                   type="text"
                   required
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   className="w-full px-4 py-4 border-2 border-gray-200 rounded-lg focus:border-[#D4AF37] outline-none transition-colors text-center text-3xl tracking-[1em]"
                   placeholder="------"
                   maxLength={6}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                 />
               </div>
 
+              {errorMsg && (
+                <div className="text-red-600 text-sm bg-red-50 border border-red-100 rounded-lg p-3">
+                  <p>{errorMsg}</p>
+                  {attemptsLeft !== null && attemptsLeft > 0 && (
+                    <p className="text-xs mt-1">{attemptsLeft} attempt{attemptsLeft !== 1 ? 's' : ''} remaining</p>
+                  )}
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || otp.length < 6}
                 className="w-full py-3 bg-[#D4AF37] text-black font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
               >
-                {isLoading ? "Verifying & Loading Data..." : "Verify & Sign In"}
+                {isLoading ? "Verifying..." : "Verify & Sign In"}
               </button>
 
               <div className="text-center">
                 <button
                   type="button"
-                  onClick={() => setOtpSent(false)}
+                  onClick={() => { setOtpSent(false); setOtp(""); setErrorMsg(""); setDevOtp(""); setAttemptsLeft(null); }}
                   className="text-sm text-gray-500 hover:text-black transition-colors"
                 >
                   Change {loginMethod === "phone" ? "Phone Number" : "Email"}
