@@ -34,13 +34,13 @@ function genLoginId(name: string) {
   return `avt.${first}@avati.in`;
 }
 
-const inputCls = 'w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:bg-white transition-all placeholder:text-gray-400';
-const selectCls = inputCls + ' appearance-none cursor-pointer';
+const inputCls = 'w-full px-3.5 py-2.5 vault-input rounded-xl text-sm placeholder:text-brand-muted/30 focus:outline-none';
+const selectCls = inputCls + ' appearance-none cursor-pointer bg-[url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23D4AF37%22%20stroke-width%3D%222%22%253E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")] bg-[length:1.25rem] bg-[right_0.875rem_center] bg-no-repeat pr-10';
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+      <label className="block text-sm font-semibold text-brand-muted mb-1.5">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
       {children}
@@ -51,9 +51,9 @@ function Field({ label, required, children }: { label: string; required?: boolea
 function ReviewRow({ label, value }: { label: string; value?: string | number | boolean }) {
   if (!value && value !== 0) return null;
   return (
-    <div className="flex justify-between py-2 border-b border-gray-100 last:border-0 text-sm">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-900 text-right max-w-[55%]">{String(value)}</span>
+    <div className="flex justify-between py-2.5 border-b border-white/5 last:border-0 text-sm">
+      <span className="text-brand-muted">{label}</span>
+      <span className="font-bold text-brand-text text-right max-w-[55%] truncate">{String(value)}</span>
     </div>
   );
 }
@@ -183,29 +183,32 @@ export default function OnboardingWizard() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+        <button onClick={() => navigate(-1)} className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-brand-muted hover:text-brand-gold transition-colors border border-white/5">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customer Onboarding</h1>
-          {lead && <p className="text-sm text-brand-gold font-medium mt-0.5">Converting lead: {lead.id} — {lead.name}</p>}
+          <h1 className="text-2xl font-black text-brand-text uppercase tracking-wider">Customer Onboarding</h1>
+          {lead && <p className="text-sm text-brand-gold font-bold mt-0.5">Converting Lead: {lead.id} — {lead.name}</p>}
         </div>
       </div>
 
       {/* Step Bar */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex items-center gap-1">
+      <div className="vault-glass rounded-xl p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const done = step > s.id, active = step === s.id;
             return (
-              <div key={s.id} className="flex items-center gap-1 flex-1">
-                <div className={clsx('flex items-center gap-2 px-3 py-2 rounded-lg flex-1 transition-all',
-                  active ? 'bg-brand-dark text-white' : done ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-400')}>
+              <div key={s.id} className="flex items-center gap-2 flex-1">
+                <div className={clsx('flex items-center gap-2.5 px-4 py-2.5 rounded-xl flex-1 transition-all border',
+                  active ? 'bg-brand-gold/10 border-brand-gold text-brand-gold shadow-[0_0_15px_rgba(212,175,55,0.1)] ring-1 ring-brand-gold/30' 
+                  : done ? 'bg-emerald-950/30 border-emerald-500/20 text-emerald-400' 
+                  : 'bg-white/5 border-white/5 text-brand-muted/40'
+                )}>
                   <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs font-semibold hidden sm:inline">{s.label}</span>
+                  <span className="text-xs font-bold tracking-wide">{s.label}</span>
                 </div>
-                {i < STEPS.length - 1 && <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />}
+                {i < STEPS.length - 1 && <ChevronRight className="w-4 h-4 text-brand-muted/30 hidden sm:block flex-shrink-0" />}
               </div>
             );
           })}
@@ -213,16 +216,16 @@ export default function OnboardingWizard() {
       </div>
 
       {/* Body */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="vault-glass rounded-xl p-6">
 
         {/* ── Step 1: Customer Details ── */}
         {step === 1 && (
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <User className="w-4 h-4 text-brand-gold" /> Customer Details
+            <h3 className="font-bold text-brand-gold flex items-center gap-2 text-base uppercase tracking-wide">
+              <User className="w-5 h-5 text-brand-gold" /> Customer Details
             </h3>
             {lead && (
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm text-blue-700">
+              <div className="bg-blue-950/30 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-300">
                 📋 Auto-filled from lead <strong>{lead.id}</strong>. Please verify and complete missing fields.
               </div>
             )}
@@ -254,7 +257,7 @@ export default function OnboardingWizard() {
               <Field label="KYC Document Type">
                 <select className={selectCls} value={cust.kycType}
                   onChange={e => setCust(p => ({ ...p, kycType: e.target.value as KycType }))}>
-                  {KYC_TYPES.map(t => <option key={t}>{t}</option>)}
+                  {KYC_TYPES.map(t => <option key={t} className="bg-brand-dark text-brand-text">{t}</option>)}
                 </select>
               </Field>
               <Field label="KYC ID Number" required>
@@ -268,16 +271,16 @@ export default function OnboardingWizard() {
               <Field label="State">
                 <select className={selectCls} value={cust.state}
                   onChange={e => setCust(p => ({ ...p, state: e.target.value }))}>
-                  {STATES.map(s => <option key={s}>{s}</option>)}
+                  {STATES.map(s => <option key={s} className="bg-brand-dark text-brand-text">{s}</option>)}
                 </select>
               </Field>
             </div>
-            <label className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
-              <input type="checkbox" className="w-4 h-4 accent-brand-gold" checked={cust.insuranceRequired}
+            <label className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:border-brand-gold/30 hover:bg-white/10 transition-all">
+              <input type="checkbox" className="w-4 h-4 accent-brand-gold cursor-pointer" checked={cust.insuranceRequired}
                 onChange={e => setCust(p => ({ ...p, insuranceRequired: e.target.checked }))} />
               <div>
-                <p className="text-sm font-semibold text-gray-900">Insurance Required</p>
-                <p className="text-xs text-gray-500">Cover items stored in our facility</p>
+                <p className="text-sm font-bold text-brand-text">Insurance Required</p>
+                <p className="text-xs text-brand-muted">Cover items stored in our facility for extra peace of mind</p>
               </div>
             </label>
             <Field label="Notes">
@@ -291,8 +294,8 @@ export default function OnboardingWizard() {
         {/* ── Step 2: Schedule Pickup ── */}
         {step === 2 && (
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <Truck className="w-4 h-4 text-brand-gold" /> Schedule Pickup
+            <h3 className="font-bold text-brand-gold flex items-center gap-2 text-base uppercase tracking-wide">
+              <Truck className="w-5 h-5 text-brand-gold" /> Schedule Pickup
             </h3>
             <Field label="Pickup Address" required>
               <textarea className={inputCls + ' resize-none'} rows={2}
@@ -307,11 +310,11 @@ export default function OnboardingWizard() {
               <Field label="Lift Available">
                 <div className="flex gap-3 mt-1">
                   {[true, false].map(v => (
-                    <label key={String(v)} className={clsx('flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 cursor-pointer text-sm font-semibold transition-all',
-                      pickup.liftAvailable === v ? 'border-brand-gold bg-brand-gold/10 text-brand-dark' : 'border-gray-200 text-gray-500')}>
+                    <label key={String(v)} className={clsx('flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl border cursor-pointer text-sm font-bold transition-all',
+                      pickup.liftAvailable === v ? 'border-brand-gold bg-brand-gold/10 text-brand-gold shadow-[0_0_10px_rgba(212,175,55,0.1)]' : 'border-white/5 bg-white/5 text-brand-muted/50 hover:border-white/10')}>
                       <input type="radio" className="sr-only" checked={pickup.liftAvailable === v}
                         onChange={() => setPickup(p => ({ ...p, liftAvailable: v }))} />
-                      {v ? '✅ Yes' : '❌ No'}
+                      {v ? 'Yes' : 'No'}
                     </label>
                   ))}
                 </div>
@@ -326,7 +329,7 @@ export default function OnboardingWizard() {
               <Field label="Preferred Time">
                 <select className={selectCls} value={pickup.preferredTime}
                   onChange={e => setPickup(p => ({ ...p, preferredTime: e.target.value as PreferredTime }))}>
-                  {TIMES.map(t => <option key={t}>{t}</option>)}
+                  {TIMES.map(t => <option key={t} className="bg-brand-dark text-brand-text">{t}</option>)}
                 </select>
               </Field>
             </div>
@@ -334,11 +337,11 @@ export default function OnboardingWizard() {
               <div className="space-y-2">
                 <input type="range" min={1000} max={5000} step={500} value={pickup.advanceAmount}
                   onChange={e => setPickup(p => ({ ...p, advanceAmount: Number(e.target.value) }))}
-                  className="w-full accent-brand-gold" />
-                <div className="flex justify-between text-xs text-gray-400">
+                  className="w-full accent-brand-gold cursor-pointer" />
+                <div className="flex justify-between text-xs text-brand-muted/40 font-bold">
                   <span>₹1,000</span><span>₹5,000</span>
                 </div>
-                <p className="text-xs text-gray-500">Will be adjusted against final transportation and packing charges.</p>
+                <p className="text-xs text-brand-muted">Will be adjusted against final transportation and packing charges.</p>
               </div>
             </Field>
 
@@ -347,19 +350,20 @@ export default function OnboardingWizard() {
               <Field label="Assign Staff">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {staff.map(s => (
-                    <label key={s.id} className={clsx('flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all',
-                      pickup.staffIds.includes(s.id) ? 'border-brand-gold bg-brand-gold/10' : 'border-gray-200 hover:border-gray-300',
-                      !s.available && 'opacity-50 cursor-not-allowed')}>
-                      <input type="checkbox" disabled={!s.available} className="w-4 h-4 accent-brand-gold"
+                    <label key={s.id} className={clsx('flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all',
+                      pickup.staffIds.includes(s.id) ? 'border-brand-gold bg-brand-gold/5 shadow-[0_0_10px_rgba(212,175,55,0.05)]' : 'border-white/5 bg-white/5 hover:border-white/10',
+                      !s.available && 'opacity-35 cursor-not-allowed'
+                    )}>
+                      <input type="checkbox" disabled={!s.available} className="w-4 h-4 accent-brand-gold cursor-pointer"
                         checked={pickup.staffIds.includes(s.id)}
                         onChange={e => setPickup(p => ({
                           ...p, staffIds: e.target.checked ? [...p.staffIds, s.id] : p.staffIds.filter(id => id !== s.id)
                         }))} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{s.name}</p>
-                        <p className="text-xs text-gray-500">{s.role}{s.vehicleNumber ? ` · ${s.vehicleNumber}` : ''}</p>
+                        <p className="text-sm font-bold text-brand-text truncate">{s.name}</p>
+                        <p className="text-xs text-brand-muted">{s.role}{s.vehicleNumber ? ` · ${s.vehicleNumber}` : ''}</p>
                       </div>
-                      {!s.available && <span className="text-xs text-red-500">Unavailable</span>}
+                      {!s.available && <span className="text-xs text-red-400 font-medium">Unavailable</span>}
                     </label>
                   ))}
                 </div>
@@ -381,11 +385,11 @@ export default function OnboardingWizard() {
         {/* ── Step 3: Portal Login ── */}
         {step === 3 && (
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-brand-gold" /> Customer Portal Login
+            <h3 className="font-bold text-brand-gold flex items-center gap-2 text-base uppercase tracking-wide">
+              <KeyRound className="w-5 h-5 text-brand-gold" /> Customer Portal Login
             </h3>
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-              <p className="font-semibold mb-1">⚠️ Share these credentials with the customer</p>
+            <div className="bg-amber-950/30 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-300">
+              <p className="font-bold mb-1">⚠️ Share these credentials with the customer</p>
               <p className="text-xs">These will be saved to Google Sheets. Share them securely via WhatsApp or email.</p>
             </div>
             <Field label="Login ID">
@@ -393,38 +397,38 @@ export default function OnboardingWizard() {
                 <input className={inputCls + ' pr-10'} value={login.loginId}
                   onChange={e => setLogin(p => ({ ...p, loginId: e.target.value }))} />
                 <button onClick={() => copy(login.loginId, 'loginId')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-dark transition-colors">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-gold transition-colors">
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
-              {copiedField === 'loginId' && <p className="text-xs text-green-600 mt-1">Copied!</p>}
+              {copiedField === 'loginId' && <p className="text-xs text-emerald-400 font-bold mt-1">Copied Login ID!</p>}
             </Field>
             <Field label="Temporary Password">
               <div className="relative">
                 <input className={inputCls + ' pr-20'} type={showPassword ? 'text' : 'password'}
                   value={login.password} onChange={e => setLogin(p => ({ ...p, password: e.target.value }))} />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                  <button onClick={() => setShowPassword(p => !p)} className="p-1.5 text-gray-400 hover:text-brand-dark">
+                  <button onClick={() => setShowPassword(p => !p)} className="p-1.5 text-brand-muted hover:text-brand-gold">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
-                  <button onClick={() => copy(login.password, 'password')} className="p-1.5 text-gray-400 hover:text-brand-dark">
+                  <button onClick={() => copy(login.password, 'password')} className="p-1.5 text-brand-muted hover:text-brand-gold">
                     <Copy className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-              {copiedField === 'password' && <p className="text-xs text-green-600 mt-1">Copied!</p>}
+              {copiedField === 'password' && <p className="text-xs text-emerald-400 font-bold mt-1">Copied Password!</p>}
               <button onClick={() => setLogin(p => ({ ...p, password: genPassword() }))}
-                className="mt-2 text-xs text-brand-gold font-medium hover:underline">
+                className="mt-2.5 text-xs text-brand-gold font-bold hover:underline flex items-center gap-1">
                 🔄 Generate new password
               </button>
             </Field>
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Customer will see after login:</p>
-              <ul className="text-sm text-gray-700 space-y-1">
-                <li>✅ Pickup date, time, staff names & vehicle</li>
-                <li>✅ Storage location & plan details</li>
-                <li>✅ All item IDs and photos</li>
-                <li>✅ Payment history & upcoming dues</li>
+            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+              <p className="text-xs font-bold text-brand-gold uppercase tracking-wider mb-2">Customer will see after login:</p>
+              <ul className="text-sm text-brand-muted space-y-1.5">
+                <li className="flex items-center gap-2 text-emerald-400/95"><span className="text-emerald-500 font-bold">✓</span> Pickup date, time, staff names & vehicle</li>
+                <li className="flex items-center gap-2 text-emerald-400/95"><span className="text-emerald-500 font-bold">✓</span> Storage location & plan details</li>
+                <li className="flex items-center gap-2 text-emerald-400/95"><span className="text-emerald-500 font-bold">✓</span> All item IDs and photos</li>
+                <li className="flex items-center gap-2 text-emerald-400/95"><span className="text-emerald-500 font-bold">✓</span> Payment history & upcoming dues</li>
               </ul>
             </div>
           </div>
@@ -433,23 +437,23 @@ export default function OnboardingWizard() {
         {/* ── Step 4: Confirm ── */}
         {step === 4 && (
           <div className="space-y-5">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-brand-gold" /> Confirm & Save
+            <h3 className="font-bold text-brand-gold flex items-center gap-2 text-base uppercase tracking-wide">
+              <CheckCircle2 className="w-5 h-5 text-brand-gold" /> Confirm & Save
             </h3>
             {saved ? (
               <div className="text-center py-10">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="w-8 h-8 text-green-600" />
+                <div className="w-16 h-16 bg-emerald-950/40 border border-emerald-500/35 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-400" />
                 </div>
-                <p className="text-lg font-bold text-gray-900">Customer Onboarded!</p>
-                <p className="text-sm text-gray-500 mt-1">Saved to Google Sheets. Redirecting…</p>
+                <p className="text-lg font-bold text-brand-text uppercase tracking-wider">Customer Onboarded!</p>
+                <p className="text-sm text-brand-muted mt-1">Saved to Google Sheets. Redirecting…</p>
               </div>
             ) : (
               <>
-                {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">{error}</div>}
+                {error && <div className="bg-red-950/30 border border-red-500/20 rounded-xl p-3 text-sm text-red-400">{error}</div>}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Customer</p>
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-brand-gold mb-3">Customer</p>
                     <ReviewRow label="Name" value={cust.name} />
                     <ReviewRow label="Company" value={cust.company} />
                     <ReviewRow label="Phone" value={cust.phone} />
@@ -457,8 +461,8 @@ export default function OnboardingWizard() {
                     <ReviewRow label="KYC" value={`${cust.kycType}: ${cust.kycId}`} />
                     <ReviewRow label="Insurance" value={cust.insuranceRequired ? 'Yes' : 'No'} />
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Pickup</p>
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-brand-gold mb-3">Pickup</p>
                     <ReviewRow label="Date" value={pickup.pickupDate} />
                     <ReviewRow label="Time" value={pickup.preferredTime} />
                     <ReviewRow label="Address" value={pickup.address} />
@@ -467,7 +471,7 @@ export default function OnboardingWizard() {
                     <ReviewRow label="Advance" value={`₹${pickup.advanceAmount.toLocaleString()}`} />
                   </div>
                 </div>
-                <div className="bg-brand-dark rounded-xl p-4 text-white">
+                <div className="bg-brand-gold/10 border border-brand-gold/20 rounded-xl p-4 text-brand-text">
                   <p className="text-xs font-bold uppercase tracking-wider text-brand-gold mb-3">Portal Login</p>
                   <ReviewRow label="Login ID" value={login.loginId} />
                   <ReviewRow label="Password" value="••••••••" />
@@ -480,19 +484,19 @@ export default function OnboardingWizard() {
 
       {/* Footer */}
       {!saved && (
-        <div className="flex justify-between items-center bg-white rounded-xl border border-gray-200 px-6 py-4">
+        <div className="flex justify-between items-center vault-glass rounded-xl px-6 py-4">
           <button onClick={() => step > 1 ? setStep(s => s - 1) : navigate(-1)}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
+            className="flex items-center gap-2 text-sm text-brand-muted hover:text-brand-gold font-bold transition-colors">
             <ChevronLeft className="w-4 h-4" /> {step === 1 ? 'Back to Leads' : 'Back'}
           </button>
           {step < STEPS.length ? (
             <button onClick={() => setStep(s => s + 1)} disabled={!canNext()}
-              className="flex items-center gap-2 bg-brand-dark text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-dark/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+              className="flex items-center gap-2 bg-white/5 border border-white/10 text-brand-text px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer">
               Continue <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button onClick={handleSave} disabled={saving}
-              className="flex items-center gap-2 bg-brand-gold text-brand-dark px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-brand-gold/90 disabled:opacity-60 shadow-md transition-all">
+              className="flex items-center gap-2 vault-btn-gold px-6 py-2.5 rounded-xl text-sm font-bold disabled:opacity-60 transition-all cursor-pointer">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {saving ? 'Saving...' : 'Confirm Onboarding'}
             </button>

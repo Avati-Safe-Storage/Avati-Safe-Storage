@@ -23,7 +23,7 @@ export function ServicesPage() {
 export function PricingPage() {
   useSEO({
     title: 'Storage Pricing Plans | Avati Safe Storage Bangalore',
-    description: 'Transparent storage pricing starting from ₹300/month. Basic, Premium, and Professional plans with 18% GST. Get an instant live quote with our calculator.',
+    description: 'Transparent storage pricing starting from ₹300/month. Silver Key (Basic Plan), Gold Key (Premium Plan), and Platinum Key (Pro Plan) plans with 18% GST. Get an instant live quote with our calculator.',
     canonical: 'https://www.avatisafestorage.com/pricing',
     schema: buildFAQSchema([
       { question: 'What is the minimum storage cost?', answer: 'Minimum monthly storage starts at ₹300 + 18% GST.' },

@@ -37,7 +37,7 @@ const features = [
   {
     icon: Lock,
     title: "Individual Unit Locks",
-    description: "Professional Plan customers receive physical locks with tamper-evident seals on their dedicated storage area.",
+    description: "Platinum Key (Pro Plan) customers receive physical locks with tamper-evident seals on their dedicated storage area.",
     ariaLabel: "Individual secure lock system for household and business storage",
   },
   {

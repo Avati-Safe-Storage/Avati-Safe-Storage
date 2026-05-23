@@ -21,6 +21,7 @@ import StorageList from './pages/admin/StorageList';
 import StorageSetup from './pages/admin/StorageSetup';
 import InventoryManagement from './pages/admin/InventoryManagement';
 import WarehouseMap from './pages/admin/WarehouseMap';
+import BlogManagement from './pages/admin/BlogManagement';
 
 // Portal Pages
 import ClientDashboard from './pages/portal/ClientDashboard';
@@ -57,6 +58,7 @@ function App() {
             <Route path="storage-setup" element={<StorageSetup />} />
             <Route path="inventory"    element={<InventoryManagement />} />
             <Route path="warehouse"    element={<WarehouseMap />} />
+            <Route path="blog"         element={<BlogManagement />} />
           </Route>
 
           {/* Client Portal */}

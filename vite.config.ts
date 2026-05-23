@@ -55,6 +55,7 @@ function zohoFormDevProxy(): Plugin {
             Radio: QUOTE_METHOD_TO_RADIO[body.quoteMethod ?? ''] ?? 'Live Quotation',
             REFERRER_NAME: body.referrer ?? 'http://localhost:5173/get-quote',
           }),
+          signal: AbortSignal.timeout(6_000),
         });
 
         const text = await zohoRes.text();

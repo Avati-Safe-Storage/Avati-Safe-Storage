@@ -44,6 +44,7 @@ const QUOTE_METHOD_TO_RADIO: Record<QuoteMethodId, string> = {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const API_PATH = '/api/zoho-form-submit';
+const SUBMIT_TIMEOUT_MS = 8_000;
 
 /** Client-side validation aligned with the quote generator step 1 rules. */
 export function validateZohoContactPayload(payload: ZohoContactFormPayload): string | null {
@@ -89,6 +90,7 @@ export async function submitZohoContactForm(
         quoteMethod: payload.quoteMethod,
         referrer: typeof window !== 'undefined' ? window.location.href : '',
       }),
+      signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS),
     });
 
     const data = (await res.json()) as ZohoFormSubmitResult & { error?: string };
@@ -109,9 +111,12 @@ export async function submitZohoContactForm(
     return { success: true, recordId: data.recordId };
   } catch (err) {
     console.error('[ZohoForm] Submission failed:', err);
+    const timedOut = err instanceof Error && err.name === 'TimeoutError';
     return {
       success: false,
-      error: 'Something went wrong while sending your details. Please try again.',
+      error: timedOut
+        ? 'Submission timed out. Please check your connection and try again.'
+        : 'Something went wrong while sending your details. Please try again.',
     };
   }
 }

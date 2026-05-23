@@ -31,19 +31,28 @@ export default function PortalLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-brand-dark text-brand-text flex">
       {/* Sidebar */}
       <aside 
         className={clsx(
-          "bg-white border-r border-gray-200 transition-all duration-300 flex flex-col z-20",
+          "bg-brand-surface border-r border-brand-border transition-all duration-300 flex flex-col z-20",
           sidebarOpen ? "w-64" : "w-20"
         )}
       >
-        <div className="h-16 flex items-center justify-center border-b border-gray-100 px-4">
+        <div className="h-16 flex items-center justify-center border-b border-brand-border px-4 select-none">
           {sidebarOpen ? (
-            <h1 className="text-xl font-bold tracking-wider text-brand-dark">AVATI <span className="text-brand-gold">PORTAL</span></h1>
+            <div className="flex items-center gap-2">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-brand-gold animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 1.5 1.5M15.5 7.5 14 6" />
+              </svg>
+              <h1 className="text-base font-black tracking-wider text-brand-text">
+                AVATI <span className="text-brand-gold">VAULT</span>
+              </h1>
+            </div>
           ) : (
-            <div className="w-8 h-8 bg-brand-dark rounded flex items-center justify-center font-bold text-white">A</div>
+            <div className="w-9 h-9 bg-gradient-to-br from-brand-gold/30 to-brand-gold/10 border border-brand-gold/40 rounded-xl flex items-center justify-center font-black text-brand-gold">
+              V
+            </div>
           )}
         </div>
 
@@ -53,18 +62,18 @@ export default function PortalLayout() {
               key={item.name}
               to={item.path}
               className={({ isActive }) => clsx(
-                "flex items-center px-3 py-3 rounded-lg transition-colors group",
+                "flex items-center px-3 py-3 rounded-lg transition-all group relative border",
                 isActive 
-                  ? "bg-brand-gold/10 text-brand-dark font-semibold border border-brand-gold/20" 
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent"
+                  ? "bg-brand-gold text-black font-extrabold border-brand-gold shadow-[0_0_15px_rgba(212,175,55,0.2)]" 
+                  : "text-brand-muted border-transparent hover:bg-brand-light hover:text-brand-text"
               )}
             >
-              {({ isActive }) => (
+              {() => (
                 <>
-                  <item.icon className={clsx("w-5 h-5 flex-shrink-0", isActive ? "text-brand-gold" : "text-gray-400 group-hover:text-gray-600", sidebarOpen && "mr-3")} />
+                  <item.icon className={clsx("w-5 h-5 flex-shrink-0", sidebarOpen && "mr-3")} />
                   {sidebarOpen && <span>{item.name}</span>}
                   {!sidebarOpen && (
-                    <div className="absolute left-20 bg-gray-900 text-white px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap shadow-lg">
+                    <div className="absolute left-20 bg-brand-surface border border-brand-border text-brand-text px-2.5 py-1 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl">
                       {item.name}
                     </div>
                   )}
@@ -74,40 +83,42 @@ export default function PortalLayout() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-brand-border">
           <button 
             onClick={handleLogout}
-            className="flex items-center w-full px-3 py-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors group"
+            className="flex items-center w-full px-3 py-3 text-red-400 hover:bg-red-950/20 border border-transparent hover:border-red-900/30 rounded-lg transition-colors cursor-pointer"
           >
-            <LogOut className={clsx("w-5 h-5 flex-shrink-0 text-red-400 group-hover:text-red-500", sidebarOpen && "mr-3")} />
+            <LogOut className={clsx("w-5 h-5 flex-shrink-0", sidebarOpen && "mr-3")} />
             {sidebarOpen && <span>Logout</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-brand-dark">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10 shadow-sm">
+        <header className="h-16 bg-brand-surface border-b border-brand-border flex items-center justify-between px-6 z-10 shadow-sm">
           <div className="flex items-center">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 mr-4 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 mr-4 text-brand-text hover:bg-brand-light rounded-lg transition-colors cursor-pointer"
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
+            <button className="relative p-2 text-brand-text hover:bg-brand-light rounded-full transition-colors cursor-pointer">
               <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-gold rounded-full animate-ping"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-gold rounded-full"></span>
             </button>
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-semibold text-gray-900">Acme Corp</p>
-                <p className="text-xs text-gray-500">Client Account</p>
+            <div className="flex items-center gap-3 pl-4 border-l border-brand-border">
+              <div className="hidden md:block text-right select-none">
+                <p className="text-sm font-semibold text-brand-text">Acme Corp</p>
+                <p className="text-[10px] font-bold text-brand-gold capitalize tracking-widest">Client Vault</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold">
+              <div className="w-10 h-10 rounded-full bg-brand-light border border-brand-border flex items-center justify-center text-brand-gold font-extrabold uppercase select-none">
                 AC
               </div>
             </div>
@@ -115,7 +126,7 @@ export default function PortalLayout() {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-6 lg:p-8">
+        <div className="flex-1 overflow-auto p-6 lg:p-8 bg-brand-dark">
           <div className="max-w-6xl mx-auto w-full">
             <Outlet />
           </div>

@@ -17,7 +17,7 @@ import {
   type Lead, type Customer, type Pickup, type Storage,
   type StoredItem, type Payment, type DashboardStats,
   type LeadStatus, type ItemStatus,
-} from '../googleSheets';
+} from '../lib/googleSheets';
 
 // ── Generic data hook factory ─────────────────────────────────
 function useDataHook<T>(fetcher: () => Promise<T[]>, deps: any[] = []) {

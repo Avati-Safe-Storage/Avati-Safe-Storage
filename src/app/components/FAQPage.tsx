@@ -17,11 +17,11 @@ const faqCategories = [
       },
       {
         q: "Is there insurance coverage for goods stored at Avati Safe Storage?",
-        a: "Yes. We offer goods-in-storage insurance coverage for customers on our Professional Plan, protecting against damage from fire, natural disasters, and structural incidents. We maintain a 100% claim-free track record since our establishment in 2020. For Basic and Premium plan customers, we recommend maintaining your existing homeowner's or renter's insurance policy that covers off-premises belongings. Our facility itself is fully insured with comprehensive structural and liability coverage. Every customer receives a detailed digital inventory with photographic documentation at the time of storage, ensuring complete transparency and proof of condition."
+        a: "Yes. We offer goods-in-storage insurance coverage for customers on our Platinum Key (Pro Plan), protecting against damage from fire, natural disasters, and structural incidents. We maintain a 100% claim-free track record since our establishment in 2020. For Silver Key (Basic Plan) and Gold Key (Premium Plan) customers, we recommend maintaining your existing homeowner's or renter's insurance policy that covers off-premises belongings. Our facility itself is fully insured with comprehensive structural and liability coverage. Every customer receives a detailed digital inventory with photographic documentation at the time of storage, ensuring complete transparency and proof of condition."
       },
       {
         q: "How quickly can I retrieve my stored items?",
-        a: "Retrieval timelines depend on your plan. Professional Plan customers enjoy same-day retrieval \u2014 request before noon and your items are delivered to your doorstep by evening. Premium Plan customers get guaranteed next-day delivery within 24 hours. Basic Plan retrievals are completed within 24\u201348 hours. Partial retrieval is available \u2014 you don't need to take back everything at once. For urgent needs, call us directly at +91 8095589888 and we'll accommodate expedited requests wherever possible. Delivery is available to any address across Bangalore including Whitefield, Indiranagar, Koramangala, HSR Layout, Marathahalli, and all 50+ areas we serve."
+        a: "Retrieval timelines depend on your plan. Platinum Key (Pro Plan) customers enjoy same-day retrieval — request before noon and your items are delivered to your doorstep by evening. Gold Key (Premium Plan) customers get guaranteed next-day delivery within 24 hours. Silver Key (Basic Plan) retrievals are completed within 24–48 hours. Partial retrieval is available — you don't need to take back everything at once. For urgent needs, call us directly at +91 8095589888 and we'll accommodate expedited requests wherever possible. Delivery is available to any address across Bangalore including Whitefield, Indiranagar, Koramangala, HSR Layout, Marathahalli, and all 50+ areas we serve."
       },
       {
         q: "Does Avati Safe Storage offer free doorstep pickup in Bangalore?",
@@ -63,7 +63,7 @@ const faqCategories = [
       },
       {
         q: "How do I get my items back?",
-        a: "Simply call or WhatsApp us with your retrieval request. We will schedule a delivery to your door. For Professional Plan customers, same-day retrieval is available. Standard plan customers can expect 24–48 hours turnaround."
+        a: "Simply call or WhatsApp us with your retrieval request. We will schedule a delivery to your door. For Platinum Key (Pro Plan) customers, same-day retrieval is available. Silver Key / Gold Key plan customers can expect 24–48 hours turnaround."
       },
       {
         q: "Can I come to the facility to access my items myself?",
@@ -76,7 +76,7 @@ const faqCategories = [
     faqs: [
       {
         q: "How do you calculate storage charges?",
-        a: "Storage is calculated based on the volume (cubic feet) of your items and the duration of storage. We offer three plans — Basic, Premium, and Professional — each with different features and pricing. Use our quote tool to get an exact price."
+        a: "Storage is calculated based on the volume (cubic feet) of your items and the duration of storage. We offer three plans — Silver Key (Basic Plan), Gold Key (Premium Plan), and Platinum Key (Pro Plan) — each with different features and pricing. Use our quote tool to get an exact price."
       },
       {
         q: "Are there any hidden charges?",
@@ -109,7 +109,7 @@ const faqCategories = [
       },
       {
         q: "Are my goods insured while in storage?",
-        a: "Professional Plan customers enjoy goods-in-storage insurance coverage. For Basic and Premium plans, we recommend you maintain your own contents insurance. Contact us for details on our insurance coverage."
+        a: "Platinum Key (Pro Plan) customers enjoy goods-in-storage insurance coverage. For Silver Key (Basic Plan) and Gold Key (Premium Plan) plans, we recommend you maintain your own contents insurance. Contact us for details on our insurance coverage."
       },
     ]
   },

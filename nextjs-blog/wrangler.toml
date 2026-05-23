@@ -1,0 +1,17 @@
+# Wrangler Configuration for Next.js App on Cloudflare Pages
+name = "avati-safe-storage-blog"
+compatibility_date = "2024-11-01"
+compatibility_flags = [ "nodejs_compat" ]
+
+# Bind the D1 Database
+[[d1_databases]]
+binding = "DB"                               # The binding name accessed in Next.js Server Actions
+database_name = "avati_blog"                 # The name of your D1 Database in Cloudflare dashboard
+database_id = "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxx" # Replace with your actual D1 Database ID
+
+# (Optional) Environment-specific bindings
+# [env.production]
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "avati_blog"
+# database_id = "prod-database-id-goes-here"

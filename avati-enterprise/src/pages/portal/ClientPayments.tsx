@@ -6,19 +6,19 @@ import clsx from 'clsx';
 import { useAuth } from '../../contexts/AuthContext';
 
 const TYPE_COLORS: Record<string, string> = {
-  'Advance': 'bg-purple-100 text-purple-800',
-  'Transportation': 'bg-blue-100 text-blue-800',
-  'Packing': 'bg-indigo-100 text-indigo-800',
-  'Monthly Storage': 'bg-brand-gold/20 text-amber-800',
-  'Insurance': 'bg-green-100 text-green-800',
-  'Miscellaneous': 'bg-gray-100 text-gray-700',
+  'Advance': 'bg-purple-950/40 border border-purple-500/20 text-purple-400',
+  'Transportation': 'bg-blue-950/40 border border-blue-500/20 text-blue-400',
+  'Packing': 'bg-indigo-950/40 border border-indigo-500/20 text-indigo-400',
+  'Monthly Storage': 'bg-brand-gold/10 border border-brand-gold/20 text-brand-gold',
+  'Insurance': 'bg-emerald-950/40 border border-emerald-500/20 text-emerald-400',
+  'Miscellaneous': 'bg-white/5 border border-white/10 text-brand-muted',
 };
 
 const STATUS_ICON = {
-  'Paid': <CheckCircle2 className="w-4 h-4 text-green-500" />,
-  'Pending': <Clock className="w-4 h-4 text-amber-500" />,
-  'Overdue': <AlertCircle className="w-4 h-4 text-red-500" />,
-  'Waived': <CheckCircle2 className="w-4 h-4 text-gray-400" />,
+  'Paid': <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
+  'Pending': <Clock className="w-4 h-4 text-amber-400" />,
+  'Overdue': <AlertCircle className="w-4 h-4 text-red-400" />,
+  'Waived': <CheckCircle2 className="w-4 h-4 text-brand-muted/40" />,
 };
 
 export default function ClientPayments() {
@@ -40,81 +40,85 @@ export default function ClientPayments() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Payment History</h1>
+      <h1 className="text-2xl font-black text-brand-text uppercase tracking-wider">Payment History</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total Paid', value: `₹${totalPaid.toLocaleString()}`, cls: 'text-green-700 bg-green-50 border-green-200' },
-          { label: 'Amount Due', value: `₹${totalDue.toLocaleString()}`, cls: 'text-amber-700 bg-amber-50 border-amber-200' },
-          { label: 'Overdue', value: overdue.length, cls: overdue.length > 0 ? 'text-red-700 bg-red-50 border-red-200' : 'text-gray-700 bg-gray-50 border-gray-200' },
+          { label: 'Total Paid', value: `₹${totalPaid.toLocaleString()}`, cls: 'text-emerald-400 bg-emerald-950/20 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]' },
+          { label: 'Amount Due', value: `₹${totalDue.toLocaleString()}`, cls: 'text-amber-400 bg-amber-950/20 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.05)]' },
+          { label: 'Overdue', value: overdue.length, cls: overdue.length > 0 ? 'text-red-400 bg-red-950/20 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.05)]' : 'text-brand-muted bg-white/5 border-white/5' },
         ].map(s => (
           <div key={s.label} className={clsx('rounded-xl border p-4 text-center', s.cls)}>
             <p className="text-2xl font-black">{s.value}</p>
-            <p className="text-xs font-semibold mt-1">{s.label}</p>
+            <p className="text-xs font-bold uppercase tracking-wider mt-1.5 opacity-80">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Overdue alert */}
       {overdue.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+        <div className="bg-red-950/25 border border-red-500/20 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5 animate-bounce" />
           <div>
-            <p className="font-semibold text-red-800 text-sm">Overdue Payment</p>
-            <p className="text-xs text-red-700 mt-0.5">You have {overdue.length} overdue payment(s). Please contact us to avoid service disruption.</p>
+            <p className="font-black text-red-400 text-sm uppercase tracking-wide">Overdue Payment Found</p>
+            <p className="text-xs text-red-300/80 mt-0.5">You have {overdue.length} overdue payment(s). Please process payment to keep your storage vault active without disruption.</p>
           </div>
         </div>
       )}
 
       {/* Payment cards */}
-      <div className="space-y-3">
+      <div className="space-y-3.5">
         {payments.map(pay => (
-          <div key={pay.id} className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1.5 flex-1">
+          <div key={pay.id} className="vault-glass rounded-xl p-4 transition-all hover:border-[#D4AF37]/35 hover:bg-white/[0.01]">
+            <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
+              <div className="space-y-2 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-xs text-gray-400">{pay.id}</span>
-                  <span className={clsx('text-xs font-bold px-2 py-0.5 rounded-full', TYPE_COLORS[pay.type] || 'bg-gray-100 text-gray-700')}>
+                  <span className="font-mono text-[10px] text-brand-muted/40">PAY-{pay.id}</span>
+                  <span className={clsx('text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded border', TYPE_COLORS[pay.type] || 'bg-white/5 border-white/10 text-brand-muted')}>
                     {pay.type}
                   </span>
-                  <div className="flex items-center gap-1 text-xs font-semibold"
-                    style={{ color: pay.status === 'Paid' ? '#16a34a' : pay.status === 'Overdue' ? '#dc2626' : '#d97706' }}>
+                  <div className="flex items-center gap-1.5 text-xs font-extrabold"
+                    style={{ color: pay.status === 'Paid' ? '#34d399' : pay.status === 'Overdue' ? '#f87171' : '#fbbf24' }}>
                     {STATUS_ICON[pay.status as keyof typeof STATUS_ICON]}
-                    {pay.status}
+                    <span className="uppercase tracking-wider text-[10px]">{pay.status}</span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-700">{pay.description}</p>
-                {pay.billingPeriod && <p className="text-xs text-gray-400">📅 {pay.billingPeriod}</p>}
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  {pay.paidOn && <span>Paid: {pay.paidOn}</span>}
-                  {pay.dueDate && !pay.paidOn && <span>Due: {pay.dueDate}</span>}
+                <p className="text-sm font-bold text-brand-text">{pay.description}</p>
+                {pay.billingPeriod && <p className="text-xs text-brand-muted/65 flex items-center gap-1.5">📅 {pay.billingPeriod}</p>}
+                <div className="flex items-center gap-4 text-[11px] text-brand-muted/50 font-medium">
+                  {pay.paidOn && <span>Paid on: {pay.paidOn}</span>}
+                  {pay.dueDate && !pay.paidOn && <span>Due by: {pay.dueDate}</span>}
                 </div>
               </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-lg font-black text-gray-900">₹{pay.totalAmount.toLocaleString()}</p>
-                {pay.gstAmount && pay.gstAmount > 0 && (
-                  <p className="text-xs text-gray-400">incl. GST ₹{pay.gstAmount.toLocaleString()}</p>
-                )}
-                {pay.invoiceUrl && (
-                  <a href={pay.invoiceUrl} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1 justify-end">
-                    <Download className="w-3 h-3" /> Invoice
-                  </a>
-                )}
-                {pay.status === 'Pending' && (
-                  <button className="mt-2 px-3 py-1.5 bg-brand-gold text-brand-dark text-xs font-bold rounded-lg hover:bg-brand-gold/90 transition-all">
-                    Pay Now
-                  </button>
-                )}
+              <div className="text-right flex-shrink-0 w-full sm:w-auto flex sm:flex-col justify-between sm:justify-start items-end gap-2 border-t border-white/5 sm:border-0 pt-3 sm:pt-0">
+                <div>
+                  <p className="text-lg font-black text-brand-text">₹{pay.totalAmount.toLocaleString()}</p>
+                  {pay.gstAmount && pay.gstAmount > 0 && (
+                    <p className="text-[10px] text-brand-muted/40 font-bold">incl. GST ₹{pay.gstAmount.toLocaleString()}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  {pay.invoiceUrl && (
+                    <a href={pay.invoiceUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-brand-gold font-bold hover:underline justify-end cursor-pointer bg-white/5 border border-white/5 px-2 py-1 rounded-lg">
+                      <Download className="w-3.5 h-3.5" /> Invoice
+                    </a>
+                  )}
+                  {pay.status === 'Pending' && (
+                    <button className="px-3.5 py-1.5 vault-btn-gold text-xs font-bold rounded-lg transition-all cursor-pointer">
+                      Pay Now
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         ))}
         {payments.length === 0 && (
-          <div className="text-center py-16 text-gray-400 bg-white rounded-xl border border-gray-200">
-            <CreditCard className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p>No payment records yet</p>
+          <div className="text-center py-16 text-brand-muted bg-white/5 rounded-xl border border-white/5">
+            <CreditCard className="w-10 h-10 mx-auto mb-3 opacity-30 text-brand-gold animate-pulse" />
+            <p className="text-xs font-bold uppercase tracking-wider">No payment records yet</p>
           </div>
         )}
       </div>

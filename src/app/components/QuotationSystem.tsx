@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "../App";
 import { submitZohoContactForm, type QuoteMethodId } from "../../lib/zoho/zohoFormService";
+import {
+  automateContactCaptured,
+  automateStorageSelected,
+  automateInventoryStep,
+  automateLogisticsStep,
+  automateQuoteConfirmed,
+  type QuoteFunnelSnapshot,
+} from "../../lib/zoho/quoteService";
 
 function useStickyState<T>(defaultValue: T | (() => T), key: string): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [value, setValue] = useState<T>(() => {
@@ -351,9 +359,9 @@ const QUOTE_METHODS = [
 const MIN_STORAGE_PRICE = 300;
 
 const PLANS = [
-  { id: 'basic', name: 'Basic', mult: 1.0, features: ['Standard secure storage', '24/7 CCTV Monitoring', 'Regular pest control'] },
-  { id: 'premium', name: 'Premium', mult: 1.3, popular: true, features: ['3-Layer Professional Packing', 'Climate controlled', 'Dust-free environment'] },
-  { id: 'professional', name: 'Professional', mult: 1.6, features: ['Wooden Vault Storage', 'Dedicated account manager', 'Insurance coverage up to 1L'] },
+  { id: 'basic', name: 'Silver Key (Basic Plan)', mult: 1.0, features: ['Standard secure storage', '24/7 CCTV Monitoring', 'Regular pest control'] },
+  { id: 'premium', name: 'Gold Key (Premium Plan)', mult: 1.3, popular: true, features: ['3-Layer Professional Packing', 'Climate controlled', 'Dust-free environment'] },
+  { id: 'professional', name: 'Platinum Key (Pro Plan)', mult: 1.6, features: ['Wooden Vault Storage', 'Dedicated account manager', 'Insurance coverage up to 1L'] },
 ];
 
 interface InventoryInstance {
@@ -370,6 +378,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
   // Step 1: State
   const [customer, setCustomer] = useStickyState({ name: '', phone: '', email: '' }, 'avati_q_customer');
   const [storageType, setStorageType] = useStickyState('Household', 'avati_q_storageType');
+  const [leadId, setLeadId] = useStickyState<string | null>(null, 'avati_q_leadId');
 
   // Quote method (for step 3)
   const [quoteMethod, setQuoteMethod] = useStickyState('inventory', 'avati_q_quoteMethod');
@@ -528,126 +537,113 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
 
   const costs = calculateCosts();
 
-  /** Step 1 Continue: hidden iframe → Zoho Form, then CRM WebToLead backup. */
-  const handleStep1Continue = async (): Promise<boolean> => {
+  const buildQuoteSnapshot = (): QuoteFunnelSnapshot => {
+    let inventoryList = '';
+    if (storageType === 'Household') {
+      inventoryList = inventory
+        .map((i) => {
+          const def = BASE_ITEMS.find((b) => b.id === i.itemId);
+          return def ? `${i.quantity}x ${def.name}` : '';
+        })
+        .filter(Boolean)
+        .join(', ');
+    } else if (storageType === 'Business') {
+      inventoryList = `${businessSqft} sqft`;
+    } else if (storageType === 'Vehicle') {
+      inventoryList = Object.keys(selectedVehicles)
+        .filter((k) => selectedVehicles[k])
+        .join(', ');
+    } else if (storageType === 'Document') {
+      inventoryList = `${docBoxes} boxes of ${docType}`;
+    }
+
+    return {
+      customer,
+      quoteMethod: quoteMethod as QuoteMethodId,
+      storageType,
+      selectedPlan,
+      inventoryList,
+      inventorySummary: inventoryList,
+      itemCount: inventory.reduce((sum, i) => sum + i.quantity, 0),
+      monthlyStorage: costs.monthlyStorage,
+      packingAndTransport: costs.packingAndTransport,
+      storageGst: costs.storageGst,
+      totalFirstMonth: costs.totalEstimate,
+      customItems: customItems.map((c) => `${c.qty}x ${c.name}`).join(', '),
+      logistics,
+      gstin: hasGstin ? gstin : undefined,
+      uploadedFileCount: uploadedFiles.length,
+      visitNote,
+    };
+  };
+
+  /** Step 1 Continue: Submit contact details to our backend /api/leads. */
+  const handleStep1Continue = async (e?: React.MouseEvent | React.FormEvent): Promise<boolean> => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
     setZohoFormError(null);
     setIsSubmitting(true);
     try {
-      const zohoResult = await submitZohoContactForm({
-        name: customer.name,
-        phone: customer.phone,
-        email: customer.email,
-        quoteMethod: quoteMethod as QuoteMethodId,
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+          quoteMethod: quoteMethod,
+        }),
       });
 
-      if (!zohoResult.success) {
-        setZohoFormError(zohoResult.error ?? 'Could not submit your details. Please try again.');
+      const data = await response.json() as any;
+
+      if (!response.ok || !data.success || !data.leadId) {
+        console.error('[Quote] Lead creation failed:', data);
+        setZohoFormError(data.error ?? 'Could not create lead in Zoho CRM. Please try again.');
         return false;
       }
 
-      await pushToZoho(true);
+      setLeadId(data.leadId);
+
+      // Trigger background automations with the updated snapshot
+      automateContactCaptured(buildQuoteSnapshot());
+      
       setStep(2);
       return true;
     } catch (err) {
       console.error('[Quote] Step 1 continue error:', err);
-      setZohoFormError('Something went wrong. Please check your connection and try again.');
+      setZohoFormError('Unable to reach server. Please check your internet connection and try again.');
       return false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const pushToZoho = async (isPartial: boolean) => {
-    // Lead status based on how far through the form the user is
-    let currentStatus = 'Contact only';
-    if (!isPartial) {
-      currentStatus = 'Quotation Generated';
-    } else {
-      if (step >= 5) currentStatus = 'Plan selected';
-      else if (step >= 4) currentStatus = 'Logistics Provided';
-      else if (step >= 3) currentStatus = 'Inventory Provided';
-      else if (step >= 2) currentStatus = 'Storage Type Selected';
-      else currentStatus = 'Contact only';
+  const handleStorageTypeSelect = (typeId: string) => {
+    setStorageType(typeId);
+    setStep(3);
+    automateStorageSelected({ ...buildQuoteSnapshot(), storageType: typeId });
+  };
+
+  const handleStepAdvance = () => {
+    const snapshot = buildQuoteSnapshot();
+    if (step === 3) {
+      automateInventoryStep(snapshot);
+      setStep(4);
+    } else if (step === 4) {
+      automateLogisticsStep(snapshot);
+      setStep(5);
     }
-
-    // Put the full name in Last Name — Zoho CRM displays leads by Last Name,
-    // so splitting "test 123" → firstName="test", lastName="123" made the lead appear as "123".
-    const firstName = '';
-    const lastName  = (customer.name || '').trim() || 'Website Lead';
-
-    let invList = '';
-    if (storageType === 'Household') {
-      invList = inventory.map(i => {
-        const def = BASE_ITEMS.find(b => b.id === i.itemId);
-        return def ? `${i.quantity}x ${def.name}` : '';
-      }).filter(Boolean).join(', ');
-    } else if (storageType === 'Business') {
-      invList = `${businessSqft} sqft`;
-    } else if (storageType === 'Vehicle') {
-      invList = Object.keys(selectedVehicles).filter(k => selectedVehicles[k]).join(', ');
-    } else if (storageType === 'Document') {
-      invList = `${docBoxes} boxes of ${docType}`;
-    }
-
-    const methodMap: Record<string, string> = { inventory: 'Live Quotation', upload: 'Upload 360 Video', visit: 'Book Survey' };
-    const planMap:   Record<string, string> = { basic: 'Basic', premium: 'Premium', professional: 'Pro' };
-
-    const params = new URLSearchParams();
-    // ── Auth tokens ──
-    params.append('xnQsjsdp',  'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce');
-    params.append('xmIwtLD',   '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d');
-    params.append('actionType','TGVhZHM=');
-    params.append('zc_gad',    '');
-    params.append('returnURL', 'https://www.avatisafestorage.com/');
-    // ── Contact ──
-    params.append('Company',    'Avati Website Lead');
-    params.append('First Name', firstName);
-    params.append('Last Name',  lastName);
-    params.append('Email',      customer.email || '');
-    params.append('Mobile',     customer.phone || '');
-    // ── Lead data ──
-    params.append('Lead Source', 'Online Store');
-    params.append('Lead Status', currentStatus);
-    params.append('LEADCF6',    methodMap[quoteMethod] || 'Live Quotation');
-    params.append('LEADCF2',    storageType || 'Household');
-    params.append('LEADCF1',    invList || '');
-    params.append('LEADCF5',    customItems.map(c => `${c.qty}x ${c.name}`).join(', ') || '');
-    params.append('LEADCF3',    planMap[selectedPlan] || 'Basic');
-    if (logistics.packingRequired)   params.append('LEADCF101', 'on');
-    if (logistics.transportRequired) params.append('LEADCF102', 'on');
-    const monthly  = Math.round(costs.monthlyStorage);
-    const ptCharge = Math.round(costs.packingAndTransport);
-    if (monthly  > 0) params.append('LEADCF67', monthly.toString());
-    if (ptCharge > 0) params.append('LEADCF66', ptCharge.toString());
-    params.append('Description', `Pickup: ${logistics.pickupDate || 'TBD'} | ${logistics.duration || 1} months | ${logistics.buildingType || 'N/A'} | Floor ${logistics.floors || 0} | Lift: ${logistics.liftAvailable}`);
-    params.append('Address - Flat / House No./ Building / Apartment Name', logistics.pickupArea || '');
-    params.append('aG9uZXlwb3Q', ''); // honeypot
-
-    try {
-      await fetch('https://crm.zoho.in/crm/WebToLeadForm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString(),
-        mode: 'no-cors',
-      });
-      console.log('[ZohoCRM] POST sent → Step:', step, 'Status:', currentStatus);
-    } catch (err) {
-      console.error('[ZohoCRM] fetch error:', err);
-    }
+    // Step 5 uses Confirm Booking → automateQuoteConfirmed (includes plan + final quote)
   };
 
   const handleConfirmBooking = async () => {
     setIsSubmitting(true);
     try {
-      await Promise.allSettled([
-        pushToZoho(false),
-        submitZohoContactForm({
-          name: customer.name,
-          phone: customer.phone,
-          email: customer.email,
-          quoteMethod: quoteMethod as QuoteMethodId,
-        }),
-      ]);
+      await automateQuoteConfirmed(buildQuoteSnapshot());
       setIsSuccess(true);
       // Clear localStorage quote data after 3s
       setTimeout(() => {
@@ -759,17 +755,11 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
         )}
         <button
           disabled={isSubmitting || (step === 1 && (!customer.name || customer.phone.length < 10 || !customer.email.includes('@')))}
-          onClick={async () => {
+          onClick={async (e) => {
             if (step === 1) {
-              await handleStep1Continue();
+              await handleStep1Continue(e);
             } else if (step < 5) {
-              setIsSubmitting(true);
-              try {
-                await pushToZoho(true);
-                setStep(step + 1);
-              } finally {
-                setIsSubmitting(false);
-              }
+              handleStepAdvance();
             } else {
               await handleConfirmBooking();
             }
@@ -1051,7 +1041,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                         {STORAGE_TYPES.map(type => (
                           <div
                             key={type.id}
-                            onClick={() => { setStorageType(type.id); setStep(3); }}
+                            onClick={() => handleStorageTypeSelect(type.id)}
                             className="p-4 sm:p-5 rounded-2xl border-2 flex flex-col items-center gap-2 cursor-pointer transition-all min-h-[100px] justify-center text-center"
                             style={{
                               borderColor: storageType === type.id ? 'var(--gold)' : 'var(--border-color)',
@@ -1653,7 +1643,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                 )}
                 <button
                   disabled={step === 3 && storageType === 'Household' && quoteMethod === 'inventory' && inventory.length === 0}
-                  onClick={() => setStep(step + 1)}
+                  onClick={handleStepAdvance}
                   className="flex-1 py-4 bg-[#EAB308] hover:bg-[#D9A006] text-black font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   Continue <ChevronRight className="w-5 h-5" />
@@ -1695,13 +1685,7 @@ export function QuotationSystem({ isDashboard, onClose }: { isDashboard?: boolea
                 if (step === 1) {
                   await handleStep1Continue();
                 } else if (step < 5) {
-                  setIsSubmitting(true);
-                  try {
-                    await pushToZoho(true);
-                    setStep(step + 1);
-                  } finally {
-                    setIsSubmitting(false);
-                  }
+                  handleStepAdvance();
                 } else {
                   await handleConfirmBooking();
                 }

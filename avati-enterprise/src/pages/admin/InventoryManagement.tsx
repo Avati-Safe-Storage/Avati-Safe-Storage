@@ -6,9 +6,12 @@ import InventoryModal from '../../components/admin/InventoryModal';
 import type { ItemStatus, StoredItem } from '../../lib/googleSheets';
 
 const STATUS_COLORS: Record<string, string> = {
-  'In Storage':          'bg-blue-100 text-blue-800',
-  'Retrieval Requested': 'bg-orange-100 text-orange-800',
-  'Retrieved':           'bg-green-100 text-green-800',
+  'Stored':              'bg-blue-950/30 text-blue-400 border border-blue-900/40',
+  'In Storage':          'bg-blue-950/30 text-blue-400 border border-blue-900/40',
+  'Retrieval Pending':   'bg-orange-950/30 text-orange-400 border border-orange-900/40',
+  'Retrieval Requested': 'bg-orange-950/30 text-orange-400 border border-orange-900/40',
+  'Retrieved':           'bg-green-950/30 text-green-400 border border-green-900/40',
+  'Damaged':             'bg-red-950/30 text-red-400 border border-red-900/40',
 };
 
 export default function InventoryManagement() {
@@ -67,12 +70,14 @@ export default function InventoryManagement() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-brand-text select-none">
       {/* Toast */}
       {toast && (
         <div className={clsx(
-          'fixed top-6 right-6 z-50 px-5 py-3 rounded-xl shadow-xl text-sm font-medium animate-in slide-in-from-right',
-          toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+          'fixed top-6 right-6 z-50 px-5 py-3 rounded-xl shadow-xl text-sm font-semibold border flex items-center gap-2 animate-in slide-in-from-right duration-300',
+          toast.type === 'success' 
+            ? 'bg-green-950/80 border-green-800 text-green-400' 
+            : 'bg-red-950/80 border-red-800 text-red-400'
         )}>
           {toast.message}
         </div>
@@ -80,155 +85,153 @@ export default function InventoryManagement() {
 
       {/* Not Configured Banner */}
       {!configured && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div className="bg-amber-950/20 border border-amber-900/40 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-amber-800">Google Sheets Not Connected</p>
-            <p className="text-xs text-amber-700 mt-1">
-              Showing demo data. Configure your <code className="bg-amber-100 px-1 rounded">.env</code> to enable live sync.
+            <p className="text-sm font-bold text-amber-400 uppercase tracking-wider">Google Sheets Not Connected</p>
+            <p className="text-xs text-brand-muted mt-1 leading-relaxed">
+              Showing demo data. Configure your <code className="bg-brand-light/95 border border-brand-border px-1.5 py-0.5 rounded text-brand-gold font-mono text-[10px]">.env</code> to enable live sync.
             </p>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-brand-border pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
-          <p className="text-gray-500 mt-1">
-            {loading ? 'Loading...' : `${filtered.length} item${filtered.length !== 1 ? 's' : ''} tracked`}
+          <h1 className="text-2xl font-black tracking-wide text-brand-text">INVENTORY MANAGEMENT</h1>
+          <p className="text-brand-muted mt-1 text-sm font-medium">
+            {loading ? 'Polling storage catalogs...' : `${filtered.length} item${filtered.length !== 1 ? 's' : ''} currently logged`}
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-2">
-            <Download className="w-4 h-4" /> Export
+          <button className="bg-brand-light hover:bg-brand-surface text-brand-text px-4 py-2.5 rounded-lg text-xs font-bold border border-brand-border transition-colors shadow-md flex items-center gap-2 cursor-pointer active:scale-[0.98]">
+            <Download className="w-4 h-4 text-brand-gold" /> Export Catalog
           </button>
           <button
             onClick={() => setModalOpen(true)}
-            className="bg-brand-dark text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-dark/90 transition-colors shadow-sm flex items-center gap-2"
+            className="vault-btn-gold px-5 py-3 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-2 active:scale-[0.98] cursor-pointer"
           >
-            <Box className="w-5 h-5" /> Receive Items
+            <Box className="w-4 h-4 text-black" /> Receive Items
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="vault-glass rounded-xl shadow-lg overflow-hidden">
         {/* Filters Bar */}
-        <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="p-4 border-b border-brand-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="relative w-full sm:w-96">
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-5 h-5 text-brand-muted absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search by item name, ID, or customer..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-2.5 vault-input rounded-lg text-xs"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="flex gap-2 flex-wrap">
             <select
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold text-gray-700"
+              className="px-3 py-2 bg-brand-light border border-brand-border rounded-lg text-xs font-bold text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold outline-none"
               value={zoneFilter}
               onChange={e => setZoneFilter(e.target.value)}
             >
-              <option value="All">All Zones</option>
-              <option>Zone A</option>
-              <option>Zone B</option>
-              <option>Zone C</option>
-              <option>Zone D</option>
+              <option value="All" className="bg-brand-surface">All Zones</option>
+              <option className="bg-brand-surface">Zone A</option>
+              <option className="bg-brand-surface">Zone B</option>
+              <option className="bg-brand-surface">Zone C</option>
+              <option className="bg-brand-surface">Zone D</option>
             </select>
             <select
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold text-gray-700"
+              className="px-3 py-2 bg-brand-light border border-brand-border rounded-lg text-xs font-bold text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold outline-none"
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
             >
-              <option value="All">All Statuses</option>
-              <option>Stored</option>
-              <option>Retrieval Pending</option>
-              <option>Retrieved</option>
-              <option>Damaged</option>
+              <option value="All" className="bg-brand-surface">All Statuses</option>
+              <option className="bg-brand-surface">Stored</option>
+              <option className="bg-brand-surface">Retrieval Pending</option>
+              <option className="bg-brand-surface">Retrieved</option>
+              <option className="bg-brand-surface">Damaged</option>
             </select>
           </div>
         </div>
 
         <div className="overflow-x-auto relative min-h-[200px]">
           {loading && (
-            <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+            <div className="absolute inset-0 bg-brand-dark/80 backdrop-blur-sm flex items-center justify-center z-10">
               <Loader2 className="w-8 h-8 animate-spin text-brand-gold" />
             </div>
           )}
           {error && (
-            <div className="p-8 text-center text-red-600 flex flex-col items-center gap-2">
-              <AlertCircle className="w-8 h-8" />
-              <p className="font-medium">{error}</p>
+            <div className="p-8 text-center text-red-400 flex flex-col items-center gap-2">
+              <AlertCircle className="w-8 h-8 text-red-500" />
+              <p className="font-bold uppercase tracking-wider text-sm">{error}</p>
             </div>
           )}
           {!loading && !error && (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
-                  <th className="px-6 py-4 font-semibold">Item Details</th>
-                  <th className="px-6 py-4 font-semibold">Customer</th>
-                  <th className="px-6 py-4 font-semibold">Category</th>
-                  <th className="px-6 py-4 font-semibold">Qty</th>
-                  <th className="px-6 py-4 font-semibold">Location</th>
-                  <th className="px-6 py-4 font-semibold">Date Added</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
+                <tr className="bg-brand-light text-brand-gold text-xs border-b border-brand-border uppercase tracking-wider font-semibold">
+                  <th className="px-6 py-4">Item Details</th>
+                  <th className="px-6 py-4">Customer</th>
+                  <th className="px-6 py-4">Category</th>
+                  <th className="px-6 py-4">Qty</th>
+                  <th className="px-6 py-4">Location</th>
+                  <th className="px-6 py-4">Date Added</th>
+                  <th className="px-6 py-4">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-brand-border/40 text-xs">
                 {filtered.length > 0 ? filtered.map(item => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={item.id} className="hover:bg-brand-light/50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                      <div className="text-sm font-bold text-brand-text flex items-center gap-2">
                         {item.name}
                         {item.isFragile && <span title="Fragile" className="text-orange-500 text-xs">⚠️</span>}
                         {item.requiresClimate && <span title="Climate Controlled" className="text-blue-500 text-xs">🌡️</span>}
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5 font-mono">{item.id}</div>
-                      {item.description && <div className="text-xs text-gray-400 mt-0.5 truncate max-w-[200px]">{item.description}</div>}
+                      <div className="text-[10px] text-brand-muted mt-0.5 font-mono">{item.id}</div>
+                      {item.description && <div className="text-xs text-brand-muted mt-0.5 truncate max-w-[200px] font-semibold">{item.description}</div>}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{item.customerName}</div>
-                      <div className="text-xs text-gray-500">{item.customerId}</div>
+                      <div className="text-sm font-bold text-brand-text">{item.customerName}</div>
+                      <div className="text-[10px] text-brand-muted mt-0.5 font-mono">{item.customerId}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{item.category}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700 font-semibold">
-                      {item.quantity} <span className="font-normal text-gray-500">{item.unit}</span>
+                    <td className="px-6 py-4 text-xs font-semibold text-brand-text">{item.category}</td>
+                    <td className="px-6 py-4 text-sm text-brand-text font-black font-sans">
+                      {item.quantity} <span className="font-bold text-xs text-brand-muted">{item.unit}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <MapPin className="w-3.5 h-3.5 text-gray-400 mr-1.5" />
+                      <div className="flex items-center text-xs font-semibold text-brand-text">
+                        <MapPin className="w-3.5 h-3.5 text-brand-gold mr-1.5" />
                         {item.zone}, {item.rack}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{item.dateAdded}</td>
+                    <td className="px-6 py-4 text-xs font-semibold text-brand-muted">{item.dateAdded}</td>
                     <td className="px-6 py-4">
                       <select
                         value={item.status}
                         onChange={e => handleStatusChange(item.id!, e.target.value as ItemStatus)}
                         className={clsx(
-                          'text-xs font-semibold px-2.5 py-1 rounded-full border-0 outline-none cursor-pointer',
+                          'text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full outline-none border cursor-pointer bg-brand-dark focus:ring-1 focus:ring-brand-gold/30',
                           STATUS_COLORS[item.status || 'Stored']
                         )}
                       >
-                        <option>Stored</option>
-                        <option>Retrieval Pending</option>
-                        <option>Retrieved</option>
-                        <option>Damaged</option>
+                        <option className="bg-brand-surface text-brand-text">Stored</option>
+                        <option className="bg-brand-surface text-brand-text">Retrieval Pending</option>
+                        <option className="bg-brand-surface text-brand-text">Retrieved</option>
+                        <option className="bg-brand-surface text-brand-text">Damaged</option>
                       </select>
                     </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                          <Box className="w-5 h-5 text-gray-400" />
-                        </div>
-                        <p className="font-medium">No items found</p>
-                        <p className="text-sm">Try a different filter or receive new items.</p>
+                    <td colSpan={7} className="px-6 py-12 text-center text-brand-muted">
+                      <div className="flex flex-col items-center gap-3 py-8">
+                        <Box className="w-8 h-8 text-brand-gold/30" />
+                        <p className="font-bold text-sm uppercase tracking-wider">No items found</p>
+                        <p className="text-xs">Try a different filter or register new incoming storage items.</p>
                       </div>
                     </td>
                   </tr>
@@ -238,11 +241,16 @@ export default function InventoryManagement() {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <span className="text-sm text-gray-600">{filtered.length} item{filtered.length !== 1 ? 's' : ''}</span>
-          <span className={clsx('text-xs px-2 py-1 rounded-full font-medium',
-            configured ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700')}>
-            {configured ? '🟢 Live – Google Sheets' : '🟡 Demo Mode'}
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-brand-border flex items-center justify-between bg-brand-light/30">
+          <span className="text-xs text-brand-muted font-bold">{filtered.length} item{filtered.length !== 1 ? 's' : ''} cataloged</span>
+          <span className={clsx(
+            'text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full border',
+            configured 
+              ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900/40' 
+              : 'bg-amber-950/30 text-amber-400 border-amber-900/40'
+          )}>
+            {configured ? 'Live – Google Sheets Active' : 'Offline Demo Mode'}
           </span>
         </div>
       </div>

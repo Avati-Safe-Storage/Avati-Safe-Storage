@@ -42,7 +42,7 @@ const serviceData: Record<string, {
     faqs: [
       { q: "How do you handle large furniture like sofas and wardrobes?", a: "Our experienced team disassembles large furniture where possible, wraps each piece carefully, and reassembles on delivery. We handle everything from sofas and beds to dining tables and wardrobes." },
       { q: "Can you store items for just 1–2 months during renovation?", a: "Absolutely! Our minimum period is 1 month, making us perfect for short-term storage during renovation, painting, or temporary relocation." },
-      { q: "What happens if an item gets damaged?", a: "We take utmost care, and Professional Plan customers are covered by goods-in-storage insurance. We have a claim-free track record, but if any issue arises, we resolve it directly." },
+      { q: "What happens if an item gets damaged?", a: "We take utmost care, and Platinum Key (Pro Plan) customers are covered by goods-in-storage insurance. We have a claim-free track record, but if any issue arises, we resolve it directly." },
       { q: "Can I add more items later or retrieve partial items?", a: "Yes! You can request partial retrieval or add more items at any time. We'll update your inventory and adjust the charges accordingly." },
     ],
   },
@@ -70,7 +70,7 @@ const serviceData: Record<string, {
     ],
     faqs: [
       { q: "Do you offer storage for retail businesses with seasonal inventory?", a: "Yes! Many retail businesses use us to store off-season stock. We offer flexible plans that allow you to scale storage up or down based on your inventory cycles." },
-      { q: "Can I access my stored business items on short notice?", a: "Premium and Professional Plan business customers get priority retrieval within 24 hours. For urgent needs, please call us directly." },
+      { q: "Can I access my stored business items on short notice?", a: "Gold Key (Premium Plan) and Platinum Key (Pro Plan) business customers get priority retrieval within 24 hours. For urgent needs, please call us directly." },
       { q: "Do you offer storage for confidential business documents?", a: "Yes, we offer document storage with full confidentiality. Items are stored in organized, labeled boxes with an indexed retrieval system." },
     ],
   },

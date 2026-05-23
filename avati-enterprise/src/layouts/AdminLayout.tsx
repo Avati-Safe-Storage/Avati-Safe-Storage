@@ -17,6 +17,7 @@ import {
   UserPlus,
   Calendar,
   Warehouse,
+  FileText,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -35,6 +36,7 @@ export default function AdminLayout() {
     { name: 'Inventory',  path: '/admin/inventory',    icon: Package },
     { name: 'Warehouse',  path: '/admin/warehouse',    icon: Map },
     { name: 'Payments',   path: '/admin/payments',     icon: CreditCard },
+    { name: 'Blog',       path: '/admin/blog',         icon: FileText },
   ];
 
   if (role === 'super_admin') {
@@ -47,19 +49,28 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-brand-dark text-brand-text flex">
       {/* Sidebar */}
       <aside 
         className={clsx(
-          "bg-brand-dark text-white transition-all duration-300 flex flex-col",
+          "bg-brand-surface border-r border-brand-border transition-all duration-300 flex flex-col z-20",
           sidebarOpen ? "w-64" : "w-20"
         )}
       >
-        <div className="h-16 flex items-center justify-center border-b border-white/10 px-4">
+        <div className="h-16 flex items-center justify-center border-b border-brand-border px-4 select-none">
           {sidebarOpen ? (
-            <h1 className="text-xl font-bold tracking-wider text-brand-gold">AVATI ADMIN</h1>
+            <div className="flex items-center gap-2">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-brand-gold animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 1.5 1.5M15.5 7.5 14 6" />
+              </svg>
+              <h1 className="text-base font-black tracking-wider text-brand-text">
+                AVATI <span className="text-brand-gold">VAULT</span>
+              </h1>
+            </div>
           ) : (
-            <div className="w-8 h-8 bg-brand-gold rounded flex items-center justify-center font-bold text-black">A</div>
+            <div className="w-9 h-9 bg-gradient-to-br from-brand-gold/30 to-brand-gold/10 border border-brand-gold/40 rounded-xl flex items-center justify-center font-black text-brand-gold">
+              V
+            </div>
           )}
         </div>
 
@@ -69,27 +80,31 @@ export default function AdminLayout() {
               key={item.name}
               to={item.path}
               className={({ isActive }) => clsx(
-                "flex items-center px-3 py-3 rounded-lg transition-colors group",
+                "flex items-center px-3 py-3 rounded-lg transition-all group relative border",
                 isActive 
-                  ? "bg-brand-gold text-brand-dark font-semibold shadow-md" 
-                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+                  ? "bg-brand-gold text-black font-extrabold border-brand-gold shadow-[0_0_15px_rgba(212,175,55,0.2)]" 
+                  : "text-brand-muted border-transparent hover:bg-brand-light hover:text-brand-text"
               )}
             >
-              <item.icon className={clsx("w-5 h-5 flex-shrink-0", sidebarOpen && "mr-3")} />
-              {sidebarOpen && <span>{item.name}</span>}
-              {!sidebarOpen && (
-                <div className="absolute left-20 bg-gray-900 text-white px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
-                  {item.name}
-                </div>
+              {() => (
+                <>
+                  <item.icon className={clsx("w-5 h-5 flex-shrink-0", sidebarOpen && "mr-3")} />
+                  {sidebarOpen && <span>{item.name}</span>}
+                  {!sidebarOpen && (
+                    <div className="absolute left-20 bg-brand-surface border border-brand-border text-brand-text px-2.5 py-1 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl">
+                      {item.name}
+                    </div>
+                  )}
+                </>
               )}
             </NavLink>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-brand-border">
           <button 
             onClick={handleLogout}
-            className="flex items-center w-full px-3 py-3 text-red-400 hover:bg-white/5 rounded-lg transition-colors"
+            className="flex items-center w-full px-3 py-3 text-red-400 hover:bg-red-950/20 border border-transparent hover:border-red-900/30 rounded-lg transition-colors cursor-pointer"
           >
             <LogOut className={clsx("w-5 h-5 flex-shrink-0", sidebarOpen && "mr-3")} />
             {sidebarOpen && <span>Logout</span>}
@@ -98,38 +113,39 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-brand-dark">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10">
+        <header className="h-16 bg-brand-surface border-b border-brand-border flex items-center justify-between px-6 z-10">
           <div className="flex items-center">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 mr-4 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 mr-4 text-brand-text hover:bg-brand-light rounded-lg transition-colors cursor-pointer"
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
             
             <div className="relative hidden md:block">
-              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-brand-muted absolute left-3 top-1/2 -translate-y-1/2" />
               <input 
                 type="text" 
-                placeholder="Search inventory, customers..." 
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition-all"
+                placeholder="Search vault catalog..." 
+                className="pl-9 pr-4 py-2 bg-brand-light border border-brand-border rounded-lg text-xs w-64 focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent text-brand-text placeholder-brand-muted transition-all"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
+            <button className="relative p-2 text-brand-text hover:bg-brand-light rounded-full transition-colors cursor-pointer">
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-gold rounded-full animate-ping"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-gold rounded-full"></span>
             </button>
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-semibold text-gray-900">Admin User</p>
-                <p className="text-xs text-gray-500 capitalize">{role?.replace('_', ' ')}</p>
+            <div className="flex items-center gap-3 pl-4 border-l border-brand-border">
+              <div className="hidden md:block text-right select-none">
+                <p className="text-sm font-semibold text-brand-text">Admin Officer</p>
+                <p className="text-[10px] font-bold text-brand-gold capitalize tracking-widest">{role?.replace('_', ' ')}</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-brand-dark flex items-center justify-center text-brand-gold font-bold uppercase">
+              <div className="w-10 h-10 rounded-full bg-brand-light border border-brand-border flex items-center justify-center text-brand-gold font-extrabold uppercase select-none">
                 A
               </div>
             </div>
@@ -137,7 +153,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-6 bg-brand-dark">
           <Outlet />
         </div>
       </main>

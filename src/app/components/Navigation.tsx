@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Menu, X, ChevronDown, ChevronRight, Home, Building2, Car, FileText, Sofa,
@@ -21,11 +21,13 @@ const serviceLinks = [
 ];
 
 const navLinks = [
-  { label: "Pricing",      href: "/#pricing" },
+  { label: "Home",         href: "/" },
+  { label: "Pricing",      href: "/pricing" },
   { label: "How It Works", href: "/#process" },
-  { label: "Areas",        href: "/areas" },
+  { label: "Areas",        href: "/#areas" },
+  { label: "Blog",         href: "/blog" },
   { label: "FAQ",          href: "/faq" },
-  { label: "Contact",      href: "/#quote" },
+  { label: "Contact",      href: "/contact" },
 ];
 
 
@@ -307,73 +309,93 @@ export function Navigation({ onLoginClick }: { onLoginClick?: () => void }) {
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-1">
-            {/* Services dropdown */}
-            <div ref={servicesRef} className="relative">
-              <button
-                onClick={() => setServicesOpen(v => !v)}
-                className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:text-[#D4AF37]"
-                style={{ color: linkColor }}
-              >
-                Services
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${servicesOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              <AnimatePresence>
-                {servicesOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                    transition={{ duration: 0.18 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 rounded-2xl overflow-hidden z-50"
-                    style={{
-                      background: dark ? 'rgba(10,10,10,0.98)' : 'rgba(255,255,255,0.98)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid var(--gold-border)',
-                      boxShadow: dark ? '0 20px 60px rgba(0,0,0,0.6)' : '0 20px 40px rgba(0,0,0,0.12)',
-                    }}
-                  >
-                    <div className="p-2">
-                      {serviceLinks.map(s => (
-                        <Link key={s.href} to={s.href}
-                          onClick={() => setServicesOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl group transition-all"
-                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--gold-surface)')}
-                          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-                        >
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ backgroundColor: 'var(--gold-surface)' }}>
-                            <s.icon className="w-4 h-4" style={{ color: 'var(--gold)' }} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold group-hover:text-[#D4AF37] transition-colors" style={{ color: 'var(--text-primary)' }}>{s.label}</p>
-                            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{s.desc}</p>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {navLinks.map(link => (
-              link.href.startsWith('/') && !link.href.startsWith('/#') ? (
+            {navLinks.map(link => {
+              const isActive = location.pathname === link.href || (link.href.startsWith('/#') && location.pathname === '/' && location.hash === link.href.slice(1));
+              
+              const linkEl = link.href.startsWith('/') && !link.href.startsWith('/#') ? (
                 <Link key={link.href} to={link.href}
-                  className="px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:text-[#D4AF37]"
-                  style={{ color: linkColor }}
+                  className="px-3 py-2 text-sm font-medium rounded-lg transition-all hover:text-[#D4AF37] relative outline-none"
+                  style={{ color: isActive ? 'var(--gold)' : linkColor }}
                 >
                   {link.label}
+                  {isActive && (
+                    <motion.span 
+                      layoutId="activeNavIndicator"
+                      className="absolute bottom-[-4px] left-3 right-3 h-[2px] bg-[#D4AF37] rounded-full"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
                 </Link>
               ) : (
                 <a key={link.href} href={link.href}
-                  className="px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:text-[#D4AF37]"
+                  className="px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:text-[#D4AF37] relative outline-none"
                   style={{ color: linkColor }}
                 >
                   {link.label}
                 </a>
-              )
-            ))}
+              );
+
+              // Inject the Services dropdown next to Home (right after Home)
+              if (link.label === "Home") {
+                return (
+                  <Fragment key="home-group">
+                    {linkEl}
+                    
+                    {/* Services dropdown next to Home */}
+                    <div ref={servicesRef} className="relative">
+                      <button
+                        onClick={() => setServicesOpen(v => !v)}
+                        className="flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors hover:text-[#D4AF37]"
+                        style={{ color: linkColor }}
+                      >
+                        Services
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${servicesOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {servicesOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                            transition={{ duration: 0.18 }}
+                            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 rounded-2xl overflow-hidden z-50"
+                            style={{
+                              background: dark ? 'rgba(10,10,10,0.98)' : 'rgba(255,255,255,0.98)',
+                              backdropFilter: 'blur(20px)',
+                              border: '1px solid var(--gold-border)',
+                              boxShadow: dark ? '0 20px 60px rgba(0,0,0,0.6)' : '0 20px 40px rgba(0,0,0,0.12)',
+                            }}
+                          >
+                            <div className="p-2">
+                              {serviceLinks.map(s => (
+                                <Link key={s.href} to={s.href}
+                                  onClick={() => setServicesOpen(false)}
+                                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl group transition-all"
+                                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--gold-surface)')}
+                                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                                >
+                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ backgroundColor: 'var(--gold-surface)' }}>
+                                    <s.icon className="w-4 h-4" style={{ color: 'var(--gold)' }} />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold group-hover:text-[#D4AF37] transition-colors" style={{ color: 'var(--text-primary)' }}>{s.label}</p>
+                                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{s.desc}</p>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </Fragment>
+                );
+              }
+
+              return linkEl;
+            })}
           </div>
 
           {/* Desktop actions */}

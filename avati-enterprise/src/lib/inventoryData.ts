@@ -28,9 +28,9 @@ export const STORAGE_TYPES = [
 ] as const;
 
 export const PLANS = [
-  { id: 'basic',        name: 'Basic',        mult: 1.0, features: ['Standard secure storage', '24/7 CCTV Monitoring', 'Regular pest control'] },
-  { id: 'premium',      name: 'Premium',       mult: 1.3, popular: true, features: ['3-Layer Professional Packing', 'Climate controlled', 'Dust-free environment'] },
-  { id: 'professional', name: 'Professional',  mult: 1.6, features: ['Wooden Vault Storage', 'Dedicated account manager', 'Insurance coverage up to 1L'] },
+  { id: 'basic',        name: 'Silver Key (Basic)',        mult: 1.0, features: ['Standard secure storage', '24/7 CCTV Monitoring', 'Regular pest control'] },
+  { id: 'premium',      name: 'Gold Key (Premium)',       mult: 1.3, popular: true, features: ['3-Layer Professional Packing', 'Climate controlled', 'Dust-free environment'] },
+  { id: 'professional', name: 'Platinum Key (Pro)',  mult: 1.6, features: ['Wooden Vault Storage', 'Dedicated account manager', 'Insurance coverage up to 1L'] },
 ] as const;
 
 export const WAREHOUSES = ['WH1', 'WH2', 'WH3'] as const;

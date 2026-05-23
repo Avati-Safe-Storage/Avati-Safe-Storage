@@ -5,7 +5,7 @@ import { Link } from "react-router";
 
 const plans = [
   {
-    name: "Basic Storage",
+    name: "Silver Key (Basic Plan)",
     subtitle: "Ideal for Household Luggage",
     badge: "Most Affordable",
     badgeColor: "#10B981",
@@ -20,7 +20,7 @@ const plans = [
     ],
   },
   {
-    name: "Premium Warehousing",
+    name: "Gold Key (Premium Plan)",
     subtitle: "Office Inventory & Business Storage",
     badge: "Most Popular",
     badgeColor: "#D4AF37",
@@ -35,7 +35,7 @@ const plans = [
     ],
   },
   {
-    name: "Professional Plan",
+    name: "Platinum Key (Pro Plan)",
     subtitle: "Maximum Privacy & Protection",
     badge: "Elite",
     badgeColor: "#60A5FA",

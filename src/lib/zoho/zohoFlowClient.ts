@@ -16,6 +16,8 @@ export const FLOW_WEBHOOKS = {
   QUOTE_INVENTORY_ENTERED: import.meta.env.VITE_FLOW_WEBHOOK_INVENTORY_ENTERED as string,
   QUOTE_MEDIA_UPLOADED:    import.meta.env.VITE_FLOW_WEBHOOK_MEDIA_UPLOADED    as string,
   QUOTE_REQUESTED:         import.meta.env.VITE_FLOW_WEBHOOK_QUOTE_REQUESTED   as string,
+  QUOTE_LOGISTICS_PROVIDED: import.meta.env.VITE_FLOW_WEBHOOK_LOGISTICS_PROVIDED as string,
+  QUOTE_PLAN_SELECTED:     import.meta.env.VITE_FLOW_WEBHOOK_PLAN_SELECTED     as string,
 
   // OTP delivery
   OTP_SEND:                import.meta.env.VITE_FLOW_WEBHOOK_OTP_SEND          as string,

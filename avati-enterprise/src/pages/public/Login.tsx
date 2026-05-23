@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Lock, Mail, ArrowRight, ShieldAlert } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldAlert, Key } from 'lucide-react';
 import clsx from 'clsx';
 
 export default function Login() {
@@ -18,11 +18,6 @@ export default function Login() {
     setError('');
 
     try {
-      // In a real app, signIn would handle Supabase auth
-      // For now, we simulate role-based login
-      // 'admin@avati.com' -> super_admin
-      // 'client@avati.com' -> client
-      
       let role: 'super_admin' | 'warehouse_supervisor' | 'staff' | 'client' = 'client';
       
       if (email.includes('admin')) {
@@ -31,8 +26,6 @@ export default function Login() {
 
       await signIn(email, password);
       
-      // The ProtectedRoute will handle actual redirection based on user role,
-      // but we can preemptively redirect here based on the email simulation
       if (role === 'super_admin') {
         navigate('/admin/dashboard');
       } else {
@@ -46,36 +39,42 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="bg-brand-dark p-8 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg relative z-10">
-            <span className="text-2xl font-bold text-brand-dark">A</span>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#050505] relative overflow-hidden">
+      {/* Background Decorative Mesh Elements */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div className="w-full max-w-md vault-glass rounded-2xl shadow-2xl overflow-hidden relative z-10">
+        <div className="bg-[#0a0a0c] border-b border-[#D4AF37]/15 p-8 text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-lg"></div>
+          
+          <div className="w-16 h-16 bg-[#D4AF37]/10 border border-[#D4AF37]/35 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(212,175,55,0.15)] animate-pulse relative z-10">
+            <Key className="w-8 h-8 text-brand-gold" />
           </div>
-          <h2 className="text-2xl font-bold text-white relative z-10">Avati Enterprise</h2>
-          <p className="text-brand-gold mt-1 text-sm font-medium relative z-10">Secure Access Portal</p>
+          
+          <h2 className="text-2xl font-black text-brand-text uppercase tracking-wider relative z-10">Avati Vault</h2>
+          <p className="text-brand-gold mt-1 text-[10px] font-black uppercase tracking-widest relative z-10">Secure Access Control Center</p>
         </div>
 
         <div className="p-8">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <ShieldAlert className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="mb-6 p-4 bg-red-950/20 border border-red-500/20 rounded-xl flex items-start gap-3">
+              <ShieldAlert className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-300 font-bold">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
+              <label className="block text-xs font-bold text-brand-gold uppercase tracking-wider mb-1.5">Email Address</label>
               <div className="relative">
-                <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Mail className="w-5 h-5 text-brand-gold/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input 
                   type="email" 
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:bg-white transition-all"
+                  className="w-full pl-11 pr-4 py-2.5 vault-input rounded-xl text-sm focus:outline-none placeholder:text-brand-muted/30 focus:ring-1 focus:ring-brand-gold"
                   placeholder="Enter your email"
                 />
               </div>
@@ -83,17 +82,17 @@ export default function Login() {
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-sm font-medium text-gray-700">Password</label>
-                <a href="#" className="text-xs text-brand-gold font-medium hover:text-brand-dark transition-colors">Forgot Password?</a>
+                <label className="block text-xs font-bold text-brand-gold uppercase tracking-wider">Password</label>
+                <a href="#" className="text-xs text-brand-gold font-bold hover:text-brand-text transition-colors">Forgot Password?</a>
               </div>
               <div className="relative">
-                <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Lock className="w-5 h-5 text-brand-gold/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input 
                   type="password" 
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:bg-white transition-all"
+                  className="w-full pl-11 pr-4 py-2.5 vault-input rounded-xl text-sm focus:outline-none placeholder:text-brand-muted/30 focus:ring-1 focus:ring-brand-gold"
                   placeholder="Enter your password"
                 />
               </div>
@@ -103,8 +102,8 @@ export default function Login() {
               type="submit" 
               disabled={loading}
               className={clsx(
-                "w-full py-3 rounded-xl font-bold text-white shadow-md flex items-center justify-center gap-2 transition-all",
-                loading ? "bg-brand-dark/70 cursor-not-allowed" : "bg-brand-dark hover:bg-brand-dark/90 hover:shadow-lg hover:-translate-y-0.5"
+                "w-full py-3 rounded-xl font-extrabold text-brand-dark flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg",
+                loading ? "bg-brand-gold/50 cursor-not-allowed" : "vault-btn-gold"
               )}
             >
               {loading ? 'Authenticating...' : 'Sign In'}
@@ -112,20 +111,28 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-xs text-gray-500">
-              By signing in, you agree to our <a href="#" className="text-gray-900 underline">Terms of Service</a> and <a href="#" className="text-gray-900 underline">Privacy Policy</a>.
+          <div className="mt-8 text-center border-t border-white/5 pt-6">
+            <p className="text-[10px] text-brand-muted/50 font-bold uppercase tracking-wider">
+              By signing in, you agree to our <a href="#" className="text-brand-text hover:text-brand-gold underline">Terms of Service</a> & <a href="#" className="text-brand-text hover:text-brand-gold underline">Privacy Policy</a>.
             </p>
           </div>
         </div>
       </div>
       
       {/* Demo Credentials Helper */}
-      <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border border-gray-200 text-xs">
-        <p className="font-bold mb-2">Demo Access:</p>
-        <p><span className="font-semibold">Admin:</span> admin@avati.com</p>
-        <p><span className="font-semibold">Client:</span> client@avati.com</p>
-        <p className="mt-1 text-gray-500">(Any password works)</p>
+      <div className="mt-6 w-full max-w-md bg-[#0a0a0c] border border-[#D4AF37]/15 p-4 rounded-xl shadow-2xl relative z-10 text-xs text-brand-text">
+        <p className="font-extrabold text-brand-gold mb-2.5 uppercase tracking-wider text-[10px]">Vault Access Directory</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+            <p className="text-brand-muted font-bold">Admin Console</p>
+            <p className="font-mono text-brand-text font-black mt-0.5 select-all">admin@avati.com</p>
+          </div>
+          <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+            <p className="text-brand-muted font-bold">Client Portal</p>
+            <p className="font-mono text-brand-text font-black mt-0.5 select-all">client@avati.com</p>
+          </div>
+        </div>
+        <p className="mt-2 text-[10px] text-brand-muted/40 font-bold text-center uppercase tracking-wider">(Any credentials will pass authentication simulation)</p>
       </div>
     </div>
   );

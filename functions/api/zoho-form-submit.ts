@@ -82,6 +82,7 @@ export const onRequestPost: PagesFunction = async ({ request }) => {
         Accept: 'application/zoho.forms-v1+json',
       },
       body: JSON.stringify(buildZohoPayload(body)),
+      signal: AbortSignal.timeout(6_000),
     });
 
     const text = await zohoRes.text();
@@ -107,7 +108,11 @@ export const onRequestPost: PagesFunction = async ({ request }) => {
     return json({ success: true, recordId }, 200);
   } catch (err) {
     console.error('[zoho-form-submit] Proxy error:', err);
-    return json({ success: false, error: 'Unable to reach Zoho Forms. Please try again.' }, 500);
+    const timedOut = err instanceof Error && err.name === 'TimeoutError';
+    return json(
+      { success: false, error: timedOut ? 'Zoho Forms timed out. Please try again.' : 'Unable to reach Zoho Forms. Please try again.' },
+      timedOut ? 504 : 500,
+    );
   }
 };
 

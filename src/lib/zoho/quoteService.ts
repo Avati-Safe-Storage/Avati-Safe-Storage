@@ -1,28 +1,31 @@
 // ============================================================
 //  Avati Safe Storage — Quote Service
-//  Centralised service for all quote funnel Zoho integrations.
-//  Replaces direct pushToZoho() calls in QuotationSystem.tsx.
-//
-//  Lead Stage Progression:
-//  CONTACT_CAPTURED → STORAGE_SELECTED → INVENTORY_ENTERED
-//  → MEDIA_UPLOADED → QUOTE_REQUESTED
+//  Centralised Zoho CRM + Flow automations for the quote funnel.
 // ============================================================
 
 import { triggerFlow, triggerFlowMulti } from './zohoFlowClient';
-import { zohoApiFetch, ZOHO_CRM_BASE } from './zohoOAuthClient';
+import { submitZohoContactForm, type QuoteMethodId } from './zohoFormService';
 import { trackEvent } from '../analytics/analytics';
-import { submitZohoContactForm } from './zohoFormService';
 
-// ── Lead Stage Enum ──────────────────────────────────────────
-export const LEAD_STAGE = {
-  CONTACT_CAPTURED:  'Contact Captured',
-  STORAGE_SELECTED:  'Storage Selected',
-  INVENTORY_ENTERED: 'Inventory Entered',
-  MEDIA_UPLOADED:    'Media Uploaded',
-  QUOTE_REQUESTED:   'Quotation Generated',
+// ── Lead stages (CRM Lead Status field values) ───────────────
+export const CRM_LEAD_STATUS = {
+  CONTACT: 'Contact only',
+  STORAGE: 'Storage Type Selected',
+  INVENTORY: 'Inventory Provided',
+  LOGISTICS: 'Logistics Provided',
+  PLAN: 'Plan selected',
+  QUOTE: 'Quotation Generated',
 } as const;
 
-export type LeadStage = typeof LEAD_STAGE[keyof typeof LEAD_STAGE];
+export type CrmLeadStatus = typeof CRM_LEAD_STATUS[keyof typeof CRM_LEAD_STATUS];
+
+export const LEAD_STAGE = {
+  CONTACT_CAPTURED: 'Contact Captured',
+  STORAGE_SELECTED: 'Storage Selected',
+  INVENTORY_ENTERED: 'Inventory Entered',
+  MEDIA_UPLOADED: 'Media Uploaded',
+  QUOTE_REQUESTED: 'Quotation Generated',
+} as const;
 
 // ── Session tracking ─────────────────────────────────────────
 function getSessionId(): string {
@@ -34,178 +37,251 @@ function getSessionId(): string {
   return id;
 }
 
-// ── Duplicate lead detection ─────────────────────────────────
-/**
- * Checks if a lead with this phone number already exists in Zoho CRM.
- * Uses the authenticated API (when configured) — falls back to false on error.
- */
-export async function checkDuplicateLead(phone: string): Promise<boolean> {
-  try {
-    const normalised = phone.replace(/\D/g, '').slice(-10);
-    const response = await zohoApiFetch(
-      `${ZOHO_CRM_BASE}/Leads/search?phone=${normalised}&fields=id,Mobile`,
-    );
-    if (!response.ok) return false;
-    const data = await response.json();
-    return (data.data ?? []).length > 0;
-  } catch {
-    // If CRM is unreachable, don't block submission
-    return false;
-  }
-}
-
-// ── Stage 1: Contact Captured ────────────────────────────────
-export interface ContactData {
-  name: string;
-  phone: string;
-  email: string;
-  quoteMethod: 'inventory' | 'upload' | 'visit';
-}
-
-export async function captureContact(contact: ContactData): Promise<void> {
-  const sessionId = getSessionId();
-
-  await triggerFlowMulti([
-    {
-      key: 'QUOTE_CONTACT_CAPTURED',
-      payload: { ...contact, sessionId, referrer: document.referrer },
-    },
-  ]);
-
-  // Zoho public form (hidden iframe — triggers CRM automations)
-  submitZohoContactForm({
-    name: contact.name,
-    phone: contact.phone,
-    email: contact.email,
-    quoteMethod: contact.quoteMethod,
-  }).catch(() => {});
-
-  trackEvent('quote_step_completed', { step_number: 1, step_name: 'contact_captured', storage_type: '' });
-}
-
-// ── Stage 2: Storage Type Selected ──────────────────────────
-export async function recordStorageSelected(phone: string, storageType: string): Promise<void> {
-  await triggerFlow('QUOTE_STORAGE_SELECTED', {
-    phone,
-    storageType,
-    sessionId: getSessionId(),
-  });
-  trackEvent('quote_step_completed', { step_number: 2, step_name: 'storage_selected', storage_type: storageType });
-}
-
-// ── Stage 3: Inventory Entered ───────────────────────────────
-export interface InventoryData {
-  phone: string;
+// ── Funnel snapshot (built by QuotationSystem) ───────────────
+export interface QuoteFunnelSnapshot {
+  customer: { name: string; phone: string; email: string };
+  quoteMethod: QuoteMethodId;
   storageType: string;
+  selectedPlan: string;
+  inventoryList: string;
   inventorySummary: string;
   itemCount: number;
-  estimatedMonthly: number;
-}
-
-export async function recordInventoryEntered(data: InventoryData): Promise<void> {
-  await triggerFlow('QUOTE_INVENTORY_ENTERED', {
-    ...data,
-    sessionId: getSessionId(),
-  });
-  trackEvent('quote_step_completed', { step_number: 3, step_name: 'inventory_entered', storage_type: data.storageType });
-}
-
-// ── Stage 4: Media Uploaded ──────────────────────────────────
-export async function recordMediaUploaded(phone: string, fileCount: number): Promise<void> {
-  await triggerFlow('QUOTE_MEDIA_UPLOADED', {
-    phone,
-    fileCount,
-    sessionId: getSessionId(),
-    // Note: actual file upload to WorkDrive requires authenticated Zoho API
-    // and must be done server-side via a Cloudflare Pages Function.
-    // The function endpoint: POST /api/zoho-workdrive-upload
-  });
-  trackEvent('quote_step_completed', { step_number: 4, step_name: 'media_uploaded' });
-}
-
-// ── Stage 5: Quote Requested (Final Submission) ───────────────
-export interface QuoteSummary {
-  name: string;
-  phone: string;
-  email: string;
-  storageType: string;
-  plan: string;
-  monthlyEstimate: number;
+  monthlyStorage: number;
   packingAndTransport: number;
-  gst: number;
+  storageGst: number;
   totalFirstMonth: number;
-  pickupDate?: string;
-  area?: string;
-  packingRequired: boolean;
-  transportRequired: boolean;
-  inventoryList: string;
-  customItems?: string;
+  customItems: string;
+  logistics: {
+    pickupDate: string;
+    duration: number;
+    buildingType: string;
+    liftAvailable: string;
+    floors: number;
+    pickupArea: string;
+    packingRequired: boolean;
+    transportRequired: boolean;
+  };
   gstin?: string;
-  duration?: number;
-  buildingType?: string;
-  floors?: number;
-  liftAvailable?: string;
+  uploadedFileCount?: number;
+  visitNote?: string;
 }
 
-export async function submitQuoteRequest(summary: QuoteSummary): Promise<{ success: boolean }> {
-  const sessionId = getSessionId();
-
-  try {
-    // Trigger Zoho Flow (primary automation)
-    await triggerFlow('QUOTE_REQUESTED', { ...summary, sessionId });
-
-    // Also post to Zoho CRM WebToLeadForm (existing backup — no-cors)
-    await _submitToCRMWebToLead(summary);
-
-    trackEvent('quote_submitted', {
-      storage_type: summary.storageType,
-      plan: summary.plan,
-      monthly_value: summary.monthlyEstimate,
-    });
-
-    return { success: true };
-  } catch (err) {
-    console.error('[QuoteService] submitQuoteRequest error:', err);
-    return { success: false };
-  }
+// ── CRM WebToLead (background, non-blocking) ─────────────────
+export function syncCrmLead(snapshot: QuoteFunnelSnapshot, leadStatus: CrmLeadStatus): void {
+  _submitCrmWebToLead(snapshot, leadStatus).catch((err) =>
+    console.warn('[QuoteService] CRM sync failed:', err),
+  );
 }
 
-// ── Internal: CRM WebToLead (existing backup) ─────────────────
-async function _submitToCRMWebToLead(summary: QuoteSummary): Promise<void> {
+function _submitCrmWebToLead(snapshot: QuoteFunnelSnapshot, leadStatus: CrmLeadStatus): Promise<void> {
+  const methodMap: Record<string, string> = {
+    inventory: 'Live Quotation',
+    upload: 'Upload 360 Video',
+    visit: 'Book Survey',
+  };
   const planMap: Record<string, string> = { basic: 'Basic', premium: 'Premium', professional: 'Pro' };
 
   const params = new URLSearchParams({
-    xnQsjsdp:   'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce',
-    xmIwtLD:    '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d',
+    xnQsjsdp: 'a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce',
+    xmIwtLD: '877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d',
     actionType: 'TGVhZHM=',
-    zc_gad:     '',
-    returnURL:  'https://www.avatisafestorage.com/',
-    Company:    'Avati Website Lead',
+    zc_gad: '',
+    returnURL: 'https://www.avatisafestorage.com/',
+    Company: 'Avati Website Lead',
     'First Name': '',
-    'Last Name':  summary.name || 'Website Lead',
-    Email:        summary.email,
-    Mobile:       summary.phone,
+    'Last Name': (snapshot.customer.name || '').trim() || 'Website Lead',
+    Email: snapshot.customer.email || '',
+    Mobile: snapshot.customer.phone || '',
     'Lead Source': 'Online Store',
-    'Lead Status': LEAD_STAGE.QUOTE_REQUESTED,
-    LEADCF2:      summary.storageType,
-    LEADCF3:      planMap[summary.plan] ?? 'Basic',
-    LEADCF1:      summary.inventoryList,
-    LEADCF5:      summary.customItems ?? '',
-    LEADCF67:     String(Math.round(summary.monthlyEstimate)),
-    LEADCF66:     String(Math.round(summary.packingAndTransport)),
-    Description:  `Pickup: ${summary.pickupDate ?? 'TBD'} | ${summary.duration ?? 1} months | ${summary.buildingType ?? 'N/A'} | Floor ${summary.floors ?? 0} | Lift: ${summary.liftAvailable ?? 'N/A'}`,
-    'Address - Flat / House No./ Building / Apartment Name': summary.area ?? '',
-    aG9uZXlwb3Q: '', // honeypot
+    'Lead Status': leadStatus,
+    LEADCF6: methodMap[snapshot.quoteMethod] || 'Live Quotation',
+    LEADCF2: snapshot.storageType || 'Household',
+    LEADCF1: snapshot.inventoryList || '',
+    LEADCF5: snapshot.customItems || '',
+    LEADCF3: planMap[snapshot.selectedPlan] || 'Basic',
+    Description: `Pickup: ${snapshot.logistics.pickupDate || 'TBD'} | ${snapshot.logistics.duration || 1} months | ${snapshot.logistics.buildingType || 'N/A'} | Floor ${snapshot.logistics.floors || 0} | Lift: ${snapshot.logistics.liftAvailable}`,
+    'Address - Flat / House No./ Building / Apartment Name': snapshot.logistics.pickupArea || '',
+    aG9uZXlwb3Q: '',
   });
 
-  if (summary.packingRequired)   params.append('LEADCF101', 'on');
-  if (summary.transportRequired) params.append('LEADCF102', 'on');
-  if (summary.gstin)             params.append('LEADCF10',  summary.gstin);
+  if (snapshot.logistics.packingRequired) params.append('LEADCF101', 'on');
+  if (snapshot.logistics.transportRequired) params.append('LEADCF102', 'on');
+  if (snapshot.gstin) params.append('LEADCF10', snapshot.gstin);
 
-  await fetch('https://crm.zoho.in/crm/WebToLeadForm', {
+  const monthly = Math.round(snapshot.monthlyStorage);
+  const ptCharge = Math.round(snapshot.packingAndTransport);
+  if (monthly > 0) params.append('LEADCF67', monthly.toString());
+  if (ptCharge > 0) params.append('LEADCF66', ptCharge.toString());
+
+  return fetch('https://crm.zoho.in/crm/WebToLeadForm', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
     mode: 'no-cors',
+  }).then(() => {
+    console.info('[QuoteService] CRM sync →', leadStatus);
+  });
+}
+
+// ── Step automations (Flow + CRM, all non-blocking) ──────────
+
+/** After step 1 — CRM backup only (Zoho Form handled separately). */
+export function automateContactCaptured(snapshot: QuoteFunnelSnapshot): void {
+  syncCrmLead(snapshot, CRM_LEAD_STATUS.CONTACT);
+  triggerFlowMulti([
+    {
+      key: 'QUOTE_CONTACT_CAPTURED',
+      payload: {
+        name: snapshot.customer.name,
+        phone: snapshot.customer.phone,
+        email: snapshot.customer.email,
+        quoteMethod: snapshot.quoteMethod,
+        sessionId: getSessionId(),
+        referrer: document.referrer,
+      },
+    },
+  ]).catch(() => {});
+  trackEvent('quote_step_completed', { step_number: 1, step_name: 'contact_captured', storage_type: '' });
+}
+
+/** Step 2 — user picked a storage type. */
+export function automateStorageSelected(snapshot: QuoteFunnelSnapshot): void {
+  syncCrmLead(snapshot, CRM_LEAD_STATUS.STORAGE);
+  triggerFlow('QUOTE_STORAGE_SELECTED', {
+    phone: snapshot.customer.phone,
+    storageType: snapshot.storageType,
+    sessionId: getSessionId(),
+  }).catch(() => {});
+  trackEvent('quote_step_completed', {
+    step_number: 2,
+    step_name: 'storage_selected',
+    storage_type: snapshot.storageType,
+  });
+}
+
+/** Step 3 — inventory, media upload, or site visit. */
+export function automateInventoryStep(snapshot: QuoteFunnelSnapshot): void {
+  syncCrmLead(snapshot, CRM_LEAD_STATUS.INVENTORY);
+  const sessionId = getSessionId();
+  const phone = snapshot.customer.phone;
+
+  if (snapshot.quoteMethod === 'upload') {
+    triggerFlow('QUOTE_MEDIA_UPLOADED', {
+      phone,
+      fileCount: snapshot.uploadedFileCount ?? 0,
+      sessionId,
+    }).catch(() => {});
+  } else if (snapshot.quoteMethod === 'visit') {
+    triggerFlow('QUOTE_INVENTORY_ENTERED', {
+      phone,
+      storageType: snapshot.storageType,
+      inventorySummary: snapshot.visitNote
+        ? `Site visit requested: ${snapshot.visitNote}`
+        : 'Site visit requested',
+      itemCount: 0,
+      estimatedMonthly: snapshot.monthlyStorage,
+      sessionId,
+    }).catch(() => {});
+  } else {
+    triggerFlow('QUOTE_INVENTORY_ENTERED', {
+      phone,
+      storageType: snapshot.storageType,
+      inventorySummary: snapshot.inventorySummary,
+      itemCount: snapshot.itemCount,
+      estimatedMonthly: snapshot.monthlyStorage,
+      sessionId,
+    }).catch(() => {});
+  }
+
+  trackEvent('quote_step_completed', {
+    step_number: 3,
+    step_name: snapshot.quoteMethod === 'upload' ? 'media_uploaded' : 'inventory_entered',
+    storage_type: snapshot.storageType,
+  });
+}
+
+/** Step 4 — logistics captured. */
+export function automateLogisticsStep(snapshot: QuoteFunnelSnapshot): void {
+  syncCrmLead(snapshot, CRM_LEAD_STATUS.LOGISTICS);
+  triggerFlow('QUOTE_LOGISTICS_PROVIDED', {
+    phone: snapshot.customer.phone,
+    storageType: snapshot.storageType,
+    pickupDate: snapshot.logistics.pickupDate,
+    duration: snapshot.logistics.duration,
+    buildingType: snapshot.logistics.buildingType,
+    floors: snapshot.logistics.floors,
+    liftAvailable: snapshot.logistics.liftAvailable,
+    pickupArea: snapshot.logistics.pickupArea,
+    packingRequired: snapshot.logistics.packingRequired,
+    transportRequired: snapshot.logistics.transportRequired,
+    sessionId: getSessionId(),
+  }).catch(() => {});
+  trackEvent('quote_step_completed', { step_number: 4, step_name: 'logistics_provided', storage_type: snapshot.storageType });
+}
+
+/** Step 5 — plan selected (before final confirm). */
+export function automatePlanStep(snapshot: QuoteFunnelSnapshot): void {
+  syncCrmLead(snapshot, CRM_LEAD_STATUS.PLAN);
+  triggerFlow('QUOTE_PLAN_SELECTED', {
+    phone: snapshot.customer.phone,
+    storageType: snapshot.storageType,
+    plan: snapshot.selectedPlan,
+    monthlyEstimate: snapshot.monthlyStorage,
+    totalFirstMonth: snapshot.totalFirstMonth,
+    sessionId: getSessionId(),
+  }).catch(() => {});
+  trackEvent('quote_step_completed', { step_number: 5, step_name: 'plan_selected', storage_type: snapshot.storageType });
+}
+
+/** Final confirm — plan sync, full quote, Zoho Form refresh. */
+export async function automateQuoteConfirmed(snapshot: QuoteFunnelSnapshot): Promise<void> {
+  syncCrmLead(snapshot, CRM_LEAD_STATUS.PLAN);
+  triggerFlow('QUOTE_PLAN_SELECTED', {
+    phone: snapshot.customer.phone,
+    storageType: snapshot.storageType,
+    plan: snapshot.selectedPlan,
+    monthlyEstimate: snapshot.monthlyStorage,
+    totalFirstMonth: snapshot.totalFirstMonth,
+    sessionId: getSessionId(),
+  }).catch(() => {});
+
+  const summary = {
+    name: snapshot.customer.name,
+    phone: snapshot.customer.phone,
+    email: snapshot.customer.email,
+    storageType: snapshot.storageType,
+    plan: snapshot.selectedPlan,
+    monthlyEstimate: snapshot.monthlyStorage,
+    packingAndTransport: snapshot.packingAndTransport,
+    gst: snapshot.storageGst,
+    totalFirstMonth: snapshot.totalFirstMonth,
+    pickupDate: snapshot.logistics.pickupDate,
+    area: snapshot.logistics.pickupArea,
+    packingRequired: snapshot.logistics.packingRequired,
+    transportRequired: snapshot.logistics.transportRequired,
+    inventoryList: snapshot.inventoryList,
+    customItems: snapshot.customItems,
+    gstin: snapshot.gstin,
+    duration: snapshot.logistics.duration,
+    buildingType: snapshot.logistics.buildingType,
+    floors: snapshot.logistics.floors,
+    liftAvailable: snapshot.logistics.liftAvailable,
+  };
+
+  await Promise.allSettled([
+    triggerFlow('QUOTE_REQUESTED', { ...summary, sessionId: getSessionId() }),
+    _submitCrmWebToLead(snapshot, CRM_LEAD_STATUS.QUOTE),
+    submitZohoContactForm({
+      name: snapshot.customer.name,
+      phone: snapshot.customer.phone,
+      email: snapshot.customer.email,
+      quoteMethod: snapshot.quoteMethod,
+    }),
+  ]);
+
+  trackEvent('quote_submitted', {
+    storage_type: snapshot.storageType,
+    plan: snapshot.selectedPlan,
+    monthly_value: snapshot.monthlyStorage,
   });
 }

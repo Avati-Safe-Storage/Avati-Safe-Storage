@@ -143,7 +143,7 @@ export function generateAreaFaqs(
     },
     {
       q: `Is ${svc} in ${area.name} safe and secure?`,
-      a: `Absolutely. Our facility is monitored 24/7 by CCTV, has controlled access, and undergoes monthly professional pest control. All items stored from ${area.name} are covered by our standard protection protocol — elevated pallets, bubble wrap, and moisture-resistant packing. Professional plan customers also get goods-in-storage insurance.`,
+      a: `Absolutely. Our facility is monitored 24/7 by CCTV, has controlled access, and undergoes monthly professional pest control. All items stored from ${area.name} are covered by our standard protection protocol — elevated pallets, bubble wrap, and moisture-resistant packing. Platinum Key (Pro Plan) customers also get goods-in-storage insurance.`,
     },
   ];
 }

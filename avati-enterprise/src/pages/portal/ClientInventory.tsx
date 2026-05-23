@@ -15,28 +15,28 @@ export default function ClientInventory() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Inventory</h1>
-          <p className="text-gray-500 mt-1">View and manage your stored items.</p>
+          <h1 className="text-2xl font-black text-brand-text uppercase tracking-wider">My Inventory</h1>
+          <p className="text-sm text-brand-muted mt-1">View and manage your stored items in Avati Vault.</p>
         </div>
-        <button className="bg-brand-dark text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-dark/90 transition-colors shadow-sm flex items-center gap-2">
+        <button className="vault-btn-gold px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all cursor-pointer">
           <Truck className="w-5 h-5" />
           Request Retrieval
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="vault-glass rounded-2xl overflow-hidden shadow-xl">
+        <div className="p-4 border-b border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="relative w-full sm:w-96">
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-5 h-5 text-brand-gold/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
               placeholder="Search items..." 
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition-all"
+              className="w-full pl-11 pr-4 py-2.5 vault-input rounded-xl text-sm focus:outline-none placeholder:text-brand-muted/30 focus:ring-1 focus:ring-brand-gold"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full sm:w-auto justify-center">
+          <button className="flex items-center gap-2 px-4 py-2.5 border border-white/5 bg-white/5 rounded-xl text-sm font-bold text-brand-muted hover:text-brand-gold hover:bg-white/10 transition-colors w-full sm:w-auto justify-center cursor-pointer">
             <Filter className="w-4 h-4" />
             Filters
           </button>
@@ -45,31 +45,32 @@ export default function ClientInventory() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
-                <th className="px-6 py-4 font-semibold w-12">
-                  <input type="checkbox" className="rounded text-brand-gold focus:ring-brand-gold border-gray-300" />
+              <tr className="bg-white/5 text-brand-gold text-xs font-bold uppercase tracking-wider border-b border-white/10">
+                <th className="px-6 py-4 font-extrabold w-12">
+                  <input type="checkbox" className="accent-brand-gold cursor-pointer w-4 h-4" />
                 </th>
-                <th className="px-6 py-4 font-semibold">Item Name</th>
-                <th className="px-6 py-4 font-semibold">Item ID</th>
-                <th className="px-6 py-4 font-semibold">Category</th>
-                <th className="px-6 py-4 font-semibold">Date Stored</th>
-                <th className="px-6 py-4 font-semibold">Status</th>
+                <th className="px-6 py-4 font-extrabold">Item Name</th>
+                <th className="px-6 py-4 font-extrabold">Item ID</th>
+                <th className="px-6 py-4 font-extrabold">Category</th>
+                <th className="px-6 py-4 font-extrabold">Date Stored</th>
+                <th className="px-6 py-4 font-extrabold">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-white/5">
               {clientItems.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4">
-                    <input type="checkbox" className="rounded text-brand-gold focus:ring-brand-gold border-gray-300" />
+                    <input type="checkbox" className="accent-brand-gold cursor-pointer w-4 h-4" />
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{item.id}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{item.category}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{item.dateStored}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-brand-text">{item.name}</td>
+                  <td className="px-6 py-4 text-sm font-mono text-brand-muted/50">{item.id}</td>
+                  <td className="px-6 py-4 text-sm text-brand-muted">{item.category}</td>
+                  <td className="px-6 py-4 text-sm text-brand-muted">{item.dateStored}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                      ${item.status === 'Stored' ? 'bg-blue-100 text-blue-800' : 
-                        'bg-orange-100 text-orange-800'}`}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border
+                      ${item.status === 'Stored' 
+                        ? 'bg-emerald-950/40 border-emerald-500/20 text-emerald-400' 
+                        : 'bg-amber-950/40 border-amber-500/20 text-amber-400'}`}
                     >
                       {item.status}
                     </span>

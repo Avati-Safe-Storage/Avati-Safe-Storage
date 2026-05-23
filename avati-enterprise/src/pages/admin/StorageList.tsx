@@ -18,8 +18,8 @@ export default function StorageList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Storage Records</h1>
-          <p className="text-gray-500 mt-1">{list.length} active storage units</p>
+          <h1 className="text-2xl font-bold text-brand-text">Storage Records</h1>
+          <p className="text-brand-muted mt-1">{list.length} active storage units</p>
         </div>
       </div>
 
@@ -28,10 +28,10 @@ export default function StorageList() {
         {['WH1', 'WH2', 'WH3'].map(wh => {
           const count = list.filter(s => s.warehouse === wh && s.status === 'Active').length;
           return (
-            <div key={wh} className="bg-white rounded-xl border border-gray-200 p-4 text-center">
+            <div key={wh} className="vault-card rounded-xl p-4 text-center border border-brand-border/10 hover:border-brand-gold/30 transition-all duration-300">
               <Warehouse className="w-8 h-8 mx-auto mb-2 text-brand-gold" />
-              <p className="text-2xl font-black text-gray-900">{count}</p>
-              <p className="text-sm text-gray-500">{wh} Active Units</p>
+              <p className="text-2xl font-black text-brand-text">{count}</p>
+              <p className="text-sm text-brand-muted">{wh} Active Units</p>
             </div>
           );
         })}
@@ -40,54 +40,54 @@ export default function StorageList() {
       {loading ? (
         <div className="flex items-center justify-center h-40"><Loader2 className="w-8 h-8 animate-spin text-brand-gold" /></div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="vault-glass rounded-xl overflow-hidden border border-brand-border/10">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
-                <th className="px-5 py-3 font-semibold">Storage ID</th>
-                <th className="px-5 py-3 font-semibold">Customer</th>
-                <th className="px-5 py-3 font-semibold">Location</th>
-                <th className="px-5 py-3 font-semibold">Plan</th>
-                <th className="px-5 py-3 font-semibold">Type</th>
-                <th className="px-5 py-3 font-semibold">Items</th>
-                <th className="px-5 py-3 font-semibold">Monthly</th>
-                <th className="px-5 py-3 font-semibold">Status</th>
-                <th className="px-5 py-3 font-semibold">Insurance</th>
+              <tr className="bg-[#0c0c0e]/85 text-brand-muted text-sm border-b border-brand-border/20">
+                <th className="px-5 py-3.5 font-semibold">Storage ID</th>
+                <th className="px-5 py-3.5 font-semibold">Customer</th>
+                <th className="px-5 py-3.5 font-semibold">Location</th>
+                <th className="px-5 py-3.5 font-semibold">Plan</th>
+                <th className="px-5 py-3.5 font-semibold">Type</th>
+                <th className="px-5 py-3.5 font-semibold">Items</th>
+                <th className="px-5 py-3.5 font-semibold">Monthly</th>
+                <th className="px-5 py-3.5 font-semibold">Status</th>
+                <th className="px-5 py-3.5 font-semibold">Insurance</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-brand-border/10">
               {list.map(s => (
-                <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-5 py-3 font-mono text-sm text-brand-gold font-bold">{s.id}</td>
-                  <td className="px-5 py-3">
-                    <p className="text-sm font-semibold text-gray-900">{s.customerName}</p>
-                    <p className="text-xs text-gray-400">{s.customerId}</p>
+                <tr key={s.id} className="hover:bg-[#121214]/50 transition-colors">
+                  <td className="px-5 py-3.5 font-mono text-sm text-brand-gold font-bold">{s.id}</td>
+                  <td className="px-5 py-3.5">
+                    <p className="text-sm font-semibold text-brand-text">{s.customerName}</p>
+                    <p className="text-xs text-brand-muted/70">{s.customerId}</p>
                   </td>
-                  <td className="px-5 py-3">
-                    <span className="bg-brand-dark text-brand-gold font-bold text-sm px-3 py-1 rounded-lg tracking-widest">
+                  <td className="px-5 py-3.5">
+                    <span className="bg-brand-dark/40 text-brand-gold font-bold text-sm px-3 py-1 rounded-lg tracking-widest border border-brand-gold/15">
                       {s.location}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-sm capitalize text-gray-700">
+                  <td className="px-5 py-3.5 text-sm capitalize text-brand-muted">
                     {PLANS.find(p => p.id === s.plan)?.name || s.plan}
                   </td>
-                  <td className="px-5 py-3 text-sm text-gray-700">{s.storageType}</td>
-                  <td className="px-5 py-3 text-sm font-bold text-gray-900">{s.itemCount}</td>
-                  <td className="px-5 py-3 text-sm font-bold text-gray-900">₹{s.monthlyRate.toLocaleString()}</td>
-                  <td className="px-5 py-3">
-                    <span className={clsx('text-xs font-bold px-2 py-1 rounded-full',
-                      s.status === 'Active' ? 'bg-green-100 text-green-800' :
-                      s.status === 'Vacating' ? 'bg-orange-100 text-orange-800' :
-                      'bg-gray-100 text-gray-600')}>
+                  <td className="px-5 py-3.5 text-sm text-brand-muted">{s.storageType}</td>
+                  <td className="px-5 py-3.5 text-sm font-bold text-brand-text">{s.itemCount}</td>
+                  <td className="px-5 py-3.5 text-sm font-bold text-brand-text">₹{s.monthlyRate.toLocaleString()}</td>
+                  <td className="px-5 py-3.5">
+                    <span className={clsx('text-xs font-bold px-2 py-1 rounded-full border',
+                      s.status === 'Active' ? 'bg-green-950/45 text-green-400 border-green-800/30' :
+                      s.status === 'Vacating' ? 'bg-orange-950/45 text-orange-400 border-orange-800/30' :
+                      'bg-brand-light text-brand-muted border-brand-border/20')}>
                       {s.status}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-sm">{s.insuranceOpted ? '✅' : '—'}</td>
+                  <td className="px-5 py-3.5 text-sm text-brand-text">{s.insuranceOpted ? '✅' : '—'}</td>
                 </tr>
               ))}
               {list.length === 0 && (
-                <tr><td colSpan={9} className="px-5 py-12 text-center text-gray-400">
-                  <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <tr><td colSpan={9} className="px-5 py-12 text-center text-brand-muted">
+                  <Package className="w-8 h-8 mx-auto mb-2 opacity-30 text-brand-gold" />
                   <p>No storage records yet</p>
                 </td></tr>
               )}

@@ -1,31 +1,122 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-dark: #0B1F3A;
+  --color-brand-dark: #050505;
+  --color-brand-surface: #0a0a0c;
   --color-brand-gold: #D4AF37;
-  --color-brand-light: #f8fafc;
+  --color-brand-light: #121214;
+  --color-brand-border: rgba(212, 175, 55, 0.18);
+  --color-brand-glow: rgba(212, 175, 55, 0.25);
+  --color-brand-text: #f5f5f0;
+  --color-brand-muted: rgba(245, 245, 240, 0.55);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* High-contrast Lucide icons */
+svg.lucide {
+  stroke: currentColor !important;
 }
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased font-sans;
+    background-color: #050505;
+    color: #f5f5f0;
+    @apply antialiased font-sans;
+  }
+
+  /* Force premium dark selection styling */
+  ::selection {
+    background-color: rgba(212, 175, 55, 0.3);
+    color: #ffffff;
   }
 }
 
-/* Custom scrollbar for webkit */
+/* ═══════════════════════════════════════════════════════════
+   PREMIUM VAULT UTILITIES (Premium Black & Gold Theme)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Luxury glass component */
+.vault-glass {
+  background: rgba(10, 10, 12, 0.75);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.03);
+}
+
+/* Interactive gold card */
+.vault-card {
+  background: #0a0a0c;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+.vault-card:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Premium Gold Button */
+.vault-btn-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+  color: #000000;
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+  transition: all 0.2s ease;
+  border: none;
+}
+.vault-btn-gold:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.45);
+  transform: translateY(-1px);
+}
+.vault-btn-gold:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* High-end Dark input elements */
+.vault-input {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f5f5f0;
+  transition: all 0.2s ease;
+}
+.vault-input:focus {
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+  background-color: rgba(255, 255, 255, 0.05);
+  outline: none;
+}
+.vault-input::placeholder {
+  color: rgba(245, 245, 240, 0.3);
+}
+
+/* Symmetrical custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #050505;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full;
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  background: rgba(212, 175, 55, 0.45);
+}
+
+/* Scrollbar hide utility */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
