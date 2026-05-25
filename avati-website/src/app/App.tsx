@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext, lazy, Suspense } from "
 import { Routes, Route, useNavigate, useLocation } from "react-router";
 import { enableVisualEditing } from "@sanity/visual-editing";
 import { sanityClient } from "../utils/sanityClient";
+import React from "react";
 
 import { Navigation } from "./components/Navigation";
 import { Hero } from "./components/Hero";
@@ -19,7 +20,7 @@ const LoginPage = lazy(() => import("./components/LoginPage").then(m => ({ defau
 const Dashboard = lazy(() => import("./components/Dashboard").then(m => ({ default: m.Dashboard })));
 const QuotePage = lazy(() => import("./components/QuotePage").then(m => ({ default: m.QuotePage })));
 const FAQPage = lazy(() => import("./components/FAQPage").then(m => ({ default: m.FAQPage })));
-const AreasPage = lazy(() => import("./components/AreasPage").then(m => ({ default: m.AreasPage })));
+const AreasPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.SitemapPage }))); // Sitemaps page fallback
 const ServiceLocationPage = lazy(() => import("./components/ServiceLocationPage").then(m => ({ default: m.ServiceLocationPage })));
 const LocationLandingPage = lazy(() => import("./components/LocationLandingPage").then(m => ({ default: m.LocationLandingPage })));
 
@@ -92,6 +93,7 @@ interface HomeCMSData {
   heroTitle?: string;
   heroSubtitle?: string;
   ctaButtonText?: string;
+  keywords?: string;
   warehouseOccupancy?: string;
   bodyContent?: string;
 }
@@ -107,6 +109,7 @@ function LandingPage({ onLoginClick }: { onLoginClick: () => void }) {
       heroTitle,
       heroSubtitle,
       ctaButtonText,
+      keywords,
       warehouseOccupancy,
       bodyContent
     }`)
@@ -114,7 +117,9 @@ function LandingPage({ onLoginClick }: { onLoginClick: () => void }) {
       setPageData(data || {});
       setLoading(false);
     })
-    .catch(() => {
+    .catch((err) => {
+      console.warn("[LandingPage CMS] Dynamic fetch failed, falling back immediately to native templates:", err);
+      setPageData({}); // Set safe empty object to unblock loading and render gorgeous fallbacks instantly
       setLoading(false);
     });
   }, []);
@@ -325,8 +330,6 @@ function AppRoutes() {
   );
 }
 
-import React from "react";
-
 // Robust Error Boundary to completely prevent blank screen crashes on unexpected failures
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
@@ -395,7 +398,6 @@ export default function App() {
       return () => disable();
     }
   }, []);
-
 
   return (
     <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d) }}>
