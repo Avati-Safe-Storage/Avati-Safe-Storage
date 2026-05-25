@@ -1,5 +1,7 @@
 import { useState, useEffect, createContext, useContext, lazy, Suspense } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router";
+import { enableVisualEditing } from "@sanity/visual-editing";
+
 import { Navigation } from "./components/Navigation";
 import { Hero } from "./components/Hero";
 import { Services } from "./components/Services";
@@ -293,6 +295,14 @@ export default function App() {
       localStorage.setItem('avati_theme', dark ? 'dark' : 'light');
     } catch {}
   }, [dark]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.self !== window.top) {
+      const disable = enableVisualEditing();
+      return () => disable();
+    }
+  }, []);
+
 
   return (
     <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d) }}>

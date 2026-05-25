@@ -96,8 +96,10 @@ export default defineConfig({
     alias: {
       // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
+      'react/compiler-runtime': path.resolve(__dirname, './src/compiler-stub.ts'),
     },
   },
+
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
