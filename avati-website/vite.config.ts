@@ -106,28 +106,9 @@ export default defineConfig({
 
   build: {
     // Raise the warning limit to reduce noise (our chunks are intentionally split)
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // Manual chunk splitting for optimal long-term caching
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            // React core — smallest possible initial bundle
-            if (id.includes('react-dom') || id.includes('react/')) return 'react-core';
-            // Router
-            if (id.includes('react-router')) return 'router';
-            // Animation library (heavy)
-            if (id.includes('motion') || id.includes('framer')) return 'motion';
-            // Lucide icons (large icon set)
-            if (id.includes('lucide')) return 'icons';
-            // Radix UI primitives
-            if (id.includes('@radix-ui')) return 'radix';
-            // Charts / recharts
-            if (id.includes('recharts') || id.includes('d3-')) return 'charts';
-            // Everything else from node_modules
-            return 'vendor';
-          }
-        },
         // Named assets for better caching
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'js/[name]-[hash].js',
