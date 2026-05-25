@@ -141,8 +141,29 @@ export function automateContactCaptured(snapshot: QuoteFunnelSnapshot): void {
       },
     },
   ]).catch(() => {});
+
+  // Send lead to Make.com Webhook
+  fetch('https://hook.eu1.make.com/nsxcdre5idm6g2ihl2rhmjllfo3vyj6z', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      fullName: snapshot.customer.name,
+      phone: snapshot.customer.phone,
+      email: snapshot.customer.email,
+      quoteMethod: snapshot.quoteMethod,
+      sessionId: getSessionId(),
+      timestamp: new Date().toISOString(),
+      referrer: document.referrer,
+    }),
+  }).catch((err) => {
+    console.warn('[QuoteService] Make.com webhook failed:', err);
+  });
+
   trackEvent('quote_step_completed', { step_number: 1, step_name: 'contact_captured', storage_type: '' });
 }
+
 
 /** Step 2 — user picked a storage type. */
 export function automateStorageSelected(snapshot: QuoteFunnelSnapshot): void {
