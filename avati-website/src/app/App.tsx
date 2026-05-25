@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, lazy, Suspense } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router";
 import { enableVisualEditing } from "@sanity/visual-editing";
+import { sanityClient } from "../utils/sanityClient";
 
 import { Navigation } from "./components/Navigation";
 import { Hero } from "./components/Hero";
@@ -86,11 +87,54 @@ function PageLayout({ children, onLoginClick }: { children: React.ReactNode; onL
   );
 }
 
+interface HomeCMSData {
+  title?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  ctaButtonText?: string;
+  warehouseOccupancy?: string;
+  bodyContent?: string;
+}
+
 // ── Landing page component ──────────────────────────────────────────────────
 function LandingPage({ onLoginClick }: { onLoginClick: () => void }) {
+  const [pageData, setPageData] = useState<HomeCMSData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    sanityClient.fetch<HomeCMSData>(`*[_id == "page-home"][0] {
+      title,
+      heroTitle,
+      heroSubtitle,
+      ctaButtonText,
+      warehouseOccupancy,
+      bodyContent
+    }`)
+    .then((data) => {
+      setPageData(data || {});
+      setLoading(false);
+    })
+    .catch(() => {
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return <PageSpinner />;
+  }
+
+  // Defensive guard check
+  if (!pageData) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0b1f3a', color: '#fff', textAlign: 'center' }}>
+        <div>Loading Avati Storage...</div>
+      </div>
+    );
+  }
+
   return (
     <PageLayout onLoginClick={onLoginClick}>
-      <Hero />
+      <Hero pageData={pageData} />
       <Services />
       <TrustSection />
       <PricingPlans />

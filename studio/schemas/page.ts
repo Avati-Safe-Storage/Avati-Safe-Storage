@@ -21,7 +21,7 @@ export default {
     //  GLOBAL FIELDS (Visible on every page)
     // ==========================================
     {
-      name: 'pageTitle',
+      name: 'title',
       title: 'Page Title (Internal)',
       type: 'string',
       description: 'Internal reference name for the team.',
@@ -35,10 +35,16 @@ export default {
       description: 'E.g., "home" or "services" or "pricing" or "contact".',
       group: 'content',
       options: {
-        source: 'pageTitle',
+        source: 'title',
         maxLength: 96,
       },
       validation: (Rule: any) => Rule.required(),
+    },
+    {
+      name: 'keywords',
+      title: 'SEO Keywords',
+      type: 'string',
+      group: 'seo',
     },
 
     // ==========================================
@@ -60,7 +66,7 @@ export default {
       hidden: showFor('page-home'),
     },
     {
-      name: 'ctaText',
+      name: 'ctaButtonText',
       title: 'Home CTA Button Text',
       type: 'string',
       group: 'content',
@@ -69,19 +75,18 @@ export default {
     {
       name: 'warehouseOccupancy',
       title: 'Warehouse Occupancy Percentage',
-      type: 'number',
-      description: 'Specify as a number (e.g., 78 or 85).',
+      type: 'string',
+      description: 'Specify as a number or string (e.g., 78 or "85%").',
       group: 'content',
       hidden: showFor('page-home'),
-      validation: (Rule: any) => Rule.min(0).max(100),
     },
     {
       name: 'bodyContent',
       title: 'Home Rich Body Content',
-      type: 'array',
+      type: 'text',
+      rows: 5,
       group: 'content',
       hidden: showFor('page-home'),
-      of: [{ type: 'block' }],
     },
 
     // ==========================================

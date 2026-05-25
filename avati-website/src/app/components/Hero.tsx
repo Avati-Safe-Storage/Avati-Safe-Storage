@@ -19,35 +19,45 @@ const encodeDataAttribute = createDataAttribute({
 });
 
 interface HomeCMSData {
+  title?: string;
   heroTitle?: string;
   heroSubtitle?: string;
   ctaButtonText?: string;
   warehouseOccupancy?: string;
 }
 
-export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
+interface HeroProps {
+  onQuoteClick?: () => void;
+  pageData?: HomeCMSData;
+}
+
+export function Hero({ onQuoteClick, pageData }: HeroProps) {
   const { dark } = useTheme();
   const [cmsData, setCmsData] = useState<HomeCMSData | null>(null);
 
   const videoUrl = import.meta.env.BASE_URL + 'homepage-video.webm';
 
-  // 1. Fetch from page-home document
+  // 1. Fetch from page-home document as fallback
   useEffect(() => {
-    sanityClient.fetch<HomeCMSData>(`*[_id == "page-home"][0] {
-      heroTitle,
-      heroSubtitle,
-      ctaText,
-      warehouseOccupancy
-    }`).then(setCmsData).catch(() => {});
-  }, []);
+    if (!pageData) {
+      sanityClient.fetch<HomeCMSData>(`*[_id == "page-home"][0] {
+        title,
+        heroTitle,
+        heroSubtitle,
+        ctaButtonText,
+        warehouseOccupancy
+      }`).then(setCmsData).catch(() => {});
+    }
+  }, [pageData]);
 
   // 2. Select active dataset with dynamic CMS fallback mapping
-  const title = cmsData?.heroTitle || "Best Storage Space in Bangalore";
-  const subtitle = cmsData?.heroSubtitle || "Premium household storage space in Bangalore with professional packing, free doorstep pickup, and secure climate-controlled warehousing.";
-  const ctaText = cmsData?.ctaText || "Get Free Quote";
-  const occupancyNum = cmsData?.warehouseOccupancy;
+  const activeData = pageData || cmsData;
+  const title = activeData?.heroTitle || "Best Storage Space in Bangalore";
+  const subtitle = activeData?.heroSubtitle || "Premium household storage space in Bangalore with professional packing, free doorstep pickup, and secure climate-controlled warehousing.";
+  const ctaText = activeData?.ctaButtonText || "Get Free Quote";
+  const occupancyNum = activeData?.warehouseOccupancy;
   const occupancy = occupancyNum !== undefined && occupancyNum !== null
-    ? `${occupancyNum}% Occupancy`
+    ? (typeof occupancyNum === 'string' && occupancyNum.includes('%') ? occupancyNum : `${occupancyNum}% Occupancy`)
     : "78% Occupancy";
 
 
@@ -167,7 +177,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
         >
           <Link 
             to="/get-quote" 
-            data-sanity={encodeDataAttribute(['page-home', 'ctaText'])}
+            data-sanity={encodeDataAttribute(['page-home', 'ctaButtonText'])}
             className="avati-btn-gold text-sm sm:text-base" 
             id="hero-quote-btn"
           >
