@@ -36,7 +36,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
     sanityClient.fetch<HomeCMSData>(`*[_id == "page-home"][0] {
       heroTitle,
       heroSubtitle,
-      ctaButtonText,
+      ctaText,
       warehouseOccupancy
     }`).then(setCmsData).catch(() => {});
   }, []);
@@ -44,8 +44,12 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
   // 2. Select active dataset with dynamic CMS fallback mapping
   const title = cmsData?.heroTitle || "Best Storage Space in Bangalore";
   const subtitle = cmsData?.heroSubtitle || "Premium household storage space in Bangalore with professional packing, free doorstep pickup, and secure climate-controlled warehousing.";
-  const ctaText = cmsData?.ctaButtonText || "Get Free Quote";
-  const occupancy = cmsData?.warehouseOccupancy || "78% Occupancy";
+  const ctaText = cmsData?.ctaText || "Get Free Quote";
+  const occupancyNum = cmsData?.warehouseOccupancy;
+  const occupancy = occupancyNum !== undefined && occupancyNum !== null
+    ? `${occupancyNum}% Occupancy`
+    : "78% Occupancy";
+
 
   // Re-map stats dynamically
   const stats = [
@@ -163,7 +167,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
         >
           <Link 
             to="/get-quote" 
-            data-sanity={encodeDataAttribute(['page-home', 'ctaButtonText'])}
+            data-sanity={encodeDataAttribute(['page-home', 'ctaText'])}
             className="avati-btn-gold text-sm sm:text-base" 
             id="hero-quote-btn"
           >

@@ -146,7 +146,7 @@ export function ContactPage() {
 // ── Legal Page (Privacy & Terms) ─────────────────────────────
 interface TermsCMS {
   termsHeading?: string;
-  termsContent?: any[];
+  legalBody?: any[];
 }
 
 export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
@@ -169,7 +169,7 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
     if (!isPrivacy) {
       sanityClient.fetch<TermsCMS>(`*[_id == "page-terms"][0] {
         termsHeading,
-        termsContent
+        legalBody
       }`).then(setCmsData).catch(() => {});
     }
   }, [isPrivacy]);
@@ -191,9 +191,9 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
         </h1>
 
         <div className="space-y-4">
-          {!isPrivacy && cmsData?.termsContent ? (
-            <div data-sanity={encodeDataAttribute(['page-terms', 'termsContent'])}>
-              {renderPortableText(cmsData.termsContent)}
+          {!isPrivacy && cmsData?.legalBody ? (
+            <div data-sanity={encodeDataAttribute(['page-terms', 'legalBody'])}>
+              {renderPortableText(cmsData.legalBody)}
             </div>
           ) : (
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>

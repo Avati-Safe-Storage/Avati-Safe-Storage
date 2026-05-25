@@ -281,6 +281,47 @@ function AppRoutes() {
   );
 }
 
+import React from "react";
+
+// Robust Error Boundary to completely prevent blank screen crashes on unexpected failures
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("[App ErrorBoundary] Caught exception:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0b1f3a', color: '#ffffff', fontFamily: 'sans-serif', textAlign: 'center', padding: '2rem' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🛡️</div>
+          <h2 style={{ color: '#D4AF37', margin: '0 0 1rem 0', fontSize: '2rem', fontWeight: 900 }}>Undergoing Safe Maintenance</h2>
+          <p style={{ color: '#a0aec0', maxWidth: '480px', lineHeight: 1.6, margin: '0 0 1.5rem 0' }}>
+            We encountered an unexpected layout adjustment. The backup safe-mode has been activated. Please reload or contact support.
+          </p>
+          <button 
+            onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}
+            style={{ padding: '0.875rem 2rem', border: 'none', borderRadius: '12px', background: 'linear-gradient(135deg, #D4AF37, #FFD700)', color: '#000', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 14px rgba(212,175,55,0.4)', transition: 'transform 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            Reload Website
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ── Theme wrapper ────────────────────────────────────────────────────────────
 export default function App() {
   // Initialize from the class applied by the flash-prevention inline script
@@ -314,7 +355,9 @@ export default function App() {
 
   return (
     <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d) }}>
-      <AppRoutes />
+      <ErrorBoundary>
+        <AppRoutes />
+      </ErrorBoundary>
     </ThemeContext.Provider>
   );
 }

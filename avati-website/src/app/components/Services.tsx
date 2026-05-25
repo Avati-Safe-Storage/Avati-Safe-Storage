@@ -114,8 +114,16 @@ export function Services() {
   const heroTitle = cmsData?.servicesHeroTitle || "Every Storage Need. One Address.";
   const heroSubtitle = cmsData?.servicesHeroSubtitle || "From a single suitcase to an entire office — Avati covers all your storage needs with professional care and honest pricing.";
   const activeServices = cmsData?.servicesList && cmsData.servicesList.length > 0 
-    ? cmsData.servicesList 
+    ? cmsData.servicesList.map(s => ({
+        title: s.serviceName || s.title || "Storage Service",
+        subtitle: s.subtitle || "Premium",
+        description: s.serviceDescription || s.description || "Secure, Monitored Space.",
+        link: s.link || "/get-quote",
+        highlights: s.highlights || [s.servicePrice ? `Starts at ${s.servicePrice}` : "24/7 Monitored"],
+        iconName: s.iconName || "Home"
+      }))
     : LOCAL_FALLBACK_SERVICES;
+
 
   const next = () => setCurrentIndex(i => Math.min(i + 1, activeServices.length - DESKTOP_SHOW));
   const prev = () => setCurrentIndex(i => Math.max(i - 1, 0));

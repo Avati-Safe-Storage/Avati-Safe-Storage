@@ -77,7 +77,21 @@ const LOCAL_FALLBACK_PLANS = [
 interface CMSPricingData {
   pricingHeroTitle?: string;
   pricingHeroSubtitle?: string;
-  pricingPlans?: any[];
+  silverPlanPrice?: string;
+  silverPlanSizing?: string;
+  silverPlanFeatures?: string[];
+  silverPlanPopular?: boolean;
+  silverPlanActive?: boolean;
+  goldPlanPrice?: string;
+  goldPlanSizing?: string;
+  goldPlanFeatures?: string[];
+  goldPlanPopular?: boolean;
+  goldPlanActive?: boolean;
+  platinumPlanPrice?: string;
+  platinumPlanSizing?: string;
+  platinumPlanFeatures?: string[];
+  platinumPlanPopular?: boolean;
+  platinumPlanActive?: boolean;
 }
 
 export function PricingPlans() {
@@ -92,7 +106,21 @@ export function PricingPlans() {
         const query = `*[_id == "page-pricing"][0] {
           pricingHeroTitle,
           pricingHeroSubtitle,
-          pricingPlans
+          silverPlanPrice,
+          silverPlanSizing,
+          silverPlanFeatures,
+          silverPlanPopular,
+          silverPlanActive,
+          goldPlanPrice,
+          goldPlanSizing,
+          goldPlanFeatures,
+          goldPlanPopular,
+          goldPlanActive,
+          platinumPlanPrice,
+          platinumPlanSizing,
+          platinumPlanFeatures,
+          platinumPlanPopular,
+          platinumPlanActive
         }`;
         const data = await sanityClient.fetch<CMSPricingData>(query);
         setCmsData(data || null);
@@ -108,22 +136,51 @@ export function PricingPlans() {
   // 2. Select active dataset with dynamic CMS fallback mapping
   const heroTitle = cmsData?.pricingHeroTitle || "Affordable Storage Plans in Bangalore";
   const heroSubtitle = cmsData?.pricingHeroSubtitle || "No hidden fees. No callbacks. Get your exact price instantly with our quote engine.";
-  const activePlans = cmsData?.pricingPlans && cmsData.pricingPlans.length > 0
-    ? cmsData.pricingPlans.map((plan: any, idx: number) => {
-        // Enforce fallback metadata parameters for custom user tiers
-        const fallback = LOCAL_FALLBACK_PLANS[idx] || LOCAL_FALLBACK_PLANS[0];
-        return {
-          name: plan.name,
-          subtitle: plan.subtitle || fallback.subtitle,
-          price: plan.price || fallback.price,
-          billing: plan.billing || fallback.billing,
-          badge: plan.name.includes("Silver") ? "Affordable" : plan.name.includes("Gold") ? "Popular" : "Elite",
-          badgeColor: plan.name.includes("Silver") ? "#10B981" : plan.name.includes("Gold") ? "#D4AF37" : "#60A5FA",
-          popular: plan.popular || false,
-          features: plan.features || fallback.features
-        };
-      })
-    : LOCAL_FALLBACK_PLANS;
+  
+  const activePlans = [
+    {
+      name: "Silver Key (Basic Plan)",
+      subtitle: cmsData?.silverPlanSizing || "Ideal for Household Luggage",
+      price: cmsData?.silverPlanPrice || "₹300",
+      billing: "per month",
+      badge: "Most Affordable",
+      badgeColor: "#10B981",
+      popular: cmsData?.silverPlanPopular !== undefined ? cmsData.silverPlanPopular : false,
+      active: cmsData?.silverPlanActive !== undefined ? cmsData.silverPlanActive : true,
+      features: cmsData?.silverPlanFeatures && cmsData.silverPlanFeatures.length > 0
+        ? cmsData.silverPlanFeatures
+        : LOCAL_FALLBACK_PLANS[0].features,
+      fieldKey: "silver"
+    },
+    {
+      name: "Gold Key (Premium Plan)",
+      subtitle: cmsData?.goldPlanSizing || "Office Inventory & Business Storage",
+      price: cmsData?.goldPlanPrice || "₹999",
+      billing: "per month",
+      badge: "Most Popular",
+      badgeColor: "#D4AF37",
+      popular: cmsData?.goldPlanPopular !== undefined ? cmsData.goldPlanPopular : true,
+      active: cmsData?.goldPlanActive !== undefined ? cmsData.goldPlanActive : true,
+      features: cmsData?.goldPlanFeatures && cmsData.goldPlanFeatures.length > 0
+        ? cmsData.goldPlanFeatures
+        : LOCAL_FALLBACK_PLANS[1].features,
+      fieldKey: "gold"
+    },
+    {
+      name: "Platinum Key (Pro Plan)",
+      subtitle: cmsData?.platinumPlanSizing || "Maximum Privacy & Protection",
+      price: cmsData?.platinumPlanPrice || "₹1,999",
+      billing: "per month",
+      badge: "Elite",
+      badgeColor: "#60A5FA",
+      popular: cmsData?.platinumPlanPopular !== undefined ? cmsData.platinumPlanPopular : false,
+      active: cmsData?.platinumPlanActive !== undefined ? cmsData.platinumPlanActive : true,
+      features: cmsData?.platinumPlanFeatures && cmsData.platinumPlanFeatures.length > 0
+        ? cmsData.platinumPlanFeatures
+        : LOCAL_FALLBACK_PLANS[2].features,
+      fieldKey: "platinum"
+    }
+  ];
 
   return (
     <section 
@@ -169,10 +226,11 @@ export function PricingPlans() {
 
         {/* Cards Layout Slider */}
         <div className="flex md:grid md:grid-cols-3 overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-5 sm:gap-6 pt-4 pb-6 px-4 -mx-4 md:px-0 md:mx-0 md:py-4">
-          {activePlans.map((plan, index) => {
-            const planAttr = cmsData?.pricingPlans
-              ? encodeDataAttribute(['page-pricing', 'pricingPlans', index])
+          {activePlans.filter(p => p.active).map((plan, index) => {
+            const planAttr = cmsData
+              ? encodeDataAttribute(['page-pricing', `${plan.fieldKey}PlanPrice`])
               : undefined;
+
 
             return (
               <motion.div

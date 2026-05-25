@@ -1,6 +1,6 @@
 // ============================================================
-//  Sanity Document Schema: page (Flat & Context-Aware Layout)
-//  Display Title: Custom Pages (Unified Page Manager)
+//  Sanity Document Schema: page (Expanded Flat Page Schema)
+//  Display Title: Custom Pages (Pruned Block-Builders)
 //  Path: studio/schemas/page.ts
 // ============================================================
 
@@ -60,7 +60,7 @@ export default {
       hidden: showFor('page-home'),
     },
     {
-      name: 'ctaButtonText',
+      name: 'ctaText',
       title: 'Home CTA Button Text',
       type: 'string',
       group: 'content',
@@ -68,11 +68,20 @@ export default {
     },
     {
       name: 'warehouseOccupancy',
-      title: 'Warehouse Occupancy Metric',
-      type: 'string',
-      description: 'E.g., "78% Occupancy" or "82%"',
+      title: 'Warehouse Occupancy Percentage',
+      type: 'number',
+      description: 'Specify as a number (e.g., 78 or 85).',
       group: 'content',
       hidden: showFor('page-home'),
+      validation: (Rule: any) => Rule.min(0).max(100),
+    },
+    {
+      name: 'bodyContent',
+      title: 'Home Rich Body Content',
+      type: 'array',
+      group: 'content',
+      hidden: showFor('page-home'),
+      of: [{ type: 'block' }],
     },
 
     // ==========================================
@@ -95,7 +104,7 @@ export default {
     },
     {
       name: 'servicesList',
-      title: 'Services Dynamic List',
+      title: 'Services Flat List',
       type: 'array',
       group: 'content',
       hidden: showFor('page-services'),
@@ -105,19 +114,20 @@ export default {
           name: 'serviceItem',
           title: 'Service Item',
           fields: [
-            { name: 'title', title: 'Service Name', type: 'string' },
-            { name: 'subtitle', title: 'Subtitle (Category)', type: 'string' },
-            { name: 'description', title: 'Description Text', type: 'text', rows: 3 },
-            { name: 'link', title: 'Learn More Relative Link', type: 'string' },
+            { name: 'serviceName', title: 'Service Name', type: 'string' },
+            { name: 'serviceDescription', title: 'Service Description Text', type: 'text', rows: 3 },
+            { name: 'servicePrice', title: 'Starting Price (e.g. ₹999/mo)', type: 'string' },
+            { name: 'subtitle', title: 'Subtitle (e.g. Commercial)', type: 'string' },
+            { name: 'link', title: 'Explore Redirect URL Link', type: 'string' },
             {
               name: 'highlights',
-              title: 'Key Highlights',
+              title: 'Highlights/Bullet Points',
               type: 'array',
               of: [{ type: 'string' }],
             },
             {
               name: 'iconName',
-              title: 'Lucide Icon Name',
+              title: 'Lucide Icon Component Name',
               type: 'string',
               description: 'E.g., Home, Building2, Car, FileText, Sofa, Package',
             },
@@ -127,7 +137,7 @@ export default {
     },
 
     // ==========================================
-    //  PRICING PAGE FIELDS (page-pricing)
+    //  PRICING PAGE FIELDS (page-pricing) (Tailored Flat Rates)
     // ==========================================
     {
       name: 'pricingHeroTitle',
@@ -144,31 +154,122 @@ export default {
       group: 'content',
       hidden: showFor('page-pricing'),
     },
+    // Silver Plan
     {
-      name: 'pricingPlans',
-      title: 'Pricing Tier Plans',
-      type: 'array',
+      name: 'silverPlanPrice',
+      title: 'Silver Plan Price',
+      type: 'string',
       group: 'content',
       hidden: showFor('page-pricing'),
-      of: [
-        {
-          type: 'object',
-          name: 'pricingPlanItem',
-          title: 'Pricing Plan',
-          fields: [
-            { name: 'name', title: 'Plan Tier Name', type: 'string' },
-            { name: 'price', title: 'Monthly Cost (Starting from)', type: 'string', description: 'E.g., "₹300" or "₹999"' },
-            { name: 'billing', title: 'Billing Frequency', type: 'string', description: 'E.g., "per month"' },
-            {
-              name: 'features',
-              title: 'Tier Inclusions/Features',
-              type: 'array',
-              of: [{ type: 'string' }],
-            },
-            { name: 'popular', title: 'Is Featured/Popular Tier?', type: 'boolean' },
-          ],
-        },
-      ],
+    },
+    {
+      name: 'silverPlanSizing',
+      title: 'Silver Plan Sizing Parameter',
+      type: 'string',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+    },
+    {
+      name: 'silverPlanFeatures',
+      title: 'Silver Plan Inclusions/Features',
+      type: 'array',
+      of: [{ type: 'string' }],
+      group: 'content',
+      hidden: showFor('page-pricing'),
+    },
+    {
+      name: 'silverPlanPopular',
+      title: 'Silver Plan - Mark as Popular',
+      type: 'boolean',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+      initialValue: false,
+    },
+    {
+      name: 'silverPlanActive',
+      title: 'Silver Plan - Active / Enabled',
+      type: 'boolean',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+      initialValue: true,
+    },
+    // Gold Plan
+    {
+      name: 'goldPlanPrice',
+      title: 'Gold Plan Price',
+      type: 'string',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+    },
+    {
+      name: 'goldPlanSizing',
+      title: 'Gold Plan Sizing Parameter',
+      type: 'string',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+    },
+    {
+      name: 'goldPlanFeatures',
+      title: 'Gold Plan Inclusions/Features',
+      type: 'array',
+      of: [{ type: 'string' }],
+      group: 'content',
+      hidden: showFor('page-pricing'),
+    },
+    {
+      name: 'goldPlanPopular',
+      title: 'Gold Plan - Mark as Popular',
+      type: 'boolean',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+      initialValue: true,
+    },
+    {
+      name: 'goldPlanActive',
+      title: 'Gold Plan - Active / Enabled',
+      type: 'boolean',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+      initialValue: true,
+    },
+    // Platinum Plan
+    {
+      name: 'platinumPlanPrice',
+      title: 'Platinum Plan Price',
+      type: 'string',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+    },
+    {
+      name: 'platinumPlanSizing',
+      title: 'Platinum Plan Sizing Parameter',
+      type: 'string',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+    },
+    {
+      name: 'platinumPlanFeatures',
+      title: 'Platinum Plan Inclusions/Features',
+      type: 'array',
+      of: [{ type: 'string' }],
+      group: 'content',
+      hidden: showFor('page-pricing'),
+    },
+    {
+      name: 'platinumPlanPopular',
+      title: 'Platinum Plan - Mark as Popular',
+      type: 'boolean',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+      initialValue: false,
+    },
+    {
+      name: 'platinumPlanActive',
+      title: 'Platinum Plan - Active / Enabled',
+      type: 'boolean',
+      group: 'content',
+      hidden: showFor('page-pricing'),
+      initialValue: true,
     },
 
     // ==========================================
@@ -183,7 +284,7 @@ export default {
     },
     {
       name: 'sitemapLinks',
-      title: 'Sitemap Navigation Directory',
+      title: 'Sitemap Navigation Links',
       type: 'array',
       group: 'content',
       hidden: showFor('page-sitemap'),
@@ -194,25 +295,25 @@ export default {
           title: 'Link Entry',
           fields: [
             { name: 'title', title: 'Link Anchor Label', type: 'string' },
-            { name: 'url', title: 'Relative Link Target', type: 'string', description: 'E.g., "/" or "/blog" or "/areas"' },
+            { name: 'url', title: 'Relative Link Target', type: 'string' },
           ],
         },
       ],
     },
 
     // ==========================================
-    //  TERMS & CONDITIONS FIELDS (page-terms)
+    //  TERMS & CONDITIONS / LEGAL (page-terms)
     // ==========================================
     {
       name: 'termsHeading',
-      title: 'Terms Heading',
+      title: 'Terms Heading Title',
       type: 'string',
       group: 'content',
       hidden: showFor('page-terms'),
     },
     {
-      name: 'termsContent',
-      title: 'Terms Rich Text Content',
+      name: 'legalBody',
+      title: 'Legal / Terms Rich Text Body',
       type: 'array',
       group: 'content',
       hidden: showFor('page-terms'),
