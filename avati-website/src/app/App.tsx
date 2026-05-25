@@ -29,6 +29,8 @@ const PricingPage = lazy(() => import("./pages/StaticPages").then(m => ({ defaul
 const ContactPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.ContactPage })));
 const LegalPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.LegalPage })));
 const NotFoundPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.NotFoundPage })));
+const SitemapPage = lazy(() => import("./pages/StaticPages").then(m => ({ default: m.SitemapPage })));
+
 const BlogListPage = lazy(() => import("./pages/BlogPages").then(m => ({ default: m.BlogListPage })));
 const BlogPostPage = lazy(() => import("./pages/BlogPages").then(m => ({ default: m.BlogPostPage })));
 
@@ -174,6 +176,12 @@ function AppRoutes() {
           <LegalPage type="terms" />
         </PageLayout>
       } />
+      <Route path="/sitemap" element={
+        <PageLayout onLoginClick={() => navigate('/login')}>
+          <SitemapPage />
+        </PageLayout>
+      } />
+
 
       {/* ── Blog (Phase 2 CMS-driven) ── */}
       <Route path="/blog" element={

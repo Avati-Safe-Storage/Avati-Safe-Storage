@@ -2,6 +2,7 @@ import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {presentationTool} from 'sanity/presentation'
+import {structure} from './structure' // 👈 Import Desk Structure
 import {schemaTypes} from './schemaTypes'
 
 export default defineConfig({
@@ -12,7 +13,7 @@ export default defineConfig({
   dataset: 'production',
 
   plugins: [
-    structureTool(), 
+    structureTool({ structure }), // 👈 Apply Desk Structure
     visionTool(),
     presentationTool({
       previewUrl: {
@@ -23,6 +24,7 @@ export default defineConfig({
       },
     }),
   ],
+
 
   schema: {
     types: schemaTypes,

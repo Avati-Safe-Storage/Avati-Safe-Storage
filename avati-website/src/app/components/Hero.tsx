@@ -1,21 +1,63 @@
+// ============================================================
+//  Hero Component (CMS Enabled & Fallback Guided)
+//  Path: avati-website/src/app/components/Hero.tsx
+// ============================================================
+
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { ArrowRight, Shield, Users, PackageCheck, Clock } from "lucide-react";
 import { Link } from "react-router";
 import { useTheme } from "../App";
+import { sanityClient } from "../../utils/sanityClient";
+import { createDataAttribute } from "@sanity/visual-editing";
 
-const stats = [
-  { icon: Users,        value: "500+",  label: "Happy Customers" },
-  { icon: PackageCheck, value: "10k+",  label: "Items Stored" },
-  { icon: Shield,       value: "100%",  label: "Claim-Free Record" },
-  { icon: Clock,        value: "24/7",  label: "Monitored" },
-];
+// Dynamic Visual Editing Overlay builder
+const encodeDataAttribute = createDataAttribute({
+  baseUrl: 'https://avati-safe-storage.sanity.studio',
+  projectId: 'bv8ffbbk',
+  dataset: 'production',
+});
+
+interface HomeCMSData {
+  heroTitle?: string;
+  heroSubtitle?: string;
+  ctaButtonText?: string;
+  warehouseOccupancy?: string;
+}
 
 export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
   const { dark } = useTheme();
+  const [cmsData, setCmsData] = useState<HomeCMSData | null>(null);
+
   const videoUrl = import.meta.env.BASE_URL + 'homepage-video.webm';
+
+  // 1. Fetch from page-home document
+  useEffect(() => {
+    sanityClient.fetch<HomeCMSData>(`*[_id == "page-home"][0] {
+      heroTitle,
+      heroSubtitle,
+      ctaButtonText,
+      warehouseOccupancy
+    }`).then(setCmsData).catch(() => {});
+  }, []);
+
+  // 2. Select active dataset with dynamic CMS fallback mapping
+  const title = cmsData?.heroTitle || "Best Storage Space in Bangalore";
+  const subtitle = cmsData?.heroSubtitle || "Premium household storage space in Bangalore with professional packing, free doorstep pickup, and secure climate-controlled warehousing.";
+  const ctaText = cmsData?.ctaButtonText || "Get Free Quote";
+  const occupancy = cmsData?.warehouseOccupancy || "78% Occupancy";
+
+  // Re-map stats dynamically
+  const stats = [
+    { icon: Users,        value: "12,000+",  label: "Happy Customers" },
+    { icon: PackageCheck, value: "15k+",  label: "Items Stored" },
+    { icon: Shield,       value: occupancy,  label: "Space Available" },
+    { icon: Clock,        value: "24/7",  label: "CCTV Security" },
+  ];
 
   return (
     <section
+      data-sanity={encodeDataAttribute(['page-home'])} // 👈 Connects visual editing overlays
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: 'var(--bg-primary)' }}
       aria-label="Avati Safe Storage – Secure Storage in Bangalore"
@@ -80,7 +122,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
           </span>
         </motion.div>
 
-        {/* H1 */}
+        {/* H1 Title Block */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -88,14 +130,11 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
           className="flex flex-col items-center gap-3"
         >
           <h1
+            data-sanity={encodeDataAttribute(['page-home', 'heroTitle'])}
             className="font-black tracking-tight leading-[1.05]"
             style={{ fontSize: 'clamp(2.5rem, 7.5vw, 5.5rem)', color: 'var(--text-primary)' }}
           >
-            Best Storage Space{" "}
-            <span className="text-transparent bg-clip-text"
-              style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700, #D4AF37)' }}>
-              in Bangalore
-            </span>
+            {title}
           </h1>
 
           <p className="font-medium" style={{ fontSize: 'clamp(0.78rem, 1.5vw, 0.95rem)', color: 'var(--text-muted)' }}>
@@ -105,25 +144,30 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
 
         {/* Sub-heading */}
         <motion.p
+          data-sanity={encodeDataAttribute(['page-home', 'heroSubtitle'])}
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.25 }}
-          className="leading-relaxed max-w-2xl"
+          className="leading-relaxed max-w-2xl text-center"
           style={{ fontSize: 'clamp(0.9rem, 1.9vw, 1.1rem)', color: 'var(--text-secondary)' }}
         >
-          Premium household storage space in Bangalore with professional packing, free doorstep pickup, and secure climate-controlled warehousing.
-          Serving <span style={{ color: 'var(--gold-dim)', fontWeight: 600 }}>Whitefield, Indiranagar, Koramangala, HSR Layout, Marathahalli, Horamavu</span> and 50+ areas across Bangalore.
+          {subtitle}
         </motion.p>
 
-        {/* CTAs */}
+        {/* Action Button CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.38 }}
           className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto justify-center"
         >
-          <Link to="/get-quote" className="avati-btn-gold text-sm sm:text-base" id="hero-quote-btn">
-            Get Free Quote
+          <Link 
+            to="/get-quote" 
+            data-sanity={encodeDataAttribute(['page-home', 'ctaButtonText'])}
+            className="avati-btn-gold text-sm sm:text-base" 
+            id="hero-quote-btn"
+          >
+            {ctaText}
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
           <a href="tel:+918095589888" className="avati-btn-ghost text-sm sm:text-base" aria-label="Call Avati Safe Storage">
@@ -134,7 +178,7 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
           </a>
         </motion.div>
 
-        {/* Stats bar */}
+        {/* Metrics/Stats Bar */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -147,21 +191,26 @@ export function Hero({ onQuoteClick }: { onQuoteClick?: () => void }) {
             WebkitBackdropFilter: 'blur(15px)',
           }}
         >
-          {stats.map((stat, i) => (
-            <div key={stat.label}
-              className="flex flex-col items-center py-4 sm:py-5 px-2 gap-1.5"
-              style={{ borderRight: i < stats.length - 1 ? '1px solid var(--border-color)' : 'none' }}
-            >
-              <stat.icon className="w-5 h-5" style={{ color: 'var(--gold)' }} aria-hidden="true" />
-              <span className="font-black" style={{ fontSize: 'clamp(1.2rem, 3.5vw, 1.75rem)', color: 'var(--gold)' }}>
-                {stat.value}
-              </span>
-              <span className="text-[10px] sm:text-xs text-center leading-tight"
-                style={{ color: 'var(--text-muted)' }}>
-                {stat.label}
-              </span>
-            </div>
-          ))}
+          {stats.map((stat, i) => {
+            const statAttr = i === 2 ? encodeDataAttribute(['page-home', 'warehouseOccupancy']) : undefined;
+            return (
+              <div 
+                key={stat.label}
+                data-sanity={statAttr}
+                className="flex flex-col items-center py-4 sm:py-5 px-2 gap-1.5"
+                style={{ borderRight: i < stats.length - 1 ? '1px solid var(--border-color)' : 'none' }}
+              >
+                <stat.icon className="w-5 h-5" style={{ color: 'var(--gold)' }} aria-hidden="true" />
+                <span className="font-black" style={{ fontSize: 'clamp(1.2rem, 3.5vw, 1.75rem)', color: 'var(--gold)' }}>
+                  {stat.value}
+                </span>
+                <span className="text-[10px] sm:text-xs text-center leading-tight"
+                  style={{ color: 'var(--text-muted)' }}>
+                  {stat.label}
+                </span>
+              </div>
+            );
+          })}
         </motion.div>
 
         {/* Hidden SEO block */}

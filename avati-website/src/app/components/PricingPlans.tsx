@@ -1,12 +1,30 @@
+// ============================================================
+//  PricingPlans Component (CMS Enabled & Fallback Guided)
+//  Path: avati-website/src/app/components/PricingPlans.tsx
+// ============================================================
+
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Check, Star } from "lucide-react";
+import { Check, Star, HelpCircle } from "lucide-react";
 import { useTheme } from "../App";
 import { Link } from "react-router";
+import { sanityClient } from "../../utils/sanityClient";
+import { createDataAttribute } from "@sanity/visual-editing";
 
-const plans = [
+// Dynamic Visual Editing Overlay builder
+const encodeDataAttribute = createDataAttribute({
+  baseUrl: 'https://avati-safe-storage.sanity.studio',
+  projectId: 'bv8ffbbk',
+  dataset: 'production',
+});
+
+// Original local fallback plans to prevent blank screens
+const LOCAL_FALLBACK_PLANS = [
   {
     name: "Silver Key (Basic Plan)",
     subtitle: "Ideal for Household Luggage",
+    price: "₹300",
+    billing: "per month",
     badge: "Most Affordable",
     badgeColor: "#10B981",
     popular: false,
@@ -22,6 +40,8 @@ const plans = [
   {
     name: "Gold Key (Premium Plan)",
     subtitle: "Office Inventory & Business Storage",
+    price: "₹999",
+    billing: "per month",
     badge: "Most Popular",
     badgeColor: "#D4AF37",
     popular: true,
@@ -37,6 +57,8 @@ const plans = [
   {
     name: "Platinum Key (Pro Plan)",
     subtitle: "Maximum Privacy & Protection",
+    price: "₹1,999",
+    billing: "per month",
     badge: "Elite",
     badgeColor: "#60A5FA",
     popular: false,
@@ -52,15 +74,68 @@ const plans = [
   },
 ];
 
+interface CMSPricingData {
+  pricingHeroTitle?: string;
+  pricingHeroSubtitle?: string;
+  pricingPlans?: any[];
+}
+
 export function PricingPlans() {
   const { dark } = useTheme();
+  const [cmsData, setCmsData] = useState<CMSPricingData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 1. Fetch from page-pricing document
+  useEffect(() => {
+    async function fetchPricing() {
+      try {
+        const query = `*[_id == "page-pricing"][0] {
+          pricingHeroTitle,
+          pricingHeroSubtitle,
+          pricingPlans
+        }`;
+        const data = await sanityClient.fetch<CMSPricingData>(query);
+        setCmsData(data || null);
+      } catch (err) {
+        console.warn("[Pricing CMS] Error loading page-pricing content, using hardcoded fallback bounds:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPricing();
+  }, []);
+
+  // 2. Select active dataset with dynamic CMS fallback mapping
+  const heroTitle = cmsData?.pricingHeroTitle || "Affordable Storage Plans in Bangalore";
+  const heroSubtitle = cmsData?.pricingHeroSubtitle || "No hidden fees. No callbacks. Get your exact price instantly with our quote engine.";
+  const activePlans = cmsData?.pricingPlans && cmsData.pricingPlans.length > 0
+    ? cmsData.pricingPlans.map((plan: any, idx: number) => {
+        // Enforce fallback metadata parameters for custom user tiers
+        const fallback = LOCAL_FALLBACK_PLANS[idx] || LOCAL_FALLBACK_PLANS[0];
+        return {
+          name: plan.name,
+          subtitle: plan.subtitle || fallback.subtitle,
+          price: plan.price || fallback.price,
+          billing: plan.billing || fallback.billing,
+          badge: plan.name.includes("Silver") ? "Affordable" : plan.name.includes("Gold") ? "Popular" : "Elite",
+          badgeColor: plan.name.includes("Silver") ? "#10B981" : plan.name.includes("Gold") ? "#D4AF37" : "#60A5FA",
+          popular: plan.popular || false,
+          features: plan.features || fallback.features
+        };
+      })
+    : LOCAL_FALLBACK_PLANS;
 
   return (
-    <section id="pricing" className="py-20 sm:py-28 transition-colors duration-300" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <section 
+      id="pricing" 
+      data-sanity={encodeDataAttribute(['page-pricing'])} // 👈 Connects visual editing overlays
+      className="py-20 sm:py-28 transition-colors duration-300" 
+      style={{ backgroundColor: 'var(--bg-primary)' }}
+    >
       <div className="absolute left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, var(--gold-border), transparent)' }} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        {/* Header */}
+        {/* Header Block */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -72,111 +147,119 @@ export function PricingPlans() {
             Transparent Pricing
           </span>
 
-          {/* Fix: mobile-friendly heading — no pseudo-element lines on mobile */}
-          <h2 className="font-black tracking-tight mb-4"
-            style={{ fontSize: 'clamp(1.75rem, 4.5vw, 3.2rem)', color: 'var(--text-primary)' }}>
-            <span className="hidden sm:inline-flex items-center gap-4 justify-center w-full">
-              <span className="h-px flex-1" style={{ background: 'linear-gradient(to right, transparent, var(--gold-border))' }} />
-              Affordable Storage Plans{" "}
-              <span className="text-transparent bg-clip-text whitespace-nowrap"
-                style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
-                in Bangalore
-              </span>
-              <span className="h-px flex-1" style={{ background: 'linear-gradient(to left, transparent, var(--gold-border))' }} />
-            </span>
-            <span className="sm:hidden block text-center">
-              Affordable Storage Plans{" "}
-              <span className="text-transparent bg-clip-text"
-                style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
-                in Bangalore
-              </span>
-            </span>
+          <h2
+            data-sanity={encodeDataAttribute(['page-pricing', 'pricingHeroTitle'])}
+            className="font-black tracking-tight mb-4 text-transparent bg-clip-text"
+            style={{ 
+              fontSize: 'clamp(1.75rem, 4.5vw, 3.2rem)',
+              backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700, var(--text-primary))'
+            }}
+          >
+            {heroTitle}
           </h2>
 
-          <p className="text-base sm:text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-            No hidden fees. No callbacks. Get your exact price instantly with our quote engine.
+          <p 
+            data-sanity={encodeDataAttribute(['page-pricing', 'pricingHeroSubtitle'])}
+            className="text-base sm:text-lg max-w-2xl mx-auto" 
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            {heroSubtitle}
           </p>
         </motion.div>
 
-        {/* Cards slider */}
+        {/* Cards Layout Slider */}
         <div className="flex md:grid md:grid-cols-3 overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-5 sm:gap-6 pt-4 pb-6 px-4 -mx-4 md:px-0 md:mx-0 md:py-4">
-          {plans.map((plan, index) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.12 }}
-              className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 flex-shrink-0 snap-center w-[85vw] md:w-auto md:flex-shrink-1"
-              style={{
-                background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.9)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: plan.popular
-                  ? '1.5px solid var(--gold)'
-                  : '1px solid var(--border-color)',
-                boxShadow: plan.popular
-                  ? (dark ? '0 0 40px rgba(212,175,55,0.15)' : '0 0 30px rgba(212,175,55,0.12)')
-                  : (dark ? '0 2px 16px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)'),
-              }}
-            >
-              {/* Top accent for popular */}
-              {plan.popular && (
-                <div className="h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
-              )}
+          {activePlans.map((plan, index) => {
+            const planAttr = cmsData?.pricingPlans
+              ? encodeDataAttribute(['page-pricing', 'pricingPlans', index])
+              : undefined;
 
-              <div className="p-6 sm:p-7 flex flex-col flex-1">
-                {/* Badge row */}
-                <div className="flex items-center justify-between mb-4">
-                  <span
-                    className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
-                    style={{ backgroundColor: `${plan.badgeColor}18`, color: plan.badgeColor, border: `1px solid ${plan.badgeColor}35` }}
-                  >
-                    {plan.badge}
-                  </span>
-                  {plan.popular && (
-                    <span className="flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-black"
-                      style={{ background: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
-                      <Star className="w-2.5 h-2.5 fill-black" /> Popular
+            return (
+              <motion.div
+                key={plan.name}
+                data-sanity={planAttr}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.12 }}
+                className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 flex-shrink-0 snap-center w-[85vw] md:w-auto md:flex-shrink-1"
+                style={{
+                  background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.9)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: plan.popular
+                    ? '1.5px solid var(--gold)'
+                    : '1px solid var(--border-color)',
+                  boxShadow: plan.popular
+                    ? (dark ? '0 0 40px rgba(212,175,55,0.15)' : '0 0 30px rgba(212,175,55,0.12)')
+                    : (dark ? '0 2px 16px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)'),
+                }}
+              >
+                {/* Top accent border for popular tier */}
+                {plan.popular && (
+                  <div className="h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
+                )}
+
+                <div className="p-6 sm:p-7 flex flex-col flex-1">
+                  {/* Badge row */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span
+                      className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                      style={{ backgroundColor: `${plan.badgeColor}18`, color: plan.badgeColor, border: `1px solid ${plan.badgeColor}35` }}
+                    >
+                      {plan.badge}
                     </span>
-                  )}
+                    {plan.popular && (
+                      <span className="flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-black"
+                        style={{ background: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
+                        <Star className="w-2.5 h-2.5 fill-black" /> Popular
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-lg sm:text-xl font-black mb-1" style={{ color: plan.popular ? '#D4AF37' : 'var(--text-primary)' }}>
+                    {plan.name}
+                  </h3>
+                  <div className="flex items-baseline gap-1 mb-6">
+                    <span className="text-3xl font-black" style={{ color: 'var(--text-primary)' }}>
+                      {plan.price}
+                    </span>
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      /{plan.billing || "month"}
+                    </span>
+                  </div>
+
+                  {/* Features Inclusions */}
+                  <ul className="space-y-2.5 mb-8 flex-1">
+                    {plan.features.map((feature: string) => (
+                      <li key={feature} className="flex items-start gap-2.5">
+                        <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                          style={{ backgroundColor: `${plan.badgeColor}20` }}>
+                          <Check className="w-2.5 h-2.5" style={{ color: plan.badgeColor }} />
+                        </div>
+                        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Booking Action CTA */}
+                  <Link to="/get-quote"
+                    className="w-full py-3 rounded-xl font-bold text-sm text-center transition-all duration-300 hover:-translate-y-0.5 block mt-auto"
+                    style={
+                      plan.popular
+                        ? { background: 'linear-gradient(90deg, #D4AF37, #FFD700)', color: '#000', boxShadow: '0 0 18px rgba(212,175,55,0.3)' }
+                        : { backgroundColor: 'transparent', color: plan.badgeColor, border: `1.5px solid ${plan.badgeColor}45` }
+                    }
+                  >
+                    {plan.popular ? "Get Instant Quote" : "Select Plan"}
+                  </Link>
                 </div>
-
-                <h3 className="text-lg sm:text-xl font-black mb-1" style={{ color: plan.popular ? '#D4AF37' : 'var(--text-primary)' }}>
-                  {plan.name}
-                </h3>
-                <p className="text-sm mb-6 leading-snug" style={{ color: 'var(--text-muted)' }}>{plan.subtitle}</p>
-
-                {/* Features */}
-                <ul className="space-y-2.5 mb-8 flex-1">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5">
-                      <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                        style={{ backgroundColor: `${plan.badgeColor}20` }}>
-                        <Check className="w-2.5 h-2.5" style={{ color: plan.badgeColor }} />
-                      </div>
-                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* CTA */}
-                <Link to="/get-quote"
-                  className="w-full py-3 rounded-xl font-bold text-sm text-center transition-all duration-300 hover:-translate-y-0.5 block mt-auto"
-                  style={
-                    plan.popular
-                      ? { background: 'linear-gradient(90deg, #D4AF37, #FFD700)', color: '#000', boxShadow: '0 0 18px rgba(212,175,55,0.3)' }
-                      : { backgroundColor: 'transparent', color: plan.badgeColor, border: `1.5px solid ${plan.badgeColor}45` }
-                  }
-                >
-                  {plan.popular ? "Get Instant Quote" : "Select Plan"}
-                </Link>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Footnote */}
+        {/* Footnote disclaimer */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
