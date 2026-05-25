@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Glowing gradient background -->
+  <defs>
+    <linearGradient id="goldGrad" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE47E" />
+      <stop offset="35%" stop-color="#D4AF37" />
+      <stop offset="70%" stop-color="#AA7C11" />
+      <stop offset="100%" stop-color="#6A4E0B" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Symmetrical Key Shape -->
+  <circle cx="32" cy="68" r="20" stroke="url(#goldGrad)" stroke-width="8" fill="#050505" filter="url(#glow)" />
+  <circle cx="32" cy="68" r="7" stroke="url(#goldGrad)" stroke-width="5" fill="none" />
+  <path d="M46 54 L82 18 M68 32 L78 42 M76 24 L86 34 M82 18 L90 26" stroke="url(#goldGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+</svg>

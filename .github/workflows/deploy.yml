@@ -1,0 +1,41 @@
+name: Deploy Static Website
+
+on:
+  push:
+    branches:
+      - main
+
+# Allow one concurrent deployment to prevent race conditions
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: avati-website/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: avati-website
+        run: npm ci
+
+      - name: Build Project
+        working-directory: avati-website
+        run: npm run build
+        env:
+          VITE_BASE_PATH: '/' # Adjust this if you host under a sub-path on github.io instead of a custom domain.
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: avati-website/dist
+          branch: gh-pages
