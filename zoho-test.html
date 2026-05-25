@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head><title>Zoho Lead Test</title></head>
+<body style="font-family:Arial; padding:40px; max-width:500px; margin:auto;">
+<h2>Zoho Web-to-Lead Test</h2>
+<p>Fill in and click Submit. If it works, a lead should appear in your Zoho CRM Leads module within seconds.</p>
+
+<form id="testForm"
+  action="https://crm.zoho.in/crm/WebToLeadForm"
+  method="POST"
+  accept-charset="UTF-8"
+  onsubmit="document.charset='UTF-8';">
+
+  <!-- Auth tokens from Avati-Leads webform -->
+  <input type="hidden" name="xnQsjsdp" value="a953c779a14bc6e4957548782b9158470d5e0b96d0d4e9bcf6d98eed4b4824ce">
+  <input type="hidden" name="zc_gad" value="">
+  <input type="hidden" name="xmIwtLD" value="877469bab2a764d5f8c16fc97b26895976af0a4990366dcf8d0516de33cee768202c367687c3cbf63287341c1660361d">
+  <input type="hidden" name="actionType" value="TGVhZHM=">
+  <input type="hidden" name="returnURL" value="https://the-monomorph.github.io/Avati-Safe-Storage/">
+
+  <!-- Required fields -->
+  <label>Company*</label><br>
+  <input type="text" name="Company" value="Zoho Test Lead" style="width:100%; padding:8px; margin:5px 0 15px;"><br>
+
+  <label>Last Name*</label><br>
+  <input type="text" name="Last Name" value="Test User" style="width:100%; padding:8px; margin:5px 0 15px;"><br>
+
+  <label>Email</label><br>
+  <input type="text" name="Email" value="test@avati.in" style="width:100%; padding:8px; margin:5px 0 15px;"><br>
+
+  <label>Mobile</label><br>
+  <input type="text" name="Mobile" value="9999999999" style="width:100%; padding:8px; margin:5px 0 15px;"><br>
+
+  <label>Lead Source</label><br>
+  <select name="Lead Source" style="width:100%; padding:8px; margin:5px 0 15px;">
+    <option value="Online Store" selected>Online Store</option>
+  </select><br>
+
+  <label>Lead Status</label><br>
+  <select name="Lead Status" style="width:100%; padding:8px; margin:5px 0 15px;">
+    <option value="Contact only" selected>Contact only</option>
+  </select><br>
+
+  <!-- Honeypot -->
+  <input type="hidden" name="aG9uZXlwb3Q" value="">
+
+  <button type="submit" style="background:#0279FF; color:white; padding:12px 30px; border:none; border-radius:6px; cursor:pointer; font-size:16px;">
+    Submit Test Lead
+  </button>
+</form>
+</body>
+</html>

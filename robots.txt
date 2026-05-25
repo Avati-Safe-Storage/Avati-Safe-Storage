@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Admin panel is on separate subdomain — not part of main site
+Disallow: /avati-enterprise/
+
+# Crawl delay for aggressive bots
+Crawl-delay: 1
+
+# Sitemap(s)
+Sitemap: https://www.avatisafestorage.com/sitemap.xml
+Sitemap: https://www.avatisafestorage.com/sitemap-locations.xml
