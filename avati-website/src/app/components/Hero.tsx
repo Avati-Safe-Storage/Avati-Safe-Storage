@@ -16,6 +16,8 @@ const encodeDataAttribute = createDataAttribute({
   baseUrl: 'https://avati-safe-storage.sanity.studio',
   projectId: 'bv8ffbbk',
   dataset: 'production',
+  id: 'page-home',
+  type: 'page',
 });
 
 interface HomeCMSData {
@@ -71,7 +73,7 @@ export function Hero({ onQuoteClick, pageData }: HeroProps) {
 
   return (
     <section
-      data-sanity={encodeDataAttribute(['page-home'])} // 👈 Connects visual editing overlays
+      data-sanity={encodeDataAttribute(['title'])} // 👈 Connects visual editing overlays
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: 'var(--bg-primary)' }}
       aria-label="Avati Safe Storage – Secure Storage in Bangalore"
@@ -144,7 +146,7 @@ export function Hero({ onQuoteClick, pageData }: HeroProps) {
           className="flex flex-col items-center gap-3"
         >
           <h1
-            data-sanity={encodeDataAttribute(['page-home', 'heroTitle'])}
+            data-sanity={encodeDataAttribute(['heroTitle'])}
             className="font-black tracking-tight leading-[1.05]"
             style={{ fontSize: 'clamp(2.5rem, 7.5vw, 5.5rem)', color: 'var(--text-primary)' }}
           >
@@ -158,7 +160,7 @@ export function Hero({ onQuoteClick, pageData }: HeroProps) {
 
         {/* Sub-heading */}
         <motion.p
-          data-sanity={encodeDataAttribute(['page-home', 'heroSubtitle'])}
+          data-sanity={encodeDataAttribute(['heroSubtitle'])}
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.25 }}
@@ -177,7 +179,7 @@ export function Hero({ onQuoteClick, pageData }: HeroProps) {
         >
           <Link 
             to="/get-quote" 
-            data-sanity={encodeDataAttribute(['page-home', 'ctaButtonText'])}
+            data-sanity={encodeDataAttribute(['ctaButtonText'])}
             className="avati-btn-gold text-sm sm:text-base" 
             id="hero-quote-btn"
           >
@@ -206,7 +208,7 @@ export function Hero({ onQuoteClick, pageData }: HeroProps) {
           }}
         >
           {stats.map((stat, i) => {
-            const statAttr = i === 2 ? encodeDataAttribute(['page-home', 'warehouseOccupancy']) : undefined;
+            const statAttr = i === 2 ? encodeDataAttribute(['warehouseOccupancy']) : undefined;
             return (
               <div 
                 key={stat.label}

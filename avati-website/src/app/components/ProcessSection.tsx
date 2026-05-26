@@ -65,16 +65,14 @@ export function ProcessSection() {
             <span className="hidden sm:inline-flex items-center gap-4 justify-center w-full">
               <span className="h-px flex-1" style={{ background: 'linear-gradient(to right, transparent, var(--gold-border))' }} />
               Store in 4 Steps.{" "}
-              <span className="text-transparent bg-clip-text whitespace-nowrap"
-                style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
+              <span style={{ color: '#D4AF37' }}>
                 Effortlessly.
               </span>
               <span className="h-px flex-1" style={{ background: 'linear-gradient(to left, transparent, var(--gold-border))' }} />
             </span>
             <span className="sm:hidden block text-center">
               Store in 4 Steps.{" "}
-              <span className="text-transparent bg-clip-text"
-                style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
+              <span style={{ color: '#D4AF37' }}>
                 Effortlessly.
               </span>
             </span>

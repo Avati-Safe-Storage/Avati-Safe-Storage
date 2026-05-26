@@ -148,7 +148,7 @@ export function Testimonials() {
 
           <h2 className="font-black tracking-tight mb-4" style={{ fontSize: 'clamp(1.75rem, 4vw, 3rem)', color: 'var(--text-primary)' }}>
             Trusted by{" "}
-            <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
+            <span style={{ color: '#D4AF37' }}>
               Real Customers
             </span>
           </h2>

@@ -116,7 +116,7 @@ export function BlogListPage() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1] text-[var(--text-primary)]"
           >
-            Insights & <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700, #D4AF37)' }}>Storage Blog</span>
+            Insights & <span style={{ color: '#D4AF37' }}>Storage Blog</span>
           </motion.h1>
 
           <motion.p 

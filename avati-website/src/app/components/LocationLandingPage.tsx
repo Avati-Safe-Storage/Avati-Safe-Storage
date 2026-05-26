@@ -294,8 +294,9 @@ export function LocationLandingPage() {
           <h1 className="font-black tracking-tight mb-4"
             style={{ fontSize: "clamp(1.75rem, 4vw, 3rem)", color: "var(--text-primary)" }}>
             {serviceMeta.label} in {area.name}
-            <span className="block text-transparent bg-clip-text mt-1"
-              style={{ backgroundImage: "linear-gradient(90deg, #D4AF37, #FFD700)", fontSize: "clamp(1.1rem, 2.5vw, 1.5rem)", fontWeight: 700 }}>
+            <span
+              style={{ display: 'block', color: '#D4AF37', marginTop: '0.25rem', fontSize: "clamp(1.1rem, 2.5vw, 1.5rem)", fontWeight: 700 }}
+            >
               Free Doorstep Pickup · {area.distanceKm} km from You
             </span>
           </h1>
@@ -467,7 +468,7 @@ export function LocationLandingPage() {
               {adjacent.map(({ zone: adjZone, area: adjArea }) => (
                 <Link
                   key={adjArea.slug}
-                  to={buildPageUrl(serviceKey, adjZone.id, adjArea.slug)}
+                  to={`/${serviceKey}/${adjZone.id}/${adjArea.slug}`}
                   className="group p-4 rounded-xl flex items-center justify-between transition-all"
                   style={card}
                   onMouseEnter={e => {
@@ -518,7 +519,7 @@ export function LocationLandingPage() {
             {SERVICE_TYPES.filter(s => s.key !== serviceKey).map(svc => (
               <Link
                 key={svc.key}
-                to={buildPageUrl(svc.key, zone.id, area.slug)}
+                to={`/${svc.key}/${zone.id}/${area.slug}`}
                 className="p-4 rounded-xl text-center transition-all"
                 style={card}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--gold)"; }}

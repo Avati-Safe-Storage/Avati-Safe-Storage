@@ -97,8 +97,7 @@ export function AreasPage() {
 
             <h1 className="font-black tracking-tight mb-4 leading-none" style={{ fontSize: 'clamp(2rem, 5vw, 3.25rem)', color: 'var(--text-primary)' }}>
               Safe Storage near{" "}
-              <span className="text-transparent bg-clip-text"
-                style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
+              <span style={{ color: '#D4AF37' }}>
                 {area.name}
               </span>
             </h1>
@@ -315,8 +314,7 @@ export function AreasPage() {
           </div>
           <h1 className="font-black tracking-tight mb-4 leading-none" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'var(--text-primary)' }}>
             Safe Storage Near You{" "}
-            <span className="text-transparent bg-clip-text"
-              style={{ backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700)' }}>
+            <span style={{ color: '#D4AF37' }}>
               Across Bangalore
             </span>
           </h1>

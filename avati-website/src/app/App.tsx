@@ -1,8 +1,11 @@
-import { useState, useEffect, createContext, useContext, lazy, Suspense } from "react";
+import { useState, useEffect, createContext, useContext, lazy, Suspense, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router";
 import { enableVisualEditing } from "@sanity/visual-editing";
 import { sanityClient } from "../utils/sanityClient";
 import React from "react";
+import { useSEO, buildSanityImageUrl } from "../lib/seo/seoManager";
+
+// Visual editing is managed inside the AppRoutes router tree using the VisualEditing component below
 
 import { Navigation } from "./components/Navigation";
 import { Hero } from "./components/Hero";
@@ -96,12 +99,42 @@ interface HomeCMSData {
   keywords?: string;
   warehouseOccupancy?: string;
   bodyContent?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  canonicalUrl?: string;
+  noIndex?: boolean;
+  customSchema?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  openGraphImage?: { asset?: { _ref?: string } };
 }
 
-// ── Landing page component ──────────────────────────────────────────────────
 function LandingPage({ onLoginClick }: { onLoginClick: () => void }) {
   const [pageData, setPageData] = useState<HomeCMSData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  let parsedSchema: any = undefined;
+  if (pageData?.customSchema) {
+    try {
+      parsedSchema = JSON.parse(pageData.customSchema);
+    } catch {}
+  }
+
+  useSEO({
+    title: pageData?.metaTitle || pageData?.title || 'Best Storage Space in Bangalore | Avati Safe Storage',
+    description: pageData?.metaDescription || 'Premium household storage space in Bangalore with professional packing, free doorstep pickup, and secure climate-controlled warehousing.',
+    canonical: pageData?.canonicalUrl || 'https://www.avatisafestorage.com',
+    noIndex: pageData?.noIndex !== undefined ? pageData.noIndex : false,
+    schema: parsedSchema,
+    keywords: pageData?.metaKeywords || pageData?.keywords,
+    og: {
+      title: pageData?.ogTitle || pageData?.metaTitle,
+      description: pageData?.ogDescription || pageData?.metaDescription,
+      imageUrl: pageData?.openGraphImage?.asset?._ref ? buildSanityImageUrl(pageData.openGraphImage.asset._ref) : undefined,
+      type: 'website',
+    }
+  });
 
   useEffect(() => {
     sanityClient.fetch<HomeCMSData>(`*[_id == "page-home"][0] {
@@ -111,7 +144,16 @@ function LandingPage({ onLoginClick }: { onLoginClick: () => void }) {
       ctaButtonText,
       keywords,
       warehouseOccupancy,
-      bodyContent
+      bodyContent,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      noIndex,
+      customSchema,
+      ogTitle,
+      ogDescription,
+      openGraphImage
     }`)
     .then((data) => {
       setPageData(data || {});
@@ -177,6 +219,51 @@ function AnalyticsTracker() {
   return null;
 }
 
+// ── React Router Visual Editing synchronization component ────────────────────
+function VisualEditing() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const onNavigateRef = useRef<((update: { type: "push" | "replace"; url: string }) => void) | null>(null);
+
+  // Sync React Router changes with Sanity Studio Presentation
+  useEffect(() => {
+    if (onNavigateRef.current) {
+      onNavigateRef.current({
+        type: "push",
+        url: `${location.pathname}${location.search}`,
+      });
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window.self !== window.top || window.location.search.includes('preview=true'))) {
+      const disable = enableVisualEditing({
+        history: {
+          subscribe: (onNavigate) => {
+            onNavigateRef.current = onNavigate;
+            return () => {
+              onNavigateRef.current = null;
+            };
+          },
+          update: (update) => {
+            if (update.type === 'push') {
+              navigate(update.url);
+            } else if (update.type === 'replace') {
+              navigate(update.url, { replace: true });
+            } else if (update.type === 'pop') {
+              window.history.back();
+            }
+          },
+        },
+      });
+
+      return () => disable();
+    }
+  }, [navigate]);
+
+  return null;
+}
+
 // ── Root with router ────────────────────────────────────────────────────────
 function AppRoutes() {
   const [customerData, setCustomerData] = useState<any>(null);
@@ -184,6 +271,7 @@ function AppRoutes() {
 
   return (
     <>
+    <VisualEditing />
     <ScrollToTop />
     <AnalyticsTracker />
     <Suspense fallback={<PageSpinner />}>
@@ -391,13 +479,6 @@ export default function App() {
       localStorage.setItem('avati_theme', dark ? 'dark' : 'light');
     } catch {}
   }, [dark]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.self !== window.top) {
-      const disable = enableVisualEditing();
-      return () => disable();
-    }
-  }, []);
 
   return (
     <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d) }}>

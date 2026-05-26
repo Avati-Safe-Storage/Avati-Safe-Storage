@@ -1,10 +1,16 @@
 /*
-  # Security headers
-  X-Frame-Options: DENY
+  # Cloudflare Pages Security & Cache Headers
+  # Avati Safe Storage — avati-safe-storage.pages.dev
+*/
+
+/*
+  # Global headers for all routes
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  # Allow Sanity Studio to iframe this site for Presentation Visual Editing
+  Content-Security-Policy: frame-ancestors 'self' https://*.sanity.studio https://sanity.studio
 
 /js/*
   Cache-Control: public, max-age=31536000, immutable

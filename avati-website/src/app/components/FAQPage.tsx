@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, HelpCircle } from "lucide-react";
 import { useTheme } from "../App";
+import { useSEO, buildSanityImageUrl } from "../../lib/seo/seoManager";
+import { sanityClient } from "../../utils/sanityClient";
+import { buildFAQSchema } from "../../lib/seo/schemaBuilder";
 
 const faqCategories = [
   {
@@ -140,8 +143,63 @@ export function FAQPage() {
   const { dark } = useTheme();
   const [activeCategory, setActiveCategory] = useState("General");
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [cmsData, setCmsData] = useState<any>(null);
 
-  const currentFaqs = faqCategories.find(c => c.category === activeCategory)?.faqs || [];
+  useEffect(() => {
+    sanityClient.fetch<any>(`*[_id == "page-faqs"][0] {
+      faqHeroTitle,
+      faqList,
+      title,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      noIndex,
+      customSchema,
+      ogTitle,
+      ogDescription,
+      openGraphImage
+    }`).then(setCmsData).catch(() => {});
+  }, []);
+
+  // Map CMS FAQs to category General dynamically if available, otherwise fallback to static list
+  const hasCmsFaqs = cmsData?.faqList && cmsData.faqList.length > 0;
+  const cmsFaqCategories = hasCmsFaqs 
+    ? [
+        {
+          category: "General",
+          faqs: cmsData.faqList.map((f: any) => ({ q: f.question, a: f.answer }))
+        },
+        ...faqCategories.filter(c => c.category !== "General")
+      ]
+    : faqCategories;
+
+  const currentFaqs = cmsFaqCategories.find(c => c.category === activeCategory)?.faqs || [];
+
+  let schemaFaqs = currentFaqs.map(f => ({ question: f.q, answer: f.a }));
+  let parsedSchema: any = buildFAQSchema(schemaFaqs);
+  if (cmsData?.customSchema) {
+    try {
+      parsedSchema = JSON.parse(cmsData.customSchema);
+    } catch {}
+  }
+
+  useSEO({
+    title: cmsData?.metaTitle || 'Frequently Asked Questions | Avati Safe Storage',
+    description: cmsData?.metaDescription || 'Everything you need to know about Avati Safe Storage services, pricing plans, security measures, monsoon protection, and delivery across Bangalore.',
+    canonical: cmsData?.canonicalUrl || 'https://www.avatisafestorage.com/faq',
+    noIndex: cmsData?.noIndex !== undefined ? cmsData.noIndex : false,
+    schema: parsedSchema,
+    keywords: cmsData?.metaKeywords,
+    og: {
+      title: cmsData?.ogTitle || cmsData?.metaTitle,
+      description: cmsData?.ogDescription || cmsData?.metaDescription,
+      imageUrl: cmsData?.openGraphImage?.asset?._ref ? buildSanityImageUrl(cmsData.openGraphImage.asset._ref) : undefined,
+      type: 'website',
+    }
+  });
+
+  const heroTitle = cmsData?.faqHeroTitle || "Frequently Asked Questions";
 
   return (
     <main className="min-h-screen pt-24 pb-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -161,7 +219,7 @@ export function FAQPage() {
             Help Center
           </div>
           <h1 className="font-black tracking-tight mb-4" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'var(--text-primary)' }}>
-            Frequently Asked Questions
+            {heroTitle}
           </h1>
           <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
             Everything you need to know about Avati Safe Storage. Can't find your answer? <a href="tel:+918095589888" className="text-[#D4AF37] font-semibold">Call us</a>.

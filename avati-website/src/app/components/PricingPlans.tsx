@@ -16,6 +16,8 @@ const encodeDataAttribute = createDataAttribute({
   baseUrl: 'https://avati-safe-storage.sanity.studio',
   projectId: 'bv8ffbbk',
   dataset: 'production',
+  id: 'page-pricing',
+  type: 'page',
 });
 
 // Original local fallback plans to prevent blank screens
@@ -94,44 +96,53 @@ interface CMSPricingData {
   platinumPlanActive?: boolean;
 }
 
-export function PricingPlans() {
+interface PricingPlansProps {
+  pageData?: any;
+}
+
+export function PricingPlans({ pageData }: PricingPlansProps) {
   const { dark } = useTheme();
   const [cmsData, setCmsData] = useState<CMSPricingData | null>(null);
   const [loading, setLoading] = useState(true);
 
   // 1. Fetch from page-pricing document
   useEffect(() => {
-    async function fetchPricing() {
-      try {
-        const query = `*[_id == "page-pricing"][0] {
-          pricingHeroTitle,
-          pricingHeroSubtitle,
-          silverPlanPrice,
-          silverPlanSizing,
-          silverPlanFeatures,
-          silverPlanPopular,
-          silverPlanActive,
-          goldPlanPrice,
-          goldPlanSizing,
-          goldPlanFeatures,
-          goldPlanPopular,
-          goldPlanActive,
-          platinumPlanPrice,
-          platinumPlanSizing,
-          platinumPlanFeatures,
-          platinumPlanPopular,
-          platinumPlanActive
-        }`;
-        const data = await sanityClient.fetch<CMSPricingData>(query);
-        setCmsData(data || null);
-      } catch (err) {
-        console.warn("[Pricing CMS] Error loading page-pricing content, using hardcoded fallback bounds:", err);
-      } finally {
-        setLoading(false);
+    if (pageData) {
+      setCmsData(pageData);
+      setLoading(false);
+    } else {
+      async function fetchPricing() {
+        try {
+          const query = `*[_id == "page-pricing"][0] {
+            pricingHeroTitle,
+            pricingHeroSubtitle,
+            silverPlanPrice,
+            silverPlanSizing,
+            silverPlanFeatures,
+            silverPlanPopular,
+            silverPlanActive,
+            goldPlanPrice,
+            goldPlanSizing,
+            goldPlanFeatures,
+            goldPlanPopular,
+            goldPlanActive,
+            platinumPlanPrice,
+            platinumPlanSizing,
+            platinumPlanFeatures,
+            platinumPlanPopular,
+            platinumPlanActive
+          }`;
+          const data = await sanityClient.fetch<CMSPricingData>(query);
+          setCmsData(data || null);
+        } catch (err) {
+          console.warn("[Pricing CMS] Error loading page-pricing content, using hardcoded fallback bounds:", err);
+        } finally {
+          setLoading(false);
+        }
       }
+      fetchPricing();
     }
-    fetchPricing();
-  }, []);
+  }, [pageData]);
 
   // 2. Select active dataset with dynamic CMS fallback mapping
   const heroTitle = cmsData?.pricingHeroTitle || "Affordable Storage Plans in Bangalore";
@@ -147,7 +158,7 @@ export function PricingPlans() {
       badgeColor: "#10B981",
       popular: cmsData?.silverPlanPopular !== undefined ? cmsData.silverPlanPopular : false,
       active: cmsData?.silverPlanActive !== undefined ? cmsData.silverPlanActive : true,
-      features: cmsData?.silverPlanFeatures && cmsData.silverPlanFeatures.length > 0
+      features: cmsData?.silverPlanFeatures && Array.isArray(cmsData.silverPlanFeatures) && cmsData.silverPlanFeatures.length > 0
         ? cmsData.silverPlanFeatures
         : LOCAL_FALLBACK_PLANS[0].features,
       fieldKey: "silver"
@@ -161,7 +172,7 @@ export function PricingPlans() {
       badgeColor: "#D4AF37",
       popular: cmsData?.goldPlanPopular !== undefined ? cmsData.goldPlanPopular : true,
       active: cmsData?.goldPlanActive !== undefined ? cmsData.goldPlanActive : true,
-      features: cmsData?.goldPlanFeatures && cmsData.goldPlanFeatures.length > 0
+      features: cmsData?.goldPlanFeatures && Array.isArray(cmsData.goldPlanFeatures) && cmsData.goldPlanFeatures.length > 0
         ? cmsData.goldPlanFeatures
         : LOCAL_FALLBACK_PLANS[1].features,
       fieldKey: "gold"
@@ -175,7 +186,7 @@ export function PricingPlans() {
       badgeColor: "#60A5FA",
       popular: cmsData?.platinumPlanPopular !== undefined ? cmsData.platinumPlanPopular : false,
       active: cmsData?.platinumPlanActive !== undefined ? cmsData.platinumPlanActive : true,
-      features: cmsData?.platinumPlanFeatures && cmsData.platinumPlanFeatures.length > 0
+      features: cmsData?.platinumPlanFeatures && Array.isArray(cmsData.platinumPlanFeatures) && cmsData.platinumPlanFeatures.length > 0
         ? cmsData.platinumPlanFeatures
         : LOCAL_FALLBACK_PLANS[2].features,
       fieldKey: "platinum"
@@ -185,7 +196,7 @@ export function PricingPlans() {
   return (
     <section 
       id="pricing" 
-      data-sanity={encodeDataAttribute(['page-pricing'])} // 👈 Connects visual editing overlays
+      data-sanity={encodeDataAttribute(['title'])} // 👈 Connects visual editing overlays
       className="py-20 sm:py-28 transition-colors duration-300" 
       style={{ backgroundColor: 'var(--bg-primary)' }}
     >
@@ -205,18 +216,15 @@ export function PricingPlans() {
           </span>
 
           <h2
-            data-sanity={encodeDataAttribute(['page-pricing', 'pricingHeroTitle'])}
-            className="font-black tracking-tight mb-4 text-transparent bg-clip-text"
-            style={{ 
-              fontSize: 'clamp(1.75rem, 4.5vw, 3.2rem)',
-              backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700, var(--text-primary))'
-            }}
+            data-sanity={encodeDataAttribute(['pricingHeroTitle'])}
+            className="font-black tracking-tight mb-4"
+            style={{ fontSize: 'clamp(1.75rem, 4.5vw, 3.2rem)', color: 'var(--text-primary)' }}
           >
             {heroTitle}
           </h2>
 
           <p 
-            data-sanity={encodeDataAttribute(['page-pricing', 'pricingHeroSubtitle'])}
+            data-sanity={encodeDataAttribute(['pricingHeroSubtitle'])}
             className="text-base sm:text-lg max-w-2xl mx-auto" 
             style={{ color: 'var(--text-secondary)' }}
           >
@@ -228,7 +236,7 @@ export function PricingPlans() {
         <div className="flex md:grid md:grid-cols-3 overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-5 sm:gap-6 pt-4 pb-6 px-4 -mx-4 md:px-0 md:mx-0 md:py-4">
           {activePlans.filter(p => p.active).map((plan, index) => {
             const planAttr = cmsData
-              ? encodeDataAttribute(['page-pricing', `${plan.fieldKey}PlanPrice`])
+              ? encodeDataAttribute([`${plan.fieldKey}PlanPrice`])
               : undefined;
 
 

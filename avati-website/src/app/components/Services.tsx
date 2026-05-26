@@ -16,6 +16,8 @@ const encodeDataAttribute = createDataAttribute({
   baseUrl: 'https://avati-safe-storage.sanity.studio',
   projectId: 'bv8ffbbk',
   dataset: 'production',
+  id: 'page-services',
+  type: 'page',
 });
 
 // Resolver helper for Lucide icons stored in Sanity
@@ -82,7 +84,11 @@ interface CMSData {
   servicesList?: any[];
 }
 
-export function Services() {
+interface ServicesProps {
+  pageData?: any;
+}
+
+export function Services({ pageData }: ServicesProps) {
   const { dark } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cmsData, setCmsData] = useState<CMSData | null>(null);
@@ -92,34 +98,39 @@ export function Services() {
 
   // 1. Fetch from page-services document
   useEffect(() => {
-    async function fetchServices() {
-      try {
-        const query = `*[_id == "page-services"][0] {
-          servicesHeroTitle,
-          servicesHeroSubtitle,
-          servicesList
-        }`;
-        const data = await sanityClient.fetch<CMSData>(query);
-        setCmsData(data || null);
-      } catch (err) {
-        console.warn("[Services CMS] Error loading page-services content, using hardcoded fallback bounds:", err);
-      } finally {
-        setLoading(false);
+    if (pageData) {
+      setCmsData(pageData);
+      setLoading(false);
+    } else {
+      async function fetchServices() {
+        try {
+          const query = `*[_id == "page-services"][0] {
+            servicesHeroTitle,
+            servicesHeroSubtitle,
+            servicesList
+          }`;
+          const data = await sanityClient.fetch<CMSData>(query);
+          setCmsData(data || null);
+        } catch (err) {
+          console.warn("[Services CMS] Error loading page-services content, using hardcoded fallback bounds:", err);
+        } finally {
+          setLoading(false);
+        }
       }
+      fetchServices();
     }
-    fetchServices();
-  }, []);
+  }, [pageData]);
 
   // 2. Select active dataset with dynamic CMS fallback mapping
   const heroTitle = cmsData?.servicesHeroTitle || "Every Storage Need. One Address.";
   const heroSubtitle = cmsData?.servicesHeroSubtitle || "From a single suitcase to an entire office — Avati covers all your storage needs with professional care and honest pricing.";
   const activeServices = cmsData?.servicesList && cmsData.servicesList.length > 0 
-    ? cmsData.servicesList.map(s => ({
+    ? cmsData.servicesList.filter(Boolean).map(s => ({
         title: s.serviceName || s.title || "Storage Service",
         subtitle: s.subtitle || "Premium",
         description: s.serviceDescription || s.description || "Secure, Monitored Space.",
         link: s.link || "/get-quote",
-        highlights: s.highlights || [s.servicePrice ? `Starts at ${s.servicePrice}` : "24/7 Monitored"],
+        highlights: Array.isArray(s.highlights) ? s.highlights : [s.servicePrice ? `Starts at ${s.servicePrice}` : "24/7 Monitored"],
         iconName: s.iconName || "Home"
       }))
     : LOCAL_FALLBACK_SERVICES;
@@ -143,7 +154,7 @@ export function Services() {
   return (
     <section 
       id="services" 
-      data-sanity={encodeDataAttribute(['page-services'])} // 👈 Connects visual editing overlays
+      data-sanity={encodeDataAttribute(['title'])} // 👈 Connects visual editing overlays
       className="py-20 sm:py-28 relative overflow-hidden" 
       style={{ backgroundColor: 'var(--bg-primary)' }}
     >
@@ -178,18 +189,15 @@ export function Services() {
           </span>
 
           <h2
-            data-sanity={encodeDataAttribute(['page-services', 'servicesHeroTitle'])}
-            className="font-black tracking-tight mb-4 text-transparent bg-clip-text"
-            style={{ 
-              fontSize: 'clamp(1.75rem, 4.5vw, 3.2rem)',
-              backgroundImage: 'linear-gradient(90deg, #D4AF37, #FFD700, var(--text-primary))'
-            }}
+            data-sanity={encodeDataAttribute(['servicesHeroTitle'])}
+            className="font-black tracking-tight mb-4"
+            style={{ fontSize: 'clamp(1.75rem, 4.5vw, 3.2rem)', color: 'var(--text-primary)' }}
           >
             {heroTitle}
           </h2>
 
           <p 
-            data-sanity={encodeDataAttribute(['page-services', 'servicesHeroSubtitle'])}
+            data-sanity={encodeDataAttribute(['servicesHeroSubtitle'])}
             className="text-base sm:text-lg max-w-2xl mx-auto" 
             style={{ color: 'var(--text-secondary)' }}
           >
@@ -204,7 +212,7 @@ export function Services() {
               const ServiceIcon = getIcon(service.iconName);
               const realIndex = currentIndex + i;
               const serviceAttr = cmsData?.servicesList
-                ? encodeDataAttribute(['page-services', 'servicesList', realIndex])
+                ? encodeDataAttribute(['servicesList', realIndex])
                 : undefined;
                 
               return (
@@ -305,7 +313,7 @@ export function Services() {
           {activeServices.map((service, i) => {
             const ServiceIcon = getIcon(service.iconName);
             const serviceAttr = cmsData?.servicesList
-              ? encodeDataAttribute(['page-services', 'servicesList', i])
+              ? encodeDataAttribute(['servicesList', i])
               : undefined;
 
             return (

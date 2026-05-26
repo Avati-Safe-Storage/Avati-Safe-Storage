@@ -29,6 +29,16 @@ export interface SEOConfig {
   keywords?: string;
 }
 
+export function buildSanityImageUrl(ref?: string): string | undefined {
+  if (!ref) return undefined;
+  const parts = ref.split('-');
+  if (parts.length < 4) return undefined;
+  const assetId = parts[1];
+  const dimensions = parts[2];
+  const extension = parts[3];
+  return `https://cdn.sanity.io/images/bv8ffbbk/production/${assetId}-${dimensions}.${extension}`;
+}
+
 // ── DOM helpers ──────────────────────────────────────────────
 function setMeta(name: string, content: string, attr: 'name' | 'property' = 'name'): void {
   let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${name}"]`);

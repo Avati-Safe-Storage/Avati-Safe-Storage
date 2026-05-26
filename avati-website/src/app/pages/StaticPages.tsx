@@ -7,16 +7,34 @@
 import { useState, useEffect } from 'react';
 import { Services } from '../components/Services';
 import { PricingPlans } from '../components/PricingPlans';
-import { useSEO } from '../../lib/seo/seoManager';
+import { useSEO, buildSanityImageUrl } from '../../lib/seo/seoManager';
 import { buildLocalBusinessSchema, buildFAQSchema } from '../../lib/seo/schemaBuilder';
 import { sanityClient } from '../../utils/sanityClient';
 import { createDataAttribute } from '@sanity/visual-editing';
 
-// Dynamic Visual Editing Overlay builder
-const encodeDataAttribute = createDataAttribute({
+// Split Visual Editing Overlay builders for distinct documents
+const encodeContact = createDataAttribute({
   baseUrl: 'https://avati-safe-storage.sanity.studio',
   projectId: 'bv8ffbbk',
   dataset: 'production',
+  id: 'page-contact',
+  type: 'page',
+});
+
+const encodeTerms = createDataAttribute({
+  baseUrl: 'https://avati-safe-storage.sanity.studio',
+  projectId: 'bv8ffbbk',
+  dataset: 'production',
+  id: 'page-terms',
+  type: 'page',
+});
+
+const encodeSitemap = createDataAttribute({
+  baseUrl: 'https://avati-safe-storage.sanity.studio',
+  projectId: 'bv8ffbbk',
+  dataset: 'production',
+  id: 'page-sitemap',
+  type: 'page',
 });
 
 // Simple custom Portable Text renderer for lightweight React 18 compatibility
@@ -41,28 +59,114 @@ function renderPortableText(blocks: any[]) {
 
 // ── Services Page ────────────────────────────────────────────
 export function ServicesPage() {
+  const [pageData, setPageData] = useState<any>(null);
+
+  useEffect(() => {
+    sanityClient.fetch<any>(`*[_id == "page-services"][0] {
+      servicesHeroTitle,
+      servicesHeroSubtitle,
+      servicesList,
+      title,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      noIndex,
+      customSchema,
+      ogTitle,
+      ogDescription,
+      openGraphImage
+    }`).then(setPageData).catch(() => {});
+  }, []);
+
+  let parsedSchema: any = buildLocalBusinessSchema();
+  if (pageData?.customSchema) {
+    try {
+      parsedSchema = JSON.parse(pageData.customSchema);
+    } catch {}
+  }
+
   useSEO({
-    title: 'Storage Services in Bangalore | Avati Safe Storage',
-    description: 'Household, business, vehicle, document & relocation storage in Bangalore. Professional packing, free doorstep pickup, and secure CCTV-monitored warehouse.',
-    canonical: 'https://www.avatisafestorage.com/services',
-    schema: buildLocalBusinessSchema(),
+    title: pageData?.metaTitle || 'Storage Services in Bangalore | Avati Safe Storage',
+    description: pageData?.metaDescription || 'Household, business, vehicle, document & relocation storage in Bangalore. Professional packing, free doorstep pickup, and secure CCTV-monitored warehouse.',
+    canonical: pageData?.canonicalUrl || 'https://www.avatisafestorage.com/services',
+    noIndex: pageData?.noIndex !== undefined ? pageData.noIndex : false,
+    schema: parsedSchema,
+    keywords: pageData?.metaKeywords,
+    og: {
+      title: pageData?.ogTitle || pageData?.metaTitle,
+      description: pageData?.ogDescription || pageData?.metaDescription,
+      imageUrl: pageData?.openGraphImage?.asset?._ref ? buildSanityImageUrl(pageData.openGraphImage.asset._ref) : undefined,
+      type: 'website',
+    }
   });
-  return <Services />;
+
+  return <Services pageData={pageData} />;
 }
 
 // ── Pricing Page ─────────────────────────────────────────────
 export function PricingPage() {
+  const [pageData, setPageData] = useState<any>(null);
+
+  useEffect(() => {
+    sanityClient.fetch<any>(`*[_id == "page-pricing"][0] {
+      pricingHeroTitle,
+      pricingHeroSubtitle,
+      silverPlanPrice,
+      silverPlanSizing,
+      silverPlanFeatures,
+      silverPlanPopular,
+      silverPlanActive,
+      goldPlanPrice,
+      goldPlanSizing,
+      goldPlanFeatures,
+      goldPlanPopular,
+      goldPlanActive,
+      platinumPlanPrice,
+      platinumPlanSizing,
+      platinumPlanFeatures,
+      platinumPlanPopular,
+      platinumPlanActive,
+      title,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      noIndex,
+      customSchema,
+      ogTitle,
+      ogDescription,
+      openGraphImage
+    }`).then(setPageData).catch(() => {});
+  }, []);
+
+  let parsedSchema: any = buildFAQSchema([
+    { question: 'What is the minimum storage cost?', answer: 'Minimum monthly storage starts at ₹300 + 18% GST.' },
+    { question: 'Are there any hidden charges?', answer: 'No. Packing and transport are quoted separately and shown upfront in the quote generator.' },
+    { question: 'Is there a minimum storage period?', answer: 'The minimum is 1 month. We offer flexible month-to-month contracts.' },
+  ]);
+  if (pageData?.customSchema) {
+    try {
+      parsedSchema = JSON.parse(pageData.customSchema);
+    } catch {}
+  }
+
   useSEO({
-    title: 'Storage Pricing Plans | Avati Safe Storage Bangalore',
-    description: 'Transparent storage pricing starting from ₹300/month. Silver Key (Basic Plan), Gold Key (Premium Plan), and Platinum Key (Pro Plan) plans with 18% GST. Get an instant live quote with our calculator.',
-    canonical: 'https://www.avatisafestorage.com/pricing',
-    schema: buildFAQSchema([
-      { question: 'What is the minimum storage cost?', answer: 'Minimum monthly storage starts at ₹300 + 18% GST.' },
-      { question: 'Are there any hidden charges?', answer: 'No. Packing and transport are quoted separately and shown upfront in the quote generator.' },
-      { question: 'Is there a minimum storage period?', answer: 'The minimum is 1 month. We offer flexible month-to-month contracts.' },
-    ]),
+    title: pageData?.metaTitle || 'Storage Pricing Plans | Avati Safe Storage Bangalore',
+    description: pageData?.metaDescription || 'Transparent storage pricing starting from ₹300/month. Silver Key (Basic Plan), Gold Key (Premium Plan), and Platinum Key (Pro Plan) plans with 18% GST. Get an instant live quote with our calculator.',
+    canonical: pageData?.canonicalUrl || 'https://www.avatisafestorage.com/pricing',
+    noIndex: pageData?.noIndex !== undefined ? pageData.noIndex : false,
+    schema: parsedSchema,
+    keywords: pageData?.metaKeywords,
+    og: {
+      title: pageData?.ogTitle || pageData?.metaTitle,
+      description: pageData?.ogDescription || pageData?.metaDescription,
+      imageUrl: pageData?.openGraphImage?.asset?._ref ? buildSanityImageUrl(pageData.openGraphImage.asset._ref) : undefined,
+      type: 'website',
+    }
   });
-  return <PricingPlans />;
+
+  return <PricingPlans pageData={pageData} />;
 }
 
 // ── Contact Page ─────────────────────────────────────────────
@@ -71,26 +175,61 @@ interface ContactCMS {
   contactEmail?: string;
   contactPhone?: string;
   contactAddress?: string;
+  title?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  canonicalUrl?: string;
+  noIndex?: boolean;
+  customSchema?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  openGraphImage?: { asset?: { _ref?: string } };
 }
 
 export function ContactPage() {
   const [cmsData, setCmsData] = useState<ContactCMS | null>(null);
-
-  useSEO({
-    title: 'Contact Avati Safe Storage | Bangalore Storage',
-    description: 'Get in touch with Avati Safe Storage. Call +91-8095589888, WhatsApp us, or visit our warehouse at N.R.I. Layout, Kalkere, Horamavu, Bangalore 560043.',
-    canonical: 'https://www.avatisafestorage.com/contact',
-    schema: buildLocalBusinessSchema(),
-  });
 
   useEffect(() => {
     sanityClient.fetch<ContactCMS>(`*[_id == "page-contact"][0] {
       contactHeroTitle,
       contactEmail,
       contactPhone,
-      contactAddress
+      contactAddress,
+      title,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      noIndex,
+      customSchema,
+      ogTitle,
+      ogDescription,
+      openGraphImage
     }`).then(setCmsData).catch(() => {});
   }, []);
+
+  let parsedSchema: any = buildLocalBusinessSchema();
+  if (cmsData?.customSchema) {
+    try {
+      parsedSchema = JSON.parse(cmsData.customSchema);
+    } catch {}
+  }
+
+  useSEO({
+    title: cmsData?.metaTitle || 'Contact Avati Safe Storage | Bangalore Storage',
+    description: cmsData?.metaDescription || 'Get in touch with Avati Safe Storage. Call +91-8095589888, WhatsApp us, or visit our warehouse at N.R.I. Layout, Kalkere, Horamavu, Bangalore 560043.',
+    canonical: cmsData?.canonicalUrl || 'https://www.avatisafestorage.com/contact',
+    noIndex: cmsData?.noIndex !== undefined ? cmsData.noIndex : false,
+    schema: parsedSchema,
+    keywords: cmsData?.metaKeywords,
+    og: {
+      title: cmsData?.ogTitle || cmsData?.metaTitle,
+      description: cmsData?.ogDescription || cmsData?.metaDescription,
+      imageUrl: cmsData?.openGraphImage?.asset?._ref ? buildSanityImageUrl(cmsData.openGraphImage.asset._ref) : undefined,
+      type: 'website',
+    }
+  });
 
   // Fallback setup to prevent empty page loads
   const heroTitle = cmsData?.contactHeroTitle || "Contact Us";
@@ -100,12 +239,12 @@ export function ContactPage() {
 
   return (
     <div 
-      data-sanity={encodeDataAttribute(['page-contact'])}
+      data-sanity={encodeContact(['title'])}
       style={{ minHeight: '60vh', padding: '4rem 1.5rem', background: 'var(--bg-primary)' }}
     >
       <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
         <h1 
-          data-sanity={encodeDataAttribute(['page-contact', 'contactHeroTitle'])}
+          data-sanity={encodeContact(['contactHeroTitle'])}
           style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontSize: '2.5rem', fontWeight: 900 }}
         >
           {heroTitle}
@@ -147,44 +286,75 @@ export function ContactPage() {
 interface TermsCMS {
   termsHeading?: string;
   legalBody?: any[];
+  title?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  canonicalUrl?: string;
+  noIndex?: boolean;
+  customSchema?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  openGraphImage?: { asset?: { _ref?: string } };
 }
 
 export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
   const isPrivacy = type === 'privacy';
   const [cmsData, setCmsData] = useState<TermsCMS | null>(null);
 
-  useSEO({
-    title: isPrivacy
-      ? 'Privacy Policy | Avati Safe Storage'
-      : 'Terms of Service | Avati Safe Storage',
-    description: isPrivacy
-      ? 'Privacy policy for Avati Safe Storage. Learn how we collect, use, and protect your personal information.'
-      : 'Terms and conditions for using Avati Safe Storage services in Bangalore.',
-    canonical: `https://www.avatisafestorage.com/${isPrivacy ? 'privacy-policy' : 'terms'}`,
-    noIndex: false,
-  });
-
   useEffect(() => {
     // Only query CMS for terms; keep privacy fallback or standard policy
     if (!isPrivacy) {
       sanityClient.fetch<TermsCMS>(`*[_id == "page-terms"][0] {
         termsHeading,
-        legalBody
+        legalBody,
+        title,
+        metaTitle,
+        metaDescription,
+        metaKeywords,
+        canonicalUrl,
+        noIndex,
+        customSchema,
+        ogTitle,
+        ogDescription,
+        openGraphImage
       }`).then(setCmsData).catch(() => {});
     }
   }, [isPrivacy]);
+
+  let parsedSchema: any = undefined;
+  if (cmsData?.customSchema) {
+    try {
+      parsedSchema = JSON.parse(cmsData.customSchema);
+    } catch {}
+  }
+
+  useSEO({
+    title: cmsData?.metaTitle || (isPrivacy ? 'Privacy Policy | Avati Safe Storage' : 'Terms of Service | Avati Safe Storage'),
+    description: cmsData?.metaDescription || (isPrivacy ? 'Privacy policy for Avati Safe Storage. Learn how we collect, use, and protect your personal information.' : 'Terms and conditions for using Avati Safe Storage services in Bangalore.'),
+    canonical: cmsData?.canonicalUrl || `https://www.avatisafestorage.com/${isPrivacy ? 'privacy-policy' : 'terms'}`,
+    noIndex: cmsData?.noIndex !== undefined ? cmsData.noIndex : false,
+    schema: parsedSchema,
+    keywords: cmsData?.metaKeywords,
+    og: {
+      title: cmsData?.ogTitle || cmsData?.metaTitle,
+      description: cmsData?.ogDescription || cmsData?.metaDescription,
+      imageUrl: cmsData?.openGraphImage?.asset?._ref ? buildSanityImageUrl(cmsData.openGraphImage.asset._ref) : undefined,
+      type: 'website',
+    }
+  });
 
   const defaultHeading = isPrivacy ? 'Privacy Policy' : 'Terms of Service';
   const heading = cmsData?.termsHeading || defaultHeading;
 
   return (
     <div 
-      data-sanity={!isPrivacy ? encodeDataAttribute(['page-terms']) : undefined}
+      data-sanity={!isPrivacy ? encodeTerms(['title']) : undefined}
       style={{ minHeight: '60vh', padding: '4rem 1.5rem', background: 'var(--bg-primary)' }}
     >
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
         <h1 
-          data-sanity={!isPrivacy ? encodeDataAttribute(['page-terms', 'termsHeading']) : undefined}
+          data-sanity={!isPrivacy ? encodeTerms(['termsHeading']) : undefined}
           style={{ color: 'var(--text-primary)', marginBottom: '2rem', fontSize: '2.5rem', fontWeight: 900 }}
         >
           {heading}
@@ -192,7 +362,7 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
 
         <div className="space-y-4">
           {!isPrivacy && cmsData?.legalBody ? (
-            <div data-sanity={encodeDataAttribute(['page-terms', 'legalBody'])}>
+            <div data-sanity={encodeTerms(['legalBody'])}>
               {renderPortableText(cmsData.legalBody)}
             </div>
           ) : (
@@ -220,23 +390,59 @@ export function LegalPage({ type }: { type: 'privacy' | 'terms' }) {
 interface SitemapCMS {
   sitemapHeroTitle?: string;
   sitemapLinks?: any[];
+  title?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  canonicalUrl?: string;
+  noIndex?: boolean;
+  customSchema?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  openGraphImage?: { asset?: { _ref?: string } };
 }
 
 export function SitemapPage() {
   const [cmsData, setCmsData] = useState<SitemapCMS | null>(null);
 
-  useSEO({
-    title: 'Sitemap | Avati Safe Storage Bangalore',
-    description: 'Explore the site map of Avati Safe Storage website to easily discover all pages, services, areas, and articles.',
-    canonical: 'https://www.avatisafestorage.com/sitemap',
-  });
-
   useEffect(() => {
     sanityClient.fetch<SitemapCMS>(`*[_id == "page-sitemap"][0] {
       sitemapHeroTitle,
-      sitemapLinks
+      sitemapLinks,
+      title,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+      canonicalUrl,
+      noIndex,
+      customSchema,
+      ogTitle,
+      ogDescription,
+      openGraphImage
     }`).then(setCmsData).catch(() => {});
   }, []);
+
+  let parsedSchema: any = undefined;
+  if (cmsData?.customSchema) {
+    try {
+      parsedSchema = JSON.parse(cmsData.customSchema);
+    } catch {}
+  }
+
+  useSEO({
+    title: cmsData?.metaTitle || 'Sitemap | Avati Safe Storage Bangalore',
+    description: cmsData?.metaDescription || 'Explore the site map of Avati Safe Storage website to easily discover all pages, services, areas, and articles.',
+    canonical: cmsData?.canonicalUrl || 'https://www.avatisafestorage.com/sitemap',
+    noIndex: cmsData?.noIndex !== undefined ? cmsData.noIndex : false,
+    schema: parsedSchema,
+    keywords: cmsData?.metaKeywords,
+    og: {
+      title: cmsData?.ogTitle || cmsData?.metaTitle,
+      description: cmsData?.ogDescription || cmsData?.metaDescription,
+      imageUrl: cmsData?.openGraphImage?.asset?._ref ? buildSanityImageUrl(cmsData.openGraphImage.asset._ref) : undefined,
+      type: 'website',
+    }
+  });
 
   const heroTitle = cmsData?.sitemapHeroTitle || "Avati Site Directory";
   const links = cmsData?.sitemapLinks && cmsData.sitemapLinks.length > 0
@@ -253,12 +459,12 @@ export function SitemapPage() {
 
   return (
     <div 
-      data-sanity={encodeDataAttribute(['page-sitemap'])}
+      data-sanity={encodeSitemap(['title'])}
       style={{ minHeight: '60vh', padding: '4rem 1.5rem', background: 'var(--bg-primary)' }}
     >
       <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
         <h1 
-          data-sanity={encodeDataAttribute(['page-sitemap', 'sitemapHeroTitle'])}
+          data-sanity={encodeSitemap(['sitemapHeroTitle'])}
           style={{ color: 'var(--text-primary)', marginBottom: '2rem', fontSize: '2.5rem', fontWeight: 900 }}
         >
           {heroTitle}

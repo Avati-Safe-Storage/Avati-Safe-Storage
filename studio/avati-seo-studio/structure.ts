@@ -4,8 +4,10 @@ export const structure: StructureResolver = (S) =>
   S.list()
     .title('Avati Content Desk')
     .items([
+
+      // ── Pages ──────────────────────────────────────────────
       S.listItem()
-        .title('Home Page')
+        .title('🏠 Home Page')
         .child(
           S.document()
             .id('page-home')
@@ -13,7 +15,15 @@ export const structure: StructureResolver = (S) =>
             .title('Home Page')
         ),
       S.listItem()
-        .title('Services Page')
+        .title('ℹ️ About Us')
+        .child(
+          S.document()
+            .id('page-about')
+            .schemaType('page')
+            .title('About Us Page')
+        ),
+      S.listItem()
+        .title('📦 Services Page')
         .child(
           S.document()
             .id('page-services')
@@ -21,7 +31,7 @@ export const structure: StructureResolver = (S) =>
             .title('Services Page')
         ),
       S.listItem()
-        .title('Pricing Plans')
+        .title('💰 Pricing Plans')
         .child(
           S.document()
             .id('page-pricing')
@@ -29,7 +39,31 @@ export const structure: StructureResolver = (S) =>
             .title('Pricing Plans')
         ),
       S.listItem()
-        .title('Sitemap Page')
+        .title('📍 Areas & Locations')
+        .child(
+          S.document()
+            .id('page-areas')
+            .schemaType('page')
+            .title('Areas & Locations')
+        ),
+      S.listItem()
+        .title('📞 Contact Us Page')
+        .child(
+          S.document()
+            .id('page-contact')
+            .schemaType('page')
+            .title('Contact Us')
+        ),
+      S.listItem()
+        .title("❓ FAQ's Page")
+        .child(
+          S.document()
+            .id('page-faqs')
+            .schemaType('page')
+            .title("FAQ's Page")
+        ),
+      S.listItem()
+        .title('🗺️ Sitemap Page')
         .child(
           S.document()
             .id('page-sitemap')
@@ -37,7 +71,7 @@ export const structure: StructureResolver = (S) =>
             .title('Sitemap Page')
         ),
       S.listItem()
-        .title('Terms & Conditions')
+        .title('📋 Terms & Conditions')
         .child(
           S.document()
             .id('page-terms')
@@ -45,23 +79,18 @@ export const structure: StructureResolver = (S) =>
             .title('Terms & Conditions')
         ),
       S.listItem()
-        .title('FAQ\'s Page')
+        .title('🔒 Privacy Policy')
         .child(
           S.document()
-            .id('page-faqs')
+            .id('page-privacy')
             .schemaType('page')
-            .title('FAQ\'s Page')
+            .title('Privacy Policy')
         ),
-      S.listItem()
-        .title('Contact Us Page')
-        .child(
-          S.document()
-            .id('page-contact')
-            .schemaType('page')
-            .title('Contact Us')
-        ),
+
       S.divider(),
-      // Display other content types like standard blog posts in the sidebar
+
+      // ── Blog & SEO Content ─────────────────────────────────
+      // Display all non-page content types (blog posts, etc.)
       ...S.documentTypeListItems().filter(
         (item) => !['page'].includes(item.getId() || '')
       ),
